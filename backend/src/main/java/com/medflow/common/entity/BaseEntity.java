@@ -23,5 +23,15 @@ public class BaseEntity {
     @Column(nullable = false)
     protected LocalDateTime updatedAt;
 
+    @Column(name = "deleted_at")
     protected LocalDateTime deletedAt;
+
+    // 데이터를 진짜 삭제하지 않고 삭제된 것처럼 표시
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
 }
