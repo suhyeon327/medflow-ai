@@ -1,4 +1,4 @@
 package com.medflow.notification;
 
-public class NotificationDomain {
+public class Notification {
 }

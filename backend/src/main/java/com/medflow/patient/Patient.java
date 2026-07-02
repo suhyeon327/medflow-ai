@@ -1,4 +1,4 @@
 package com.medflow.patient;
 
-public class PatientDomain {
+public class Patient {
 }

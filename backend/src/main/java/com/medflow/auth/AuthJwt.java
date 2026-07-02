@@ -1,4 +1,4 @@
 package com.medflow.auth;
 
-public class AuthException {
+public class AuthJwt {
 }

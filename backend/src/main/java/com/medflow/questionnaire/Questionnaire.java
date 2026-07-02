@@ -1,4 +1,4 @@
 package com.medflow.questionnaire;
 
-public class QuestionnaireDomain {
+public class Questionnaire {
 }

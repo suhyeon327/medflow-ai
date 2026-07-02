@@ -1,4 +1,4 @@
 package com.medflow.auth;
 
-public class AuthDomain {
+public class AuthSecurity {
 }
