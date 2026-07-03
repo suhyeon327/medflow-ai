@@ -18,7 +18,7 @@ public class AuthService {
     public SignupResponse signup(SignupRequest request) {
 
         // 이메일 중복 체크
-        if (userRepository.existByEmail(request.getEmail())) {
+        if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
         }
 
