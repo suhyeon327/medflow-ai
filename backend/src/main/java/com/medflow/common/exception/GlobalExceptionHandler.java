@@ -2,10 +2,12 @@ package com.medflow.common.exception;
 
 import com.medflow.common.response.ApiResponse;
 import com.medflow.common.response.ErrorResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+@Slf4j
 @RestControllerAdvice   // 모든 Controller에서 발생한 예외를 가로챔
 public class GlobalExceptionHandler {
 
@@ -19,7 +21,7 @@ public class GlobalExceptionHandler {
                 .build();
 
         return ResponseEntity
-                .badRequest()   // HTTP 상태코드 400 반환
+                .status(e.getErrorCode().getStatus())
                 .body(ApiResponse.fail(error));
     }
 
@@ -27,8 +29,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
 
+        log.error("Unexpected Exception", e);
         ErrorResponse error = ErrorResponse.builder()
-                .code("INTERAL_SERVER_ERROR")
+                .code("INTERNAL_SERVER_ERROR")
                 .message("서버 오류가 발생했습니다.")
                 .build();
 

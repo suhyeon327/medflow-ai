@@ -22,7 +22,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/",
                                 "/api/v1/auth/signup",
-                                "/api/v1/auth/login"
+                                "/api/v1/auth/login",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"
                         ).permitAll()   // 누구나 접속 가능한 주소
                         .anyRequest().authenticated()   // 인증(로그인) 해야 접속 가능
                 );

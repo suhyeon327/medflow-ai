@@ -2,6 +2,7 @@ package com.medflow.auth.service;
 
 import com.medflow.auth.dto.SignupRequest;
 import com.medflow.auth.dto.SignupResponse;
+import com.medflow.common.exception.EmailAlreadyExistsException;
 import com.medflow.user.entity.User;
 import com.medflow.user.entity.UserRole;
 import com.medflow.user.repository.UserRepository;
@@ -18,22 +19,22 @@ public class AuthService {
 
     public SignupResponse signup(SignupRequest request) {
 
+        // 이메일 중복 여부
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+            throw new EmailAlreadyExistsException();
         }
 
-        if (request.getRole() == UserRole.ADMIN) {
-            throw new IllegalArgumentException("ADMIN 계정은 일반 회원가입으로 생성할 수 없습니다.");
-        }
-
+        // User 생성
         User user = User.create(
                 request.getEmail(),
                 passwordEncoder.encode(request.getPassword()),
                 request.getRole()
         );
 
+        // 데이터베이스 저장
         User saveUser = userRepository.save(user);
 
+        // 출력
         return SignupResponse.builder()
                 .id(saveUser.getId())
                 .email(saveUser.getEmail())
