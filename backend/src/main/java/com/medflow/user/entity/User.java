@@ -3,6 +3,7 @@ package com.medflow.user.entity;
 import com.medflow.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -33,6 +34,13 @@ public class User extends BaseEntity {
     private UserStatus status;
 
     private LocalDateTime lastLoginAt;
+
+    @Builder
+    public User(String email, String password, UserRole role) {
+        this.email = email;
+        this.password = password;
+        this.role = role;
+    }
 
     // 회원 생성
     public static User create(
