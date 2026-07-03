@@ -1,4 +1,4 @@
-package com.medflow.user;
+package com.medflow.user.repository;
 
 import com.medflow.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;

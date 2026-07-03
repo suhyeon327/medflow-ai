@@ -2,7 +2,7 @@ package com.medflow.auth.service;
 
 import com.medflow.auth.dto.SignupRequest;
 import com.medflow.auth.dto.SignupResponse;
-import com.medflow.user.UserRepository;
+import com.medflow.user.repository.UserRepository;
 import com.medflow.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
