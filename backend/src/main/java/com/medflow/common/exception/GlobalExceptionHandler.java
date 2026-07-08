@@ -4,15 +4,16 @@ import com.medflow.common.response.ApiResponse;
 import com.medflow.common.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @Slf4j
-@RestControllerAdvice   // 모든 Controller에서 발생한 예외를 가로챔
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
     // 비즈니스 예외 처리
-    @ExceptionHandler(BusinessException.class)   // 비즈니스 예외만 따로 처리
+    @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException e) {
 
         ErrorResponse error = ErrorResponse.builder()
@@ -22,6 +23,20 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(e.getErrorCode().getStatus())
+                .body(ApiResponse.fail(error));
+    }
+
+    // @Valid 검증 실패 예외 처리
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+
+        ErrorResponse error = ErrorResponse.builder()
+                .code("VALIDATION_ERROR")
+                .message(e.getBindingResult().getAllErrors().get(0).getDefaultMessage())
+                .build();
+
+        return ResponseEntity
+                .badRequest()
                 .body(ApiResponse.fail(error));
     }
 
@@ -36,7 +51,7 @@ public class GlobalExceptionHandler {
                 .build();
 
         return ResponseEntity
-                .internalServerError()   // 500 에러
+                .internalServerError()
                 .body(ApiResponse.fail(error));
     }
 }
