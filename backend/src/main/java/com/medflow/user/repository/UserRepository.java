@@ -13,4 +13,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // 이메일로 회원 조회
     // 회원이 존재하면 Optional<User>, 없으면 Optional.empty() 반환
     Optional<User> findByEmail(String email);
+
+    // ID로 회원 조회
+    Optional<User> findById(Long id);
 }
