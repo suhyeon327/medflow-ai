@@ -32,7 +32,7 @@ public class Patient {
     @Column(name = "gender",nullable = false, length = 10)
     private Gender gender;
 
-    @Column(name = "phone",nullable = false, length = 20)
+    @Column(name = "phone",nullable = false, length = 11)
     private String phone;
 
     public Patient(
