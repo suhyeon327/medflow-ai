@@ -1,6 +1,10 @@
 package com.medflow.auth.jwt;
 
+import com.medflow.auth.security.CustomUserDetails;
 import com.medflow.common.exception.TokenMissingAuthorityException;
+import com.medflow.common.exception.UserNotFoundException;
+import com.medflow.user.entity.User;
+import com.medflow.user.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -12,15 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 
 @Slf4j
@@ -28,11 +26,16 @@ import java.util.Date;
 public class JwtProvider {
 
     private final Key key;
+    private final UserRepository userRepository;
 
     // application.yml에서 Base64로 인코딩된 secret 값을 읽어 서명용 Key 생성
-    public JwtProvider(@Value("${jwt.secret}") String secretKey) {
+    public JwtProvider(
+            @Value("${jwt.secret}") String secretKey,
+            UserRepository userRepository
+    ) {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
+        this.userRepository = userRepository;
     }
 
     // JWT를 복호화해서 Spring Security가 사용할 Authentication 객체 생성
@@ -46,16 +49,18 @@ public class JwtProvider {
             throw new TokenMissingAuthorityException();
         }
 
-        // Claims에 저장된 권한 문자열을 GrantedAuthority 목록으로 변환
-        Collection<? extends GrantedAuthority> authorities = Arrays.stream(claims.get("auth").toString().split(","))
-                .map(SimpleGrantedAuthority::new)
-                .toList();
+        String email = claims.getSubject();
 
-        // Spring Security에서 사용할 UserDetails 생성
-        UserDetails principal = new User(claims.getSubject(), "", authorities);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(UserNotFoundException::new);
 
-        // 인증 완료 상태의 Authentication 반환
-        return new UsernamePasswordAuthenticationToken(principal, "", authorities);
+        CustomUserDetails userDetails = new CustomUserDetails(user);
+
+        return new UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                userDetails.getAuthorities()
+        );
     }
 
     // JWT 서명, 형식, 만료 여부를 검증
