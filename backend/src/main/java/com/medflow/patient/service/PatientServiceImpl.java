@@ -32,7 +32,7 @@ public class PatientServiceImpl implements PatientService {
         patientRepository.save(patient);
     }
 
-    // 환자 정보 생성
+    // 환자 정보 조회
     @Override
     @Transactional(readOnly = true)
     public PatientResponse getMyProfile(User user) {
