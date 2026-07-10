@@ -2,11 +2,13 @@ package com.medflow.patient.entity;
 
 import com.medflow.user.entity.User;
 import jakarta.persistence.*;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
 @Entity
+@Getter
 @NoArgsConstructor
 public class Patient {
 
