@@ -1,11 +1,14 @@
 package com.medflow.patient.service;
 
+import com.medflow.common.exception.PatientAlreadyExistsException;
 import com.medflow.common.exception.PatientNotFoundException;
+import com.medflow.common.exception.UserNotFoundException;
 import com.medflow.patient.dto.PatientRequest;
 import com.medflow.patient.dto.PatientResponse;
 import com.medflow.patient.entity.Patient;
 import com.medflow.patient.repository.PatientRepository;
 import com.medflow.user.entity.User;
+import com.medflow.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,10 +19,19 @@ import org.springframework.transaction.annotation.Transactional;
 public class PatientServiceImpl implements PatientService {
 
     private final PatientRepository patientRepository;
+    private final UserRepository userRepository;
 
     // 환자 등록
     @Override
-    public void createPatient(User user, PatientRequest request) {
+    public PatientResponse createPatient(Long userId, PatientRequest request) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        // 이미 생성된 환자인지 확인
+        if (patientRepository.existsByUserId(userId)) {
+            throw new PatientAlreadyExistsException();
+        }
 
         Patient patient = Patient.create(
                 user,
@@ -29,34 +41,36 @@ public class PatientServiceImpl implements PatientService {
                 request.getPhone()
         );
 
-        patientRepository.save(patient);
+        Patient savedPatient = patientRepository.save(patient);
+
+        return PatientResponse.from(savedPatient);
     }
 
     // 환자 정보 조회
     @Override
     @Transactional(readOnly = true)
-    public PatientResponse getPatientProfile(User user) {
+    public PatientResponse getPatientProfile(Long userId) {
 
-        return PatientResponse.from(findPatient(user));
+        Patient patient = patientRepository.findByUserId(userId)
+                .orElseThrow(PatientNotFoundException::new);
+
+        return PatientResponse.from(patient);
     }
 
     // 환자 정보 수정
     @Override
-    public void updatePatient(User user, PatientRequest request) {
+    public PatientResponse updatePatient(Long userId, PatientRequest request) {
 
-        findPatient(user).update(
+        Patient patient = patientRepository.findByUserId(userId)
+                .orElseThrow(PatientNotFoundException::new);
+
+        patient.update(
                 request.getName(),
                 request.getBirth(),
                 request.getGender(),
                 request.getPhone()
         );
 
-    }
-
-    // 환자 가져오기
-    public Patient findPatient(User user) {
-
-        return patientRepository.findByUser(user)
-                .orElseThrow(PatientNotFoundException::new);
+        return PatientResponse.from(patient);
     }
 }

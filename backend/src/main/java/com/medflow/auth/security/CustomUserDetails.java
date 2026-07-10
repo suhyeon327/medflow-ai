@@ -22,6 +22,11 @@ public class CustomUserDetails implements UserDetails {
         this.user = user;
     }
 
+    // user id 꺼내기
+    public Long getUserId() {
+        return user.getId();
+    }
+
     // 사용자의 권한(role) 반환
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

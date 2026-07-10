@@ -8,11 +8,11 @@ import java.util.List;
 
 public interface PatientService {
 
-    void createPatient(User user, PatientRequest request);
+    PatientResponse createPatient(Long userId, PatientRequest request);
 
-    PatientResponse getPatientProfile(User user);
+    PatientResponse getPatientProfile(Long userId);
 
-    void updatePatient(User user, PatientRequest request);
+    PatientResponse updatePatient(Long userId, PatientRequest request);
 
 //    PatientResponse getPatient(Long patientId);
 
