@@ -19,7 +19,7 @@ public class PatientServiceImpl implements PatientService {
 
     // 환자 등록
     @Override
-    public void registerPatient(User user, PatientRequest request) {
+    public void createPatient(User user, PatientRequest request) {
 
         Patient patient = Patient.create(
                 user,
@@ -35,14 +35,14 @@ public class PatientServiceImpl implements PatientService {
     // 환자 정보 조회
     @Override
     @Transactional(readOnly = true)
-    public PatientResponse getMyProfile(User user) {
+    public PatientResponse getPatientProfile(User user) {
 
         return PatientResponse.from(findPatient(user));
     }
 
     // 환자 정보 수정
     @Override
-    public void update(User user, PatientRequest request) {
+    public void updatePatient(User user, PatientRequest request) {
 
         findPatient(user).update(
                 request.getName(),
