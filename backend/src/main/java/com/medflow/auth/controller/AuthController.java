@@ -1,19 +1,13 @@
 package com.medflow.auth.controller;
 
-import com.medflow.auth.dto.JwtToken;
-import com.medflow.auth.dto.LoginRequest;
-import com.medflow.auth.dto.LogoutRequest;
-import com.medflow.auth.dto.ReissueRequest;
-import com.medflow.auth.dto.SignupRequest;
-import com.medflow.auth.dto.SignupResponse;
+import com.medflow.auth.dto.*;
+import com.medflow.auth.security.CustomUserDetails;
 import com.medflow.auth.service.AuthService;
 import com.medflow.common.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -59,5 +53,15 @@ public class AuthController {
     ) {
         authService.logout(request);
         return ApiResponse.success(null);
+    }
+
+    // 회원 탈퇴
+    @DeleteMapping("/withdraw")
+    public ApiResponse<WithdrawResponse> withdraw(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ApiResponse.success(
+                authService.withdraw(userDetails.getUserId())
+        );
     }
 }

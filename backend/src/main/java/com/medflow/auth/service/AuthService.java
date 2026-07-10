@@ -1,17 +1,15 @@
 package com.medflow.auth.service;
 
-import com.medflow.auth.dto.JwtToken;
-import com.medflow.auth.dto.LoginRequest;
-import com.medflow.auth.dto.LogoutRequest;
-import com.medflow.auth.dto.ReissueRequest;
-import com.medflow.auth.dto.SignupRequest;
-import com.medflow.auth.dto.SignupResponse;
+import com.medflow.auth.dto.*;
 import com.medflow.auth.jwt.JwtGenerator;
 import com.medflow.auth.jwt.JwtProvider;
 import com.medflow.auth.security.CustomUserDetails;
 import com.medflow.common.exception.EmailAlreadyExistsException;
 import com.medflow.common.exception.InvalidCredentialsException;
+import com.medflow.common.exception.PatientNotFoundException;
 import com.medflow.common.exception.UserNotFoundException;
+import com.medflow.patient.entity.Patient;
+import com.medflow.patient.repository.PatientRepository;
 import com.medflow.token.entity.RefreshToken;
 import com.medflow.token.repository.RefreshTokenRepository;
 import com.medflow.user.entity.User;
@@ -41,6 +39,7 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final PatientRepository patientRepository;
 
     // 회원가입
     public SignupResponse signup(SignupRequest request) {
@@ -165,5 +164,23 @@ public class AuthService {
         return date.toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
+    }
+
+    // 회원탈퇴
+    public WithdrawResponse withdraw(Long userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        Patient patient = patientRepository.findByUserId(userId)
+                .orElseThrow(PatientNotFoundException::new);
+
+        user.softDelete();
+
+        patient.softDelete();
+
+        refreshTokenRepository.deleteByUserId(userId);
+
+        return WithdrawResponse.from(user);
     }
 }

@@ -1,5 +1,6 @@
 package com.medflow.patient.entity;
 
+import com.medflow.common.entity.BaseEntity;
 import com.medflow.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -10,7 +11,7 @@ import java.time.LocalDate;
 @Entity
 @Getter
 @NoArgsConstructor
-public class Patient {
+public class Patient extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
