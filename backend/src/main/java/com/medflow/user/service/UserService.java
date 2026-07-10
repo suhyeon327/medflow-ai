@@ -24,6 +24,7 @@ public class UserService {
                 .id(user.getId())
                 .email(user.getEmail())
                 .role(user.getRole())
+                .deleteAt(user.getDeletedAt())
                 .build();
     }
 
@@ -36,6 +37,7 @@ public class UserService {
                         .id(user.getId())
                         .email(user.getEmail())
                         .role(user.getRole())
+                        .deleteAt(user.getDeletedAt())
                         .build())
                 .toList();
     }
