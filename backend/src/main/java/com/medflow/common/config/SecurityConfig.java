@@ -2,6 +2,7 @@ package com.medflow.common.config;
 
 import com.medflow.auth.jwt.JwtAuthenticationFilter;
 import com.medflow.auth.jwt.JwtProvider;
+import com.medflow.common.security.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +24,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtProvider jwtProvider;
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
 
     // 보안 정책 정의
     @Bean
@@ -42,6 +44,12 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()   // 누구나 접속 가능한 주소
                         .anyRequest().authenticated()   // 인증(로그인) 해야 접속 가능
+                )
+
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(   // 인증 실패 401
+                                authenticationEntryPoint
+                        )
                 )
 
                 // UsernamePasswordAuthenticationFilter 보다 JWT 검사를 먼저 실행
