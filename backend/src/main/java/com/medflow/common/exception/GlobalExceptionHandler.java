@@ -3,7 +3,9 @@ package com.medflow.common.exception;
 import com.medflow.common.response.ApiResponse;
 import com.medflow.common.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -12,7 +14,23 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 비즈니스 예외 처리
+    // Method Security(@PreAuthorize) 권한 부족 예외 처리
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAuthorizationDeniedException(
+            AuthorizationDeniedException e
+    ) {
+
+        ErrorResponse error = ErrorResponse.builder()
+                .code(ErrorCode.AUTH_FORBIDDEN.getCode())
+                .message(ErrorCode.AUTH_FORBIDDEN.getMessage())
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.fail(error));
+    }
+
+    // 비즈니스 예외 처리 - Service 계층에서 의도적으로 발생시키는 예외 처리
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException e) {
 
