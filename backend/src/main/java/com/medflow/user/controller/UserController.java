@@ -1,7 +1,7 @@
 package com.medflow.user.controller;
 
 import com.medflow.common.response.ApiResponse;
-import com.medflow.user.dto.UserResponse;
+import com.medflow.user.dto.AdminUserResponse;
 import com.medflow.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +20,7 @@ public class UserController {
 
     // 단일 회원 조회
     @GetMapping("/{id}")
-    public ApiResponse<UserResponse> getUser(
+    public ApiResponse<AdminUserResponse> getUser(
             @PathVariable Long id
     ) {
         return ApiResponse.success(
@@ -29,7 +29,7 @@ public class UserController {
 
     // 전체 회원 조회
     @GetMapping("/")
-    public ApiResponse<List<UserResponse>> getUsers() {
+    public ApiResponse<List<AdminUserResponse>> getUsers() {
         return ApiResponse.success(
                 userService.getUsers());
     }

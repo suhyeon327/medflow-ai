@@ -1,7 +1,7 @@
 package com.medflow.user.service;
 
 import com.medflow.common.exception.UserNotFoundException;
-import com.medflow.user.dto.UserResponse;
+import com.medflow.user.dto.AdminUserResponse;
 import com.medflow.user.entity.User;
 import com.medflow.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,29 +16,19 @@ public class UserService {
     private final UserRepository userRepository;
 
     // ID로 단일 회원 조회
-    public UserResponse getUser(Long id) {
+    public AdminUserResponse getUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(UserNotFoundException::new);
 
-        return UserResponse.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .role(user.getRole())
-                .deleteAt(user.getDeletedAt())
-                .build();
+        return AdminUserResponse.from(user);
     }
 
     // 전체 회원 조회
-    public List<UserResponse> getUsers() {
+    public List<AdminUserResponse> getUsers() {
 
         return userRepository.findAll()
                 .stream()
-                .map(user -> UserResponse.builder()
-                        .id(user.getId())
-                        .email(user.getEmail())
-                        .role(user.getRole())
-                        .deleteAt(user.getDeletedAt())
-                        .build())
+                .map(AdminUserResponse::from)
                 .toList();
     }
 }
