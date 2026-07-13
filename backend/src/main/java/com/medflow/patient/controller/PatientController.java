@@ -2,12 +2,15 @@ package com.medflow.patient.controller;
 
 import com.medflow.auth.security.CustomUserDetails;
 import com.medflow.common.response.ApiResponse;
+import com.medflow.patient.dto.AdminPatientResponse;
 import com.medflow.patient.dto.PatientRequest;
 import com.medflow.patient.dto.PatientResponse;
 import com.medflow.patient.service.PatientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/patient")
@@ -53,5 +56,12 @@ public class PatientController {
                         request
                 )
         );
+    }
+
+    // 전체 환자 조회
+    @GetMapping("/")
+    public ApiResponse<List<AdminPatientResponse>> getPatients() {
+        return ApiResponse.success(
+                patientService.getPatients());
     }
 }

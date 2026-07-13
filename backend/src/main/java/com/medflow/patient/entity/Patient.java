@@ -2,6 +2,7 @@ package com.medflow.patient.entity;
 
 import com.medflow.common.entity.BaseEntity;
 import com.medflow.user.entity.User;
+import com.medflow.user.entity.UserStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

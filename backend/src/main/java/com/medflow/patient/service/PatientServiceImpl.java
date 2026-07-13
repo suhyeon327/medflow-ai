@@ -3,6 +3,7 @@ package com.medflow.patient.service;
 import com.medflow.common.exception.PatientAlreadyExistsException;
 import com.medflow.common.exception.PatientNotFoundException;
 import com.medflow.common.exception.UserNotFoundException;
+import com.medflow.patient.dto.AdminPatientResponse;
 import com.medflow.patient.dto.PatientRequest;
 import com.medflow.patient.dto.PatientResponse;
 import com.medflow.patient.entity.Patient;
@@ -12,6 +13,8 @@ import com.medflow.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -72,5 +75,14 @@ public class PatientServiceImpl implements PatientService {
         );
 
         return PatientResponse.from(patient);
+    }
+
+    // 전체 환자 조회
+    public List<AdminPatientResponse> getPatients() {
+
+        return patientRepository.findAll()
+                .stream()
+                .map(AdminPatientResponse::from)
+                .toList();
     }
 }

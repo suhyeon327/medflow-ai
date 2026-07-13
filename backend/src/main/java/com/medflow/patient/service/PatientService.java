@@ -1,5 +1,6 @@
 package com.medflow.patient.service;
 
+import com.medflow.patient.dto.AdminPatientResponse;
 import com.medflow.patient.dto.PatientRequest;
 import com.medflow.patient.dto.PatientResponse;
 import com.medflow.user.entity.User;
@@ -14,7 +15,5 @@ public interface PatientService {
 
     PatientResponse updatePatient(Long userId, PatientRequest request);
 
-//    PatientResponse getPatient(Long patientId);
-
-//    List<PatientResponse> getPatients();
+    List<AdminPatientResponse> getPatients();
 }
