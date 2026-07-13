@@ -10,6 +10,8 @@ spring:
       hibernate:
         format_sql: true
     open-in-view: false
+  profiles:
+    active: dev
 
 springdoc:
   swagger-ui:

@@ -81,4 +81,19 @@ public class User extends BaseEntity {
     public boolean isActive() {
         return this.status == UserStatus.ACTIVE;
     }
+
+    // 관리자 계정 생성
+    public static User createAdmin(
+            String email,
+            String password
+    ) {
+        User user = new User();
+
+        user.email = email;
+        user.password = password;
+        user.role = UserRole.ADMIN;
+        user.status = UserStatus.ACTIVE;
+
+        return user;
+    }
 }
