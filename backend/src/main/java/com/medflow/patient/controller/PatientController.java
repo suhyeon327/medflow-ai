@@ -7,6 +7,7 @@ import com.medflow.patient.dto.PatientRequest;
 import com.medflow.patient.dto.PatientResponse;
 import com.medflow.patient.service.PatientService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -59,6 +60,7 @@ public class PatientController {
     }
 
     // 전체 환자 조회
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/")
     public ApiResponse<List<AdminPatientResponse>> getPatients() {
         return ApiResponse.success(
