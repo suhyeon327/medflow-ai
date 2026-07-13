@@ -175,6 +175,8 @@ public class AuthService {
         Patient patient = patientRepository.findByUserId(userId)
                 .orElseThrow(PatientNotFoundException::new);
 
+        user.withdraw();
+
         user.softDelete();
 
         patient.softDelete();
