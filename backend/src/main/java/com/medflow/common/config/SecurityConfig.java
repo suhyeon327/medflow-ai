@@ -36,8 +36,6 @@ public class SecurityConfig {
                                 "/",
                                 "/api/v1/auth/signup",
                                 "/api/v1/auth/login",
-                                "/api/v1/auth/reissue",
-                                "/api/v1/auth/logout",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()   // 누구나 접속 가능한 주소
