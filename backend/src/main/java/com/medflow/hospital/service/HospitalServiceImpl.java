@@ -21,6 +21,8 @@ public class HospitalServiceImpl implements HospitalService {
 
     private final HospitalRepository hospitalRepository;
 
+    // 관리자 기능
+
     // 병원 등록
     @Override
     public HospitalResponse createHospital(HospitalRequest request) {
@@ -73,5 +75,14 @@ public class HospitalServiceImpl implements HospitalService {
         );
 
         return AdminHospitalResponse.from(hospital);
+    }
+
+    // 사용자 기능
+    @Override
+    public List<HospitalResponse> getAvailableHospitals() {
+        return hospitalRepository.findAll()
+                .stream()
+                .map(HospitalResponse::from)
+                .toList();
     }
 }

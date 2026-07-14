@@ -1,6 +1,5 @@
 package com.medflow.hospital.service;
 
-import com.medflow.common.response.ApiResponse;
 import com.medflow.hospital.dto.AdminHospitalResponse;
 import com.medflow.hospital.dto.HospitalRequest;
 import com.medflow.hospital.dto.HospitalResponse;
@@ -19,4 +18,9 @@ public interface HospitalService {
 
     // 병원 정보 수정
     AdminHospitalResponse updateHospital(Long hospitalId, HospitalRequest request);
+
+    // 사용자 기능
+
+    // 병원 목록 조회
+    List<HospitalResponse> getAvailableHospitals();
 }
