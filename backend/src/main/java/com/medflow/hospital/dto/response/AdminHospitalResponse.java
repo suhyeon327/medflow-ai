@@ -1,6 +1,7 @@
-package com.medflow.hospital.dto;
+package com.medflow.hospital.dto.response;
 
 import com.medflow.hospital.entity.Hospital;
+import com.medflow.hospital.entity.HospitalStatus;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -14,6 +15,7 @@ public class AdminHospitalResponse {
     private String address;
     private String region;
     private String tel;
+    private HospitalStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;
@@ -26,6 +28,7 @@ public class AdminHospitalResponse {
                 .address(hospital.getAddress())
                 .region(hospital.getRegion())
                 .tel(hospital.getTel())
+                .status(hospital.getStatus())
                 .createdAt(hospital.getCreatedAt())
                 .updatedAt(hospital.getUpdatedAt())
                 .deletedAt(hospital.getDeletedAt())

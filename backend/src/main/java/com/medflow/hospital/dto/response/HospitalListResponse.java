@@ -1,4 +1,4 @@
-package com.medflow.hospital.dto;
+package com.medflow.hospital.dto.response;
 
 import com.medflow.hospital.entity.Hospital;
 import lombok.Builder;

@@ -1,12 +1,14 @@
-package com.medflow.hospital.dto;
+package com.medflow.hospital.dto.request;
 
+import com.medflow.hospital.entity.HospitalStatus;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class HospitalRequest {
+public class HospitalUpdateRequest {
 
     @NotBlank(message = "이름은 필수입니다.")
     private String name;
@@ -19,4 +21,7 @@ public class HospitalRequest {
 
     @NotBlank
     private String tel;
+
+    @NotNull
+    private HospitalStatus status;
 }

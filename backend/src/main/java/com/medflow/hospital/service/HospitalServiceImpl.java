@@ -3,11 +3,14 @@ package com.medflow.hospital.service;
 import com.medflow.common.exception.BusinessException;
 import com.medflow.common.exception.ErrorCode;
 import com.medflow.common.exception.HospitalAlreadyExistsException;
-import com.medflow.hospital.dto.AdminHospitalResponse;
-import com.medflow.hospital.dto.HospitalListResponse;
-import com.medflow.hospital.dto.HospitalRequest;
-import com.medflow.hospital.dto.HospitalDetailResponse;
+import com.medflow.hospital.dto.request.HospitalCreateRequest;
+import com.medflow.hospital.dto.request.HospitalUpdateRequest;
+import com.medflow.hospital.dto.response.AdminHospitalResponse;
+import com.medflow.hospital.dto.response.HospitalDetailResponse;
+import com.medflow.hospital.dto.response.HospitalListResponse;
+import com.medflow.hospital.dto.response.deleteResponse;
 import com.medflow.hospital.entity.Hospital;
+import com.medflow.hospital.entity.HospitalStatus;
 import com.medflow.hospital.repository.HospitalRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,7 +29,7 @@ public class HospitalServiceImpl implements HospitalService {
 
     // 병원 등록
     @Override
-    public HospitalDetailResponse createHospital(HospitalRequest request) {
+    public HospitalDetailResponse createHospital(HospitalCreateRequest request) {
 
         if (hospitalRepository.existsByName(request.getName())) {
             throw new HospitalAlreadyExistsException();
@@ -36,7 +39,8 @@ public class HospitalServiceImpl implements HospitalService {
                 request.getName(),
                 request.getAddress(),
                 request.getRegion(),
-                request.getTel()
+                request.getTel(),
+                HospitalStatus.ACTIVE
         );
 
         Hospital savedHospital = hospitalRepository.save(hospital);
@@ -59,7 +63,7 @@ public class HospitalServiceImpl implements HospitalService {
     @Override
     public AdminHospitalResponse updateHospital(
             Long hospitalId,
-            HospitalRequest request) {
+            HospitalUpdateRequest request) {
 
         Hospital hospital = hospitalRepository.findById(hospitalId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.HOSPITAL_NOT_FOUND));
@@ -72,11 +76,28 @@ public class HospitalServiceImpl implements HospitalService {
                 request.getName(),
                 request.getAddress(),
                 request.getRegion(),
-                request.getTel()
+                request.getTel(),
+                request.getStatus()
         );
 
         return AdminHospitalResponse.from(hospital);
     }
+
+    // 병원 삭제
+
+    @Override
+    public deleteResponse deleteHospital(Long hospitalId) {
+
+        Hospital hospital = hospitalRepository.findById(hospitalId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.HOSPITAL_NOT_FOUND));
+
+        hospital.delete();
+
+        hospital.softDelete();
+
+        return deleteResponse.from(hospital);
+    }
+
 
     // 사용자 기능
 

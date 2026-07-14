@@ -1,9 +1,11 @@
 package com.medflow.hospital.controller;
 
 import com.medflow.common.response.ApiResponse;
-import com.medflow.hospital.dto.AdminHospitalResponse;
-import com.medflow.hospital.dto.HospitalRequest;
-import com.medflow.hospital.dto.HospitalDetailResponse;
+import com.medflow.hospital.dto.response.AdminHospitalResponse;
+import com.medflow.hospital.dto.request.HospitalCreateRequest;
+import com.medflow.hospital.dto.response.HospitalDetailResponse;
+import com.medflow.hospital.dto.request.HospitalUpdateRequest;
+import com.medflow.hospital.dto.response.deleteResponse;
 import com.medflow.hospital.service.HospitalService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +25,7 @@ public class AdminHospitalController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/")
     public ApiResponse<HospitalDetailResponse> createHospital(
-            @Valid @RequestBody HospitalRequest request
+            @Valid @RequestBody HospitalCreateRequest request
             ) {
         return ApiResponse.success(
                 hospitalService.createHospital(request)
@@ -44,10 +46,21 @@ public class AdminHospitalController {
     @PutMapping("/{hospitalId}")
     public ApiResponse<AdminHospitalResponse> updateHospital(
             @PathVariable Long hospitalId,
-            @Valid @RequestBody HospitalRequest request
+            @Valid @RequestBody HospitalUpdateRequest request
     ) {
         return ApiResponse.success(
                 hospitalService.updateHospital(hospitalId, request)
+        );
+    }
+
+    // 병원 삭제
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{hospitalId}")
+    public ApiResponse<deleteResponse> deleteHospital(
+            @PathVariable Long hospitalId
+    ) {
+        return ApiResponse.success(
+                hospitalService.deleteHospital(hospitalId)
         );
     }
 }

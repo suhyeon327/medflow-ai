@@ -1,8 +1,8 @@
 package com.medflow.hospital.controller;
 
 import com.medflow.common.response.ApiResponse;
-import com.medflow.hospital.dto.HospitalDetailResponse;
-import com.medflow.hospital.dto.HospitalListResponse;
+import com.medflow.hospital.dto.response.HospitalDetailResponse;
+import com.medflow.hospital.dto.response.HospitalListResponse;
 import com.medflow.hospital.service.HospitalService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
