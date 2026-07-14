@@ -1,5 +1,7 @@
 package com.medflow.hospital.service;
 
+import com.medflow.common.exception.BusinessException;
+import com.medflow.common.exception.ErrorCode;
 import com.medflow.common.exception.HospitalAlreadyExistsException;
 import com.medflow.hospital.dto.AdminHospitalResponse;
 import com.medflow.hospital.dto.HospitalRequest;
@@ -39,6 +41,7 @@ public class HospitalServiceImpl implements HospitalService {
         return HospitalResponse.from(hospital);
     }
 
+    // 병원 관리 목록 조회
     @Override
     @Transactional(readOnly = true)
     public List<AdminHospitalResponse> getHospitals() {
@@ -47,5 +50,28 @@ public class HospitalServiceImpl implements HospitalService {
                 .stream()
                 .map(AdminHospitalResponse::from)
                 .toList();
+    }
+
+    // 병원 정보 수정
+    @Override
+    public AdminHospitalResponse updateHospital(
+            Long hospitalId,
+            HospitalRequest request) {
+
+        Hospital hospital = hospitalRepository.findById(hospitalId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.HOSPITAL_NOT_FOUND));
+
+        if (!hospital.getName().equals(request.getName()) && hospitalRepository.existsByName(request.getName())) {
+            throw new BusinessException(ErrorCode.HOSPITAL_ALREADY_EXISTS);
+        }
+
+        hospital.update(
+                request.getName(),
+                request.getAddress(),
+                request.getRegion(),
+                request.getTel()
+        );
+
+        return AdminHospitalResponse.from(hospital);
     }
 }

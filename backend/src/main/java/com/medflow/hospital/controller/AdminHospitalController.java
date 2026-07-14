@@ -38,4 +38,16 @@ public class AdminHospitalController {
                 hospitalService.getHospitals()
         );
     }
+
+    // 병원 정보 수정
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{hospitalId}")
+    public ApiResponse<AdminHospitalResponse> updateHospital(
+            @PathVariable Long hospitalId,
+            @Valid @RequestBody HospitalRequest request
+    ) {
+        return ApiResponse.success(
+                hospitalService.updateHospital(hospitalId, request)
+        );
+    }
 }
