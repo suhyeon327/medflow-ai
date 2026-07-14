@@ -23,4 +23,7 @@ public interface HospitalService {
 
     // 병원 목록 조회
     List<HospitalResponse> getAvailableHospitals();
+
+    // 병원 상세 정보 조회
+    HospitalResponse getDetailHospital(Long hospitalId);
 }

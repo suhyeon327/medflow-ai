@@ -78,11 +78,22 @@ public class HospitalServiceImpl implements HospitalService {
     }
 
     // 사용자 기능
+
+    // 사용자 병원 목록 조회
     @Override
     public List<HospitalResponse> getAvailableHospitals() {
         return hospitalRepository.findAll()
                 .stream()
                 .map(HospitalResponse::from)
                 .toList();
+    }
+
+    // 병원 상세 정보 조회
+    public HospitalResponse getDetailHospital(Long hospitalId) {
+
+        Hospital hospital = hospitalRepository.findById(hospitalId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.HOSPITAL_NOT_FOUND));
+
+        return HospitalResponse.from(hospital);
     }
 }
