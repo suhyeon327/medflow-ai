@@ -104,7 +104,7 @@ public class HospitalServiceImpl implements HospitalService {
     // 사용자 병원 목록 조회
     @Override
     public List<HospitalListResponse> getAvailableHospitals() {
-        return hospitalRepository.findAll()
+        return hospitalRepository.findAllByStatus(HospitalStatus.ACTIVE)
                 .stream()
                 .map(HospitalListResponse::from)
                 .toList();
