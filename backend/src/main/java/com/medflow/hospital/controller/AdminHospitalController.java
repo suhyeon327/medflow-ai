@@ -3,7 +3,7 @@ package com.medflow.hospital.controller;
 import com.medflow.common.response.ApiResponse;
 import com.medflow.hospital.dto.AdminHospitalResponse;
 import com.medflow.hospital.dto.HospitalRequest;
-import com.medflow.hospital.dto.HospitalResponse;
+import com.medflow.hospital.dto.HospitalDetailResponse;
 import com.medflow.hospital.service.HospitalService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ public class AdminHospitalController {
     // 병원 등록
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/")
-    public ApiResponse<HospitalResponse> createHospital(
+    public ApiResponse<HospitalDetailResponse> createHospital(
             @Valid @RequestBody HospitalRequest request
             ) {
         return ApiResponse.success(

@@ -1,10 +1,9 @@
 package com.medflow.hospital.controller;
 
 import com.medflow.common.response.ApiResponse;
-import com.medflow.hospital.dto.HospitalRequest;
-import com.medflow.hospital.dto.HospitalResponse;
+import com.medflow.hospital.dto.HospitalDetailResponse;
+import com.medflow.hospital.dto.HospitalListResponse;
 import com.medflow.hospital.service.HospitalService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +18,7 @@ public class HospitalController {
 
     // 병원 목록 조회
     @GetMapping("/")
-    public ApiResponse<List<HospitalResponse>> getHospitals() {
+    public ApiResponse<List<HospitalListResponse>> getHospitals() {
         return ApiResponse.success(
                 hospitalService.getAvailableHospitals()
         );
@@ -27,7 +26,7 @@ public class HospitalController {
 
     // 병원 상세 정보 조회
     @GetMapping("/{hospitalId}")
-    public ApiResponse<HospitalResponse> getDetailHospital(
+    public ApiResponse<HospitalDetailResponse> getDetailHospital(
             @PathVariable Long hospitalId
             ) {
         return ApiResponse.success(

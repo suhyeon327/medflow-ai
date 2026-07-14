@@ -6,16 +6,16 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class HospitalResponse {
+public class HospitalDetailResponse {
     private Long id;
     private String name;
     private String address;
     private String region;
     private String tel;
 
-    public static HospitalResponse from(Hospital hospital) {
+    public static HospitalDetailResponse from(Hospital hospital) {
 
-        return HospitalResponse.builder()
+        return HospitalDetailResponse.builder()
                 .id(hospital.getId())
                 .name(hospital.getName())
                 .address(hospital.getAddress())

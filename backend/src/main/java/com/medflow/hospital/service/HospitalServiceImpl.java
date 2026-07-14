@@ -4,8 +4,9 @@ import com.medflow.common.exception.BusinessException;
 import com.medflow.common.exception.ErrorCode;
 import com.medflow.common.exception.HospitalAlreadyExistsException;
 import com.medflow.hospital.dto.AdminHospitalResponse;
+import com.medflow.hospital.dto.HospitalListResponse;
 import com.medflow.hospital.dto.HospitalRequest;
-import com.medflow.hospital.dto.HospitalResponse;
+import com.medflow.hospital.dto.HospitalDetailResponse;
 import com.medflow.hospital.entity.Hospital;
 import com.medflow.hospital.repository.HospitalRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,7 @@ public class HospitalServiceImpl implements HospitalService {
 
     // 병원 등록
     @Override
-    public HospitalResponse createHospital(HospitalRequest request) {
+    public HospitalDetailResponse createHospital(HospitalRequest request) {
 
         if (hospitalRepository.existsByName(request.getName())) {
             throw new HospitalAlreadyExistsException();
@@ -40,7 +41,7 @@ public class HospitalServiceImpl implements HospitalService {
 
         Hospital savedHospital = hospitalRepository.save(hospital);
 
-        return HospitalResponse.from(hospital);
+        return HospitalDetailResponse.from(hospital);
     }
 
     // 병원 관리 목록 조회
@@ -81,19 +82,19 @@ public class HospitalServiceImpl implements HospitalService {
 
     // 사용자 병원 목록 조회
     @Override
-    public List<HospitalResponse> getAvailableHospitals() {
+    public List<HospitalListResponse> getAvailableHospitals() {
         return hospitalRepository.findAll()
                 .stream()
-                .map(HospitalResponse::from)
+                .map(HospitalListResponse::from)
                 .toList();
     }
 
     // 병원 상세 정보 조회
-    public HospitalResponse getDetailHospital(Long hospitalId) {
+    public HospitalDetailResponse getDetailHospital(Long hospitalId) {
 
         Hospital hospital = hospitalRepository.findById(hospitalId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.HOSPITAL_NOT_FOUND));
 
-        return HospitalResponse.from(hospital);
+        return HospitalDetailResponse.from(hospital);
     }
 }
