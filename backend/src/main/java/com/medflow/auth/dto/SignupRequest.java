@@ -20,4 +20,7 @@ public class SignupRequest {
     @NotBlank(message = "비밀번호는 8~20자입니다.")
     @Size(min = 8, max = 20)
     private String password;
+
+    @NotNull(message = "회원 유형을 선택해주세요.")
+    private UserRole role;
 }

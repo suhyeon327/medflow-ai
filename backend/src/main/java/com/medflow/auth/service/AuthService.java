@@ -4,10 +4,7 @@ import com.medflow.auth.dto.*;
 import com.medflow.auth.jwt.JwtGenerator;
 import com.medflow.auth.jwt.JwtProvider;
 import com.medflow.auth.security.CustomUserDetails;
-import com.medflow.common.exception.EmailAlreadyExistsException;
-import com.medflow.common.exception.InvalidCredentialsException;
-import com.medflow.common.exception.PatientNotFoundException;
-import com.medflow.common.exception.UserNotFoundException;
+import com.medflow.common.exception.*;
 import com.medflow.patient.entity.Patient;
 import com.medflow.patient.repository.PatientRepository;
 import com.medflow.token.entity.RefreshToken;
@@ -43,6 +40,11 @@ public class AuthService {
 
     // 회원가입
     public SignupResponse signup(SignupRequest request) {
+
+        // PATIENT, DOCTOR만 회원가입 허용
+        if (request.getRole() == UserRole.ADMIN) {
+            throw new BusinessException(ErrorCode.INVALID_SIGNUP_ROLE);
+        }
 
         // 이메일 중복 여부
         if (userRepository.existsByEmail(request.getEmail())) {
