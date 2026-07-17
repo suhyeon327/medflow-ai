@@ -1,0 +1,28 @@
+package com.medflow.doctor.controller;
+
+import com.medflow.common.response.ApiResponse;
+import com.medflow.doctor.dto.response.PendingDoctorResponse;
+import com.medflow.doctor.service.DoctorAdminService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/admin/doctors")
+public class DoctorAdminController {
+
+    private final DoctorAdminService doctorAdminService;
+
+    // 승인 대기 의사 목록 조회
+    @GetMapping("/pending")
+    public ApiResponse<List<PendingDoctorResponse>> getPendingDoctors() {
+
+        return ApiResponse.success(
+                doctorAdminService.getPendingDoctors()
+        );
+    }
+}
