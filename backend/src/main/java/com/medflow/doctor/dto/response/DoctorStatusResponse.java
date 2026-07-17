@@ -1,12 +1,13 @@
 package com.medflow.doctor.dto.response;
 
 import com.medflow.doctor.entity.Doctor;
+import com.medflow.doctor.entity.DoctorStatus;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder
-public class PendingDoctorResponse {
+public class DoctorStatusResponse {
 
     private Long doctorId;
 
@@ -16,13 +17,17 @@ public class PendingDoctorResponse {
 
     private String licenseNumber;
 
-    public static PendingDoctorResponse from(Doctor doctor) {
+    private DoctorStatus status;
 
-        return PendingDoctorResponse.builder()
+
+    public static DoctorStatusResponse from(Doctor doctor) {
+
+        return DoctorStatusResponse.builder()
                 .doctorId(doctor.getId())
                 .doctorName(doctor.getName())
                 .hospitalName(doctor.getHospital().getName())
                 .licenseNumber(doctor.getLicenseNumber())
+                .status(doctor.getStatus())
                 .build();
     }
 }

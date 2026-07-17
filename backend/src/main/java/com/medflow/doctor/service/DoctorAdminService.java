@@ -5,7 +5,7 @@ import com.medflow.common.exception.ErrorCode;
 import com.medflow.doctor.dto.response.DoctorApproveResponse;
 import com.medflow.doctor.dto.response.DoctorDetailResponse;
 import com.medflow.doctor.dto.response.DoctorRejectResponse;
-import com.medflow.doctor.dto.response.PendingDoctorResponse;
+import com.medflow.doctor.dto.response.DoctorStatusResponse;
 import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorStatus;
 import com.medflow.doctor.repository.DoctorRepository;
@@ -24,13 +24,14 @@ public class DoctorAdminService {
 
     private final DoctorRepository doctorRepository;
 
-    // 승인 대기 의사 목록 조회
+    // 의사 상태 조회
     @Transactional(readOnly = true)
-    public List<PendingDoctorResponse> getPendingDoctors() {
-
-        return doctorRepository.findAllByStatus(DoctorStatus.PENDING)
+    public List<DoctorStatusResponse> getDoctorsByStatus(
+            DoctorStatus status
+    ) {
+        return doctorRepository.findAllByStatus(status)
                 .stream()
-                .map(PendingDoctorResponse::from)
+                .map(DoctorStatusResponse::from)
                 .toList();
     }
 

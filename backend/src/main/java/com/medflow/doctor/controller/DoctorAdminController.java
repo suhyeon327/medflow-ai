@@ -4,7 +4,8 @@ import com.medflow.common.response.ApiResponse;
 import com.medflow.doctor.dto.response.DoctorApproveResponse;
 import com.medflow.doctor.dto.response.DoctorDetailResponse;
 import com.medflow.doctor.dto.response.DoctorRejectResponse;
-import com.medflow.doctor.dto.response.PendingDoctorResponse;
+import com.medflow.doctor.dto.response.DoctorStatusResponse;
+import com.medflow.doctor.entity.DoctorStatus;
 import com.medflow.doctor.service.DoctorAdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,13 +21,15 @@ public class DoctorAdminController {
 
     private final DoctorAdminService doctorAdminService;
 
-    // 승인 대기 의사 목록 조회
-    @GetMapping("/pending")
-    public ApiResponse<List<PendingDoctorResponse>> getPendingDoctors() {
-
+    // 의사 상태 조회
+    @GetMapping("/")
+    public ApiResponse<List<DoctorStatusResponse>> getDoctorsByStatus(
+            @RequestParam DoctorStatus status
+    ) {
         return ApiResponse.success(
-                doctorAdminService.getPendingDoctors()
+                doctorAdminService.getDoctorsByStatus(status)
         );
+
     }
 
     // 의사 인증 신청 상세 조회

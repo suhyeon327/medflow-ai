@@ -105,8 +105,4 @@ public class Doctor extends BaseEntity {
 
         this.status = DoctorStatus.REJECTED;
     }
-
-    public void deactivate() {
-        this.status = DoctorStatus.INACTIVE;
-    }
 }
