@@ -1,15 +1,13 @@
 package com.medflow.doctor.controller;
 
 import com.medflow.common.response.ApiResponse;
+import com.medflow.doctor.dto.response.DoctorApproveResponse;
 import com.medflow.doctor.dto.response.DoctorDetailResponse;
 import com.medflow.doctor.dto.response.PendingDoctorResponse;
 import com.medflow.doctor.service.DoctorAdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -37,6 +35,16 @@ public class DoctorAdminController {
     ) {
         return ApiResponse.success(
                 doctorAdminService.getDoctorDetail(doctorId)
+        );
+    }
+
+    // 의사 승인
+    @PatchMapping("/{doctorId}/approve")
+    public ApiResponse<DoctorApproveResponse> approveDoctor(
+            @PathVariable Long doctorId
+    ) {
+        return ApiResponse.success(
+                doctorAdminService.approveDoctor(doctorId)
         );
     }
 }
