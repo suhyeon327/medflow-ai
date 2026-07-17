@@ -24,7 +24,11 @@ public enum ErrorCode {
 
     // Hospital
     HOSPITAL_ALREADY_EXISTS(HttpStatus.CONFLICT, "HOSPITAL_001", "이미 존재하는 병원입니다."),
-    HOSPITAL_NOT_FOUND(HttpStatus.CONFLICT, "HOSPITAL_002", "병원을 찾을 수 없습니다.");
+    HOSPITAL_NOT_FOUND(HttpStatus.CONFLICT, "HOSPITAL_002", "병원을 찾을 수 없습니다."),
+
+    // Doctor
+    DOCTOR_ALREADY_EXISTS(HttpStatus.CONFLICT, "DOCTOR_001", "이미 의사 인증을 신청했거나 등록된 면허번호입니다.");
+    
 
     private final HttpStatus status;
     private final String code;
