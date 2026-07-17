@@ -5,6 +5,7 @@ import com.medflow.common.exception.ErrorCode;
 import com.medflow.doctor.dto.request.DoctorApplyRequest;
 import com.medflow.doctor.dto.request.DoctorUpdateRequest;
 import com.medflow.doctor.dto.response.DoctorApplyResponse;
+import com.medflow.doctor.dto.response.DoctorDeleteResponse;
 import com.medflow.doctor.dto.response.DoctorInfoResponse;
 import com.medflow.doctor.dto.response.DoctorUpdateResponse;
 import com.medflow.doctor.entity.Doctor;
@@ -88,5 +89,18 @@ public class DoctorService {
         );
 
         return DoctorUpdateResponse.from(doctor);
+    }
+
+    // 의사 인증 신청 취소
+    public DoctorDeleteResponse cancel(Long userId) {
+
+        Doctor doctor = doctorRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
+
+        doctor.cancel();
+
+        doctorRepository.delete(doctor);
+
+        return DoctorDeleteResponse.from(doctor);
     }
 }

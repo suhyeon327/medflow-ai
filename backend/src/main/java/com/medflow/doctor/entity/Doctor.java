@@ -80,6 +80,14 @@ public class Doctor extends BaseEntity {
         this.licenseNumber = licenseNumber;
     }
 
+    // 의사 인증 취소 가능 여부
+    public void cancel() {
+
+        if (this.status != DoctorStatus.PENDING) {
+            throw new BusinessException(ErrorCode.INVALID_DOCTOR_STATUS);
+        }
+    }
+
     public void approve() {
 
         if (status != DoctorStatus.PENDING) {

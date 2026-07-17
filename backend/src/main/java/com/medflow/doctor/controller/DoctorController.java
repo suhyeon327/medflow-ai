@@ -5,6 +5,7 @@ import com.medflow.common.response.ApiResponse;
 import com.medflow.doctor.dto.request.DoctorApplyRequest;
 import com.medflow.doctor.dto.request.DoctorUpdateRequest;
 import com.medflow.doctor.dto.response.DoctorApplyResponse;
+import com.medflow.doctor.dto.response.DoctorDeleteResponse;
 import com.medflow.doctor.dto.response.DoctorInfoResponse;
 import com.medflow.doctor.dto.response.DoctorUpdateResponse;
 import com.medflow.doctor.service.DoctorService;
@@ -12,8 +13,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.nio.file.attribute.UserPrincipal;
 
 @RestController
 @RequiredArgsConstructor
@@ -52,5 +51,14 @@ public class DoctorController {
         return ApiResponse.success(
                 doctorService.update(userDetails.getUserId(), request)
         );
+    }
+
+    // 의사 인증 신청 취소
+    @DeleteMapping("/profile")
+    public ApiResponse<DoctorDeleteResponse> cancel(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ApiResponse.success(
+                doctorService.cancel(userDetails.getUserId()));
     }
 }
