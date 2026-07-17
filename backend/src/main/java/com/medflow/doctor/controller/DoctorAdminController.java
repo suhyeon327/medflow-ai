@@ -4,6 +4,7 @@ import com.medflow.common.response.ApiResponse;
 import com.medflow.doctor.dto.response.PendingDoctorResponse;
 import com.medflow.doctor.service.DoctorAdminService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,6 +14,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/admin/doctors")
+@PreAuthorize("hasRole('ADMIN')")
 public class DoctorAdminController {
 
     private final DoctorAdminService doctorAdminService;
