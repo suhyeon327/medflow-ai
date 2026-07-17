@@ -1,6 +1,10 @@
 package com.medflow.doctor.service;
 
+import com.medflow.common.exception.BusinessException;
+import com.medflow.common.exception.ErrorCode;
+import com.medflow.doctor.dto.response.DoctorDetailResponse;
 import com.medflow.doctor.dto.response.PendingDoctorResponse;
+import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorStatus;
 import com.medflow.doctor.repository.DoctorRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,5 +29,15 @@ public class DoctorAdminService {
                 .stream()
                 .map(PendingDoctorResponse::from)
                 .toList();
+    }
+
+    // 의사 인증 신청 상세 조회
+    public DoctorDetailResponse getDoctorDetail(Long doctorId) {
+
+        Doctor doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
+
+
+        return DoctorDetailResponse.from(doctor);
     }
 }
