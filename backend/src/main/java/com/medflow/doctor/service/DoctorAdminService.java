@@ -4,6 +4,7 @@ import com.medflow.common.exception.BusinessException;
 import com.medflow.common.exception.ErrorCode;
 import com.medflow.doctor.dto.response.DoctorApproveResponse;
 import com.medflow.doctor.dto.response.DoctorDetailResponse;
+import com.medflow.doctor.dto.response.DoctorRejectResponse;
 import com.medflow.doctor.dto.response.PendingDoctorResponse;
 import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorStatus;
@@ -53,5 +54,16 @@ public class DoctorAdminService {
         doctor.approve();
 
         return DoctorApproveResponse.from(doctor);
+    }
+
+    // 의사 반려
+    public DoctorRejectResponse rejectDoctor(Long doctorId) {
+
+        Doctor doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
+
+        doctor.reject();
+
+        return DoctorRejectResponse.from(doctor);
     }
 }

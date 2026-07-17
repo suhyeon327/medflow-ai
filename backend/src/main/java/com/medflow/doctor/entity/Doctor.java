@@ -98,6 +98,11 @@ public class Doctor extends BaseEntity {
     }
 
     public void reject() {
+
+        if (status != DoctorStatus.PENDING) {
+            throw new BusinessException(ErrorCode.INVALID_DOCTOR_STATUS);
+        }
+
         this.status = DoctorStatus.REJECTED;
     }
 

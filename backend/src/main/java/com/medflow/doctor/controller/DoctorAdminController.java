@@ -3,6 +3,7 @@ package com.medflow.doctor.controller;
 import com.medflow.common.response.ApiResponse;
 import com.medflow.doctor.dto.response.DoctorApproveResponse;
 import com.medflow.doctor.dto.response.DoctorDetailResponse;
+import com.medflow.doctor.dto.response.DoctorRejectResponse;
 import com.medflow.doctor.dto.response.PendingDoctorResponse;
 import com.medflow.doctor.service.DoctorAdminService;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,16 @@ public class DoctorAdminController {
     ) {
         return ApiResponse.success(
                 doctorAdminService.approveDoctor(doctorId)
+        );
+    }
+
+    // 의사 반려
+    @PatchMapping("/{doctorId}/reject")
+    public ApiResponse<DoctorRejectResponse> rejectDoctor(
+            @PathVariable Long doctorId
+    ) {
+        return ApiResponse.success(
+                doctorAdminService.rejectDoctor(doctorId)
         );
     }
 }
