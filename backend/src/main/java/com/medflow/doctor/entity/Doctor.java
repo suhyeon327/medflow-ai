@@ -1,6 +1,8 @@
 package com.medflow.doctor.entity;
 
 import com.medflow.common.entity.BaseEntity;
+import com.medflow.common.exception.BusinessException;
+import com.medflow.common.exception.ErrorCode;
 import com.medflow.hospital.entity.Hospital;
 import com.medflow.user.entity.User;
 import jakarta.persistence.*;
@@ -64,6 +66,18 @@ public class Doctor extends BaseEntity {
     ) {
 //        return new Doctor(user, hospital, department, name, licenseNumber);
         return new Doctor(user, hospital, name, licenseNumber);
+    }
+
+    // 의사 정보 수정
+    public void update(Hospital hospital, String name, String licenseNumber) {
+
+        if (this.status != DoctorStatus.PENDING) {
+            throw new BusinessException(ErrorCode.INVALID_DOCTOR_STATUS);
+        }
+
+        this.hospital = hospital;
+        this.name = name;
+        this.licenseNumber = licenseNumber;
     }
 
     public void approve() {

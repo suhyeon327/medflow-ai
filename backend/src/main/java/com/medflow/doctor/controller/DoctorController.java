@@ -3,8 +3,10 @@ package com.medflow.doctor.controller;
 import com.medflow.auth.security.CustomUserDetails;
 import com.medflow.common.response.ApiResponse;
 import com.medflow.doctor.dto.request.DoctorApplyRequest;
+import com.medflow.doctor.dto.request.DoctorUpdateRequest;
 import com.medflow.doctor.dto.response.DoctorApplyResponse;
 import com.medflow.doctor.dto.response.DoctorInfoResponse;
+import com.medflow.doctor.dto.response.DoctorUpdateResponse;
 import com.medflow.doctor.service.DoctorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +40,17 @@ public class DoctorController {
 
         return ApiResponse.success(
                 doctorService.getMyDoctorInfo(userDetails.getUserId())
+        );
+    }
+
+    // 의사 정보 수정
+    @PatchMapping("/profile")
+    public ApiResponse<DoctorUpdateResponse> update(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody DoctorUpdateRequest request
+    ) {
+        return ApiResponse.success(
+                doctorService.update(userDetails.getUserId(), request)
         );
     }
 }

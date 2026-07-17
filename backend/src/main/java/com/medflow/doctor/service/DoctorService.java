@@ -3,8 +3,10 @@ package com.medflow.doctor.service;
 import com.medflow.common.exception.BusinessException;
 import com.medflow.common.exception.ErrorCode;
 import com.medflow.doctor.dto.request.DoctorApplyRequest;
+import com.medflow.doctor.dto.request.DoctorUpdateRequest;
 import com.medflow.doctor.dto.response.DoctorApplyResponse;
 import com.medflow.doctor.dto.response.DoctorInfoResponse;
+import com.medflow.doctor.dto.response.DoctorUpdateResponse;
 import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.repository.DoctorRepository;
 import com.medflow.hospital.entity.Hospital;
@@ -63,5 +65,28 @@ public class DoctorService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
 
         return DoctorInfoResponse.from(doctor);
+    }
+
+    // 의사 정보 수정
+    public DoctorUpdateResponse update(Long userId, DoctorUpdateRequest request) {
+
+        Doctor doctor = doctorRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
+
+        Hospital hospital = hospitalRepository.findById(request.getHospitalId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.HOSPITAL_NOT_FOUND));
+
+        if (!doctor.getLicenseNumber().equals(request.getLicenseNumber())
+                && doctorRepository.existsByLicenseNumber(request.getLicenseNumber())) {
+            throw new BusinessException(ErrorCode.LICENSE_NUMBER_ALREADY_EXISTS);
+        }
+
+        doctor.update(
+                hospital,
+                request.getName(),
+                request.getLicenseNumber()
+        );
+
+        return DoctorUpdateResponse.from(doctor);
     }
 }
