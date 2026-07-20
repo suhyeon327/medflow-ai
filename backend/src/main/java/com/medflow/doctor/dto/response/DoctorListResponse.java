@@ -7,8 +7,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class DoctorStatusResponse {
-
+public class DoctorListResponse {
     private Long doctorId;
 
     private String doctorName;
@@ -20,9 +19,9 @@ public class DoctorStatusResponse {
     private DoctorStatus status;
 
 
-    public static DoctorStatusResponse from(Doctor doctor) {
+    public static DoctorListResponse from(Doctor doctor) {
 
-        return DoctorStatusResponse.builder()
+        return DoctorListResponse.builder()
                 .doctorId(doctor.getId())
                 .doctorName(doctor.getName())
                 .hospitalName(doctor.getHospital().getName())
