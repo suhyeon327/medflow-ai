@@ -30,8 +30,13 @@ public enum ErrorCode {
     DOCTOR_ALREADY_EXISTS(HttpStatus.CONFLICT, "DOCTOR_001", "이미 의사 인증을 신청했거나 등록된 면허번호입니다."),
     DOCTOR_NOT_FOUND(HttpStatus.NOT_FOUND, "DOCTOR_002", "의사 정보를 찾을 수 없습니다."),
     INVALID_DOCTOR_STATUS(HttpStatus.BAD_REQUEST, "DOCTOR_003", "현재 상태에서는 요청을 처리할 수 없습니다."),
-    LICENSE_NUMBER_ALREADY_EXISTS(HttpStatus.CONFLICT, "DOCTOR_004", "이미 등록된 면허번호입니다.");
-    
+    LICENSE_NUMBER_ALREADY_EXISTS(HttpStatus.CONFLICT, "DOCTOR_004", "이미 등록된 면허번호입니다."),
+
+    // Reservation
+    SCHEDULE_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "RESERVATION_001", "예약할 수 없는 시간입니다."),
+    COMPLETED_RESERVATION(HttpStatus.BAD_REQUEST, "RESERVATION_002", "진료가 완료된 예약은 취소할 수 없습니다."),
+    INVALID_STATUS_CHANGE(HttpStatus.CONFLICT, "RESERVATION_003", "취소된 예약은 상태 변경 불가합니다.");
+
 
     private final HttpStatus status;
     private final String code;
