@@ -3,13 +3,12 @@ package com.medflow.reservation.entity;
 import com.medflow.common.entity.BaseEntity;
 import com.medflow.common.exception.BusinessException;
 import com.medflow.common.exception.ErrorCode;
-import com.medflow.doctor.entity.DoctorScheduleStatus;
+import com.medflow.doctor.entity.DoctorSchedule;
 import com.medflow.patient.entity.Patient;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
 
 @Entity
 @Table(name = "reservations")
@@ -21,15 +20,13 @@ public class Reservation extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = false)
     private Patient patient;
 
-
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doctor_schedule_id", nullable = false)
-    private DoctorScheduleStatus doctorSchedule;
+    private DoctorSchedule doctorSchedule;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -37,7 +34,7 @@ public class Reservation extends BaseEntity {
 
     private Reservation(
             Patient patient,
-            DoctorScheduleStatus doctorSchedule
+            DoctorSchedule doctorSchedule
     ){
         this.patient = patient;
         this.doctorSchedule = doctorSchedule;
@@ -47,7 +44,7 @@ public class Reservation extends BaseEntity {
     // 예약 생성
     public static Reservation create(
             Patient patient,
-            DoctorScheduleStatus doctorSchedule
+            DoctorSchedule doctorSchedule
     ){
         return new Reservation(
                 patient,

@@ -56,7 +56,7 @@ public class AuthService {
         User user = User.create(
                 request.getEmail(),
                 passwordEncoder.encode(request.getPassword()),
-                UserRole.PATIENT
+                request.getRole()
         );
 
         // 데이터베이스 저장

@@ -34,6 +34,24 @@ public class DoctorSchedule {
     @Enumerated(EnumType.STRING)
     private DoctorScheduleStatus status;   // 예약 상태
 
+    // 진료 스케줄 등록
+    public static DoctorSchedule create(
+            Doctor doctor,
+            LocalDate date,
+            LocalTime startTime,
+            LocalTime endTime
+    ) {
+        DoctorSchedule doctorSchedule = new DoctorSchedule();
+
+        doctorSchedule.doctor = doctor;
+        doctorSchedule.date = date;
+        doctorSchedule.startTime = startTime;
+        doctorSchedule.endTime = endTime;
+        doctorSchedule.status = DoctorScheduleStatus.AVAILABLE;
+
+        return doctorSchedule;
+    }
+
     // 예약 처리
     public void reserve() {
 
