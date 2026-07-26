@@ -11,6 +11,7 @@ import com.medflow.doctor.dto.response.DoctorUpdateResponse;
 import com.medflow.doctor.service.DoctorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +22,7 @@ public class DoctorController {
 
     private final DoctorService doctorService;
 
+    @PreAuthorize("hasRole('DOCTOR')")
     @PostMapping("/apply")
     public ApiResponse<DoctorApplyResponse> apply(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -43,6 +45,7 @@ public class DoctorController {
     }
 
     // 의사 정보 수정
+    @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN')")
     @PatchMapping("/profile")
     public ApiResponse<DoctorUpdateResponse> update(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -54,6 +57,7 @@ public class DoctorController {
     }
 
     // 의사 인증 신청 취소
+    @PreAuthorize("hasRole('DOCTOR')")
     @DeleteMapping("/profile")
     public ApiResponse<DoctorDeleteResponse> cancel(
             @AuthenticationPrincipal CustomUserDetails userDetails

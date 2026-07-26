@@ -25,7 +25,7 @@ public class DoctorScheduleService {
     private final DoctorRepository doctorRepository;
     private final DoctorScheduleRepository doctorScheduleRepository;
 
-    // 의사 스케줄 등록
+    // 의사 진료 스케줄 등록
     public List<DoctorScheduleResponse> createSchedule(
             Long userId,
             DoctorScheduleCreateRequest request
@@ -65,7 +65,7 @@ public class DoctorScheduleService {
         return responses;
     }
 
-    // 예약 가능한 시간 조회
+    // 예약 가능 시간 조회
     @Transactional(readOnly = true)
     public List<DoctorScheduleResponse> getAvailableSchedules(Long doctorId) {
 
