@@ -7,6 +7,7 @@ import com.medflow.doctor.dto.response.DoctorScheduleResponse;
 import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorSchedule;
 import com.medflow.doctor.entity.DoctorScheduleStatus;
+import com.medflow.doctor.entity.DoctorStatus;
 import com.medflow.doctor.repository.DoctorRepository;
 import com.medflow.doctor.repository.DoctorScheduleRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,10 @@ public class DoctorScheduleService {
     ) {
         Doctor doctor = doctorRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
+
+        if(doctor.getStatus() != DoctorStatus.ACTIVE){
+            throw new BusinessException(ErrorCode.DOCTOR_NOT_APPROVED);
+        }
 
         List<DoctorScheduleResponse> responses = new ArrayList<>();
 

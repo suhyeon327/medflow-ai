@@ -31,6 +31,7 @@ public enum ErrorCode {
     DOCTOR_NOT_FOUND(HttpStatus.NOT_FOUND, "DOCTOR_002", "의사 정보를 찾을 수 없습니다."),
     INVALID_DOCTOR_STATUS(HttpStatus.BAD_REQUEST, "DOCTOR_003", "현재 상태에서는 요청을 처리할 수 없습니다."),
     LICENSE_NUMBER_ALREADY_EXISTS(HttpStatus.CONFLICT, "DOCTOR_004", "이미 등록된 면허번호입니다."),
+    DOCTOR_NOT_APPROVED(HttpStatus.FORBIDDEN, "DOCTOR_005", "승인되지 않은 의사는 해당 기능을 사용할 수 없습니다."),
 
     // Reservation
     SCHEDULE_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "RESERVATION_001", "예약할 수 없는 시간입니다."),
