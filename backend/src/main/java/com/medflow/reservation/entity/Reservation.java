@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "reservations")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Reservation extends BaseEntity {
+public class  Reservation extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -53,10 +53,14 @@ public class Reservation extends BaseEntity {
     }
 
     // 예약 취소
-    public void cancel(){
+    public void cancel() {
 
-        if(status == ReservationStatus.COMPLETED){
+        if (status == ReservationStatus.COMPLETED) {
             throw new BusinessException(ErrorCode.COMPLETED_RESERVATION);
+        }
+
+        if (status == ReservationStatus.CANCELLED) {
+            throw new BusinessException(ErrorCode.RESERVATION_ALREADY_CANCELLED);
         }
 
         this.status = ReservationStatus.CANCELLED;

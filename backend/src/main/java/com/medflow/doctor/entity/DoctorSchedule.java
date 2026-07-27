@@ -62,7 +62,7 @@ public class DoctorSchedule {
         this.status = DoctorScheduleStatus.RESERVED;
     }
 
-    // 예약 취소 후 시간 복구
+    // 예약 취소 후 복구
     public void release() {
 
         this.status = DoctorScheduleStatus.AVAILABLE;

@@ -2,19 +2,22 @@ package com.medflow.reservation.service;
 
 import com.medflow.common.exception.BusinessException;
 import com.medflow.common.exception.ErrorCode;
-import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorSchedule;
 import com.medflow.doctor.entity.DoctorScheduleStatus;
 import com.medflow.doctor.repository.DoctorScheduleRepository;
 import com.medflow.patient.entity.Patient;
 import com.medflow.patient.repository.PatientRepository;
 import com.medflow.reservation.dto.request.ReservationCreateRequest;
+import com.medflow.reservation.dto.response.PatientReservationResponse;
+import com.medflow.reservation.dto.response.ReservationCancelResponse;
 import com.medflow.reservation.dto.response.ReservationCreateResponse;
 import com.medflow.reservation.entity.Reservation;
 import com.medflow.reservation.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +50,36 @@ public class ReservationService {
         reservationRepository.save(reservation);
 
         return ReservationCreateResponse.from(reservation);
+    }
 
+    // 환자 예약 내역 조회
+    @Transactional(readOnly = true)
+    public List<PatientReservationResponse> getPatientReservations(
+            Long userId
+    ) {
+        Patient patient = patientRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PATIENT_NOT_FOUND));
+
+        return reservationRepository
+                .findByPatientId(patient.getId())
+                .stream()
+                .map(PatientReservationResponse::from)
+                .toList();
+    }
+
+    // 환자 예약 취소
+    public ReservationCancelResponse cancelReservation(Long userId, Long reservationId) {
+
+        Patient patient = patientRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PATIENT_NOT_FOUND));
+
+        Reservation reservation = reservationRepository
+                .findByIdAndPatientId(reservationId, patient.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        reservation.cancel();
+        reservation.getDoctorSchedule().release();
+
+        return ReservationCancelResponse.from(reservation);
     }
 }
