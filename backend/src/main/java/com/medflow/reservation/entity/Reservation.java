@@ -24,7 +24,7 @@ public class  Reservation extends BaseEntity {
     @JoinColumn(name = "patient_id", nullable = false)
     private Patient patient;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "doctor_schedule_id", nullable = false)
     private DoctorSchedule doctorSchedule;
 
@@ -38,7 +38,7 @@ public class  Reservation extends BaseEntity {
     ){
         this.patient = patient;
         this.doctorSchedule = doctorSchedule;
-        this.status = ReservationStatus.CONFIRMED;
+        this.status = ReservationStatus.REQUESTED;
     }
 
     // 예약 생성
@@ -66,19 +66,23 @@ public class  Reservation extends BaseEntity {
         this.status = ReservationStatus.CANCELLED;
     }
 
-    // 진료 상태 변경
-    public void changeStatus(ReservationStatus status) {
+    // 예약 승인
+    public void approve() {
 
-        validateChange(status);
-
-        this.status = status;
-    }
-
-
-    private void validateChange(ReservationStatus nextStatus) {
-
-        if (this.status == ReservationStatus.CANCELLED){
+        if (this.status != ReservationStatus.REQUESTED) {
             throw new BusinessException(ErrorCode.INVALID_STATUS_CHANGE);
         }
+
+        this.status = ReservationStatus.CONFIRMED;
+    }
+
+    // 예약 거절
+    public void reject() {
+
+        if (this.status != ReservationStatus.REQUESTED) {
+            throw new BusinessException(ErrorCode.INVALID_STATUS_CHANGE);
+        }
+
+        this.status = ReservationStatus.CANCELLED;
     }
 }

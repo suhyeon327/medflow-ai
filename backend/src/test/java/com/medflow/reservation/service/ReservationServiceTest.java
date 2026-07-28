@@ -5,14 +5,13 @@ import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorSchedule;
 import com.medflow.doctor.entity.DoctorScheduleStatus;
 import com.medflow.doctor.repository.DoctorScheduleRepository;
+import com.medflow.doctor.repository.DoctorRepository;
 import com.medflow.hospital.entity.Hospital;
 import com.medflow.patient.entity.Gender;
 import com.medflow.patient.entity.Patient;
 import com.medflow.patient.repository.PatientRepository;
 import com.medflow.reservation.dto.request.ReservationCreateRequest;
-import com.medflow.reservation.dto.response.PatientReservationResponse;
-import com.medflow.reservation.dto.response.ReservationCancelResponse;
-import com.medflow.reservation.dto.response.ReservationCreateResponse;
+import com.medflow.reservation.dto.response.*;
 import com.medflow.reservation.entity.ReservationStatus;
 import com.medflow.reservation.entity.Reservation;
 import com.medflow.reservation.repository.ReservationRepository;
@@ -51,8 +50,14 @@ class ReservationServiceTest {
     @Mock
     private PatientRepository patientRepository;
 
+    @Mock
+    private DoctorRepository doctorRepository;
+
     @InjectMocks
     private ReservationService reservationService;
+
+    @InjectMocks
+    private DoctorReservationService doctorReservationService;
 
     // ----- 예약 생성 기능 ------
     // 예약 성공 테스트
@@ -86,7 +91,7 @@ class ReservationServiceTest {
 
         // then - 검증
         assertThat(response.status())
-                .isEqualTo(ReservationStatus.CONFIRMED);
+                .isEqualTo(ReservationStatus.REQUESTED);
 
         assertThat(schedule.getStatus())
                 .isEqualTo(DoctorScheduleStatus.RESERVED);
@@ -203,17 +208,6 @@ class ReservationServiceTest {
 
         Doctor doctor = mock(Doctor.class);
 
-        Hospital hospital = mock(Hospital.class);
-
-        when(doctor.getHospital())
-                .thenReturn(hospital);
-
-        when(hospital.getName())
-                .thenReturn("테스트 병원");
-
-        when(doctor.getName())
-                .thenReturn("테스트 의사");
-
         DoctorSchedule schedule = DoctorSchedule.create(
                 doctor,
                 LocalDate.of(2026, 7, 28),
@@ -253,6 +247,12 @@ class ReservationServiceTest {
         Patient patient = createPatient(patientId);
 
         Reservation reservation = createReservation(patient);
+        Doctor doctor = reservation.getDoctorSchedule().getDoctor();
+        Hospital hospital = mock(Hospital.class);
+
+        when(doctor.getHospital()).thenReturn(hospital);
+        when(hospital.getName()).thenReturn("Test Hospital");
+        when(doctor.getName()).thenReturn("Test Doctor");
 
         when(patientRepository.findByUserId(userId))
                 .thenReturn(Optional.of(patient));
@@ -422,7 +422,7 @@ class ReservationServiceTest {
         DoctorSchedule schedule = createAvailableSchedule(10L);
 
         Reservation reservation = createReservation(patient, schedule, reservationId);
-        reservation.changeStatus(ReservationStatus.COMPLETED);
+        ReflectionTestUtils.setField(reservation, "status", ReservationStatus.COMPLETED);
 
         when(patientRepository.findByUserId(userId))
                 .thenReturn(Optional.of(patient));
@@ -471,5 +471,91 @@ class ReservationServiceTest {
         ReflectionTestUtils.setField(reservation, "id", reservationId);
 
         return reservation;
+    }
+
+    @Test
+    void approveReservation_success() {
+
+        Long userId = 1L;
+        Long doctorId = 10L;
+        Long reservationId = 100L;
+        Doctor doctor = mock(Doctor.class);
+        Patient patient = createPatient(1L);
+        DoctorSchedule schedule = createAvailableSchedule(1L);
+        schedule.reserve();
+        Reservation reservation = createReservation(patient, schedule, reservationId);
+
+        when(doctor.getId()).thenReturn(doctorId);
+        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
+        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
+                .thenReturn(Optional.of(reservation));
+
+        ReservationDoctorApproveRejectResponse response = doctorReservationService.approveReservation(userId, reservationId);
+
+        assertThat(response.status()).isEqualTo(ReservationStatus.CONFIRMED);
+        assertThat(schedule.getStatus()).isEqualTo(DoctorScheduleStatus.RESERVED);
+    }
+
+    @Test
+    void rejectReservation_success_releasesSchedule() {
+
+        Long userId = 1L;
+        Long doctorId = 10L;
+        Long reservationId = 100L;
+        Doctor doctor = mock(Doctor.class);
+        Patient patient = createPatient(1L);
+        DoctorSchedule schedule = createAvailableSchedule(1L);
+        schedule.reserve();
+        Reservation reservation = createReservation(patient, schedule, reservationId);
+
+        when(doctor.getId()).thenReturn(doctorId);
+        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
+        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
+                .thenReturn(Optional.of(reservation));
+
+        ReservationDoctorApproveRejectResponse response = doctorReservationService.rejectReservation(userId, reservationId);
+
+        assertThat(response.status()).isEqualTo(ReservationStatus.CANCELLED);
+        assertThat(schedule.getStatus()).isEqualTo(DoctorScheduleStatus.AVAILABLE);
+    }
+
+    @Test
+    void approveReservation_fail_when_reservation_belongs_to_another_doctor() {
+
+        Long userId = 1L;
+        Long doctorId = 10L;
+        Long reservationId = 100L;
+        Doctor doctor = mock(Doctor.class);
+
+        when(doctor.getId()).thenReturn(doctorId);
+        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
+        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> doctorReservationService.approveReservation(userId, reservationId))
+                .isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    void rejectReservation_fail_when_already_processed() {
+
+        Long userId = 1L;
+        Long doctorId = 10L;
+        Long reservationId = 100L;
+        Doctor doctor = mock(Doctor.class);
+        Patient patient = createPatient(1L);
+        DoctorSchedule schedule = createAvailableSchedule(1L);
+        schedule.reserve();
+        Reservation reservation = createReservation(patient, schedule, reservationId);
+        reservation.approve();
+
+        when(doctor.getId()).thenReturn(doctorId);
+        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
+        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
+                .thenReturn(Optional.of(reservation));
+
+        assertThatThrownBy(() -> doctorReservationService.rejectReservation(userId, reservationId))
+                .isInstanceOf(BusinessException.class);
+        assertThat(schedule.getStatus()).isEqualTo(DoctorScheduleStatus.RESERVED);
     }
 }

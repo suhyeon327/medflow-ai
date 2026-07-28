@@ -11,4 +11,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     List<Reservation> findByPatientId(Long patientId);
 
     Optional<Reservation> findByIdAndPatientId(Long id, Long patientId);
+
+    Optional<Reservation> findByIdAndDoctorScheduleDoctorId(Long id, Long doctorId);
 }
