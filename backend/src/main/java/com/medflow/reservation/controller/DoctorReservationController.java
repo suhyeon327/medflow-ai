@@ -8,13 +8,16 @@ import com.medflow.reservation.service.DoctorReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
@@ -41,6 +44,17 @@ public class DoctorReservationController {
     ) {
         return ApiResponse.success(
                 doctorReservationService.getTodayDoctorReservations(userDetails.getUserId())
+        );
+    }
+    
+    // 날짜별 예약 조회
+    @GetMapping("/date")
+    public ApiResponse<List<DoctorReservationResponse>> getDoctorReservationsByDate(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        return ApiResponse.success(
+                doctorReservationService.getDoctorReservationsByDate(userDetails.getUserId(), date)
         );
     }
 

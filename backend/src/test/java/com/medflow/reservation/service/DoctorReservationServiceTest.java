@@ -233,6 +233,79 @@ class DoctorReservationServiceTest {
                 .isInstanceOf(BusinessException.class);
     }
 
+    @Test
+    void getDoctorReservationsByDate_success() {
+
+        Long userId = 1L;
+        Long doctorId = 10L;
+        LocalDate date = LocalDate.of(2026, 7, 30);
+        Doctor doctor = doctor(doctorId);
+        Reservation reservation = reservation(1L, "Patient", date, LocalTime.of(9, 0));
+
+        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
+        when(reservationRepository.findAllByDoctorScheduleDoctorIdAndDoctorScheduleDateOrderByDoctorScheduleStartTimeAsc(
+                doctorId, date)).thenReturn(List.of(reservation));
+
+        List<DoctorReservationResponse> result = doctorReservationService.getDoctorReservationsByDate(userId, date);
+
+        assertThat(result).singleElement().satisfies(response -> {
+            assertThat(response.reservationId()).isEqualTo(1L);
+            assertThat(response.reservationDate()).isEqualTo(date);
+            assertThat(response.patientName()).isEqualTo("Patient");
+        });
+    }
+
+    @Test
+    void getDoctorReservationsByDate_doesNotQueryAnotherDoctorsReservations() {
+
+        Long userId = 1L;
+        Long doctorId = 10L;
+        LocalDate date = LocalDate.of(2026, 7, 30);
+        Doctor doctor = doctor(doctorId);
+
+        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
+        when(reservationRepository.findAllByDoctorScheduleDoctorIdAndDoctorScheduleDateOrderByDoctorScheduleStartTimeAsc(
+                doctorId, date)).thenReturn(List.of());
+
+        assertThat(doctorReservationService.getDoctorReservationsByDate(userId, date)).isEmpty();
+        verify(reservationRepository)
+                .findAllByDoctorScheduleDoctorIdAndDoctorScheduleDateOrderByDoctorScheduleStartTimeAsc(doctorId, date);
+    }
+
+    @Test
+    void getDoctorReservationsByDate_returnsEmptyList_whenNoReservations() {
+
+        Long userId = 1L;
+        Long doctorId = 10L;
+        LocalDate date = LocalDate.of(2026, 7, 30);
+        Doctor doctor = doctor(doctorId);
+
+        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
+        when(reservationRepository.findAllByDoctorScheduleDoctorIdAndDoctorScheduleDateOrderByDoctorScheduleStartTimeAsc(
+                doctorId, date)).thenReturn(List.of());
+
+        assertThat(doctorReservationService.getDoctorReservationsByDate(userId, date)).isEmpty();
+    }
+
+    @Test
+    void getDoctorReservationsByDate_returnsReservationsInStartTimeOrder() {
+
+        Long userId = 1L;
+        Long doctorId = 10L;
+        LocalDate date = LocalDate.of(2026, 7, 30);
+        Doctor doctor = doctor(doctorId);
+        Reservation first = reservation(1L, "First", date, LocalTime.of(9, 0));
+        Reservation second = reservation(2L, "Second", date, LocalTime.of(10, 0));
+
+        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
+        when(reservationRepository.findAllByDoctorScheduleDoctorIdAndDoctorScheduleDateOrderByDoctorScheduleStartTimeAsc(
+                doctorId, date)).thenReturn(List.of(first, second));
+
+        assertThat(doctorReservationService.getDoctorReservationsByDate(userId, date))
+                .extracting(DoctorReservationResponse::startTime)
+                .containsExactly(LocalTime.of(9, 0), LocalTime.of(10, 0));
+    }
+
     private void assertTodayReservationsExclude(ReservationStatus excludedStatus) {
 
         Long userId = 1L;

@@ -58,6 +58,23 @@ public class DoctorReservationService {
                 .map(DoctorReservationResponse::from)
                 .toList();
     }
+    
+    // 날짜별 예약 조회
+    @Transactional(readOnly = true)
+    public List<DoctorReservationResponse> getDoctorReservationsByDate(Long userId, LocalDate date) {
+
+        Doctor doctor = doctorRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
+
+        return reservationRepository
+                .findAllByDoctorScheduleDoctorIdAndDoctorScheduleDateOrderByDoctorScheduleStartTimeAsc(
+                        doctor.getId(),
+                        date
+                )
+                .stream()
+                .map(DoctorReservationResponse::from)
+                .toList();
+    }
 
     // 예약 승인
     public ReservationDoctorApproveRejectResponse approveReservation(Long userId, Long reservationId) {

@@ -37,4 +37,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             @Param("date") LocalDate date,
             @Param("statuses") List<ReservationStatus> statuses
     );
+
+    @EntityGraph(attributePaths = {"patient", "doctorSchedule"})
+    List<Reservation> findAllByDoctorScheduleDoctorIdAndDoctorScheduleDateOrderByDoctorScheduleStartTimeAsc(
+            Long doctorId,
+            LocalDate date
+    );
 }

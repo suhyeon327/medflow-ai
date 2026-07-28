@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -58,11 +59,26 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.fail(error));
     }
 
+    // 요청 파라미터의 타입이 잘못 들어왔을 때
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodArgumentTypeMismatchException(
+            MethodArgumentTypeMismatchException e
+    ) {
+
+        ErrorResponse error = ErrorResponse.builder()
+                .code("VALIDATION_ERROR")
+                .message("Invalid request parameter: " + e.getName())
+                .build();
+
+        return ResponseEntity
+                .badRequest()
+                .body(ApiResponse.fail(error));
+    }
+
     // 모든 예외 처리
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
 
-        log.error("Unexpected Exception", e);
         ErrorResponse error = ErrorResponse.builder()
                 .code("INTERNAL_SERVER_ERROR")
                 .message("서버 오류가 발생했습니다.")
