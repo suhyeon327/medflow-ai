@@ -9,11 +9,13 @@ import com.medflow.patient.repository.PatientRepository;
 import com.medflow.reservation.dto.response.ReservationDoctorApproveRejectResponse;
 import com.medflow.reservation.dto.response.DoctorReservationResponse;
 import com.medflow.reservation.entity.Reservation;
+import com.medflow.reservation.entity.ReservationStatus;
 import com.medflow.reservation.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -35,6 +37,23 @@ public class DoctorReservationService {
 
         return reservationRepository
                 .findAllByDoctorScheduleDoctorIdOrderByDoctorScheduleDateAscDoctorScheduleStartTimeAsc(doctor.getId())
+                .stream()
+                .map(DoctorReservationResponse::from)
+                .toList();
+    }
+    
+    // 오늘 예약 조회
+    @Transactional(readOnly = true)
+    public List<DoctorReservationResponse> getTodayDoctorReservations(Long userId) {
+
+        Doctor doctor = doctorRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
+
+        return reservationRepository.findTodayReservationsByDoctorId(
+                        doctor.getId(),
+                        LocalDate.now(),
+                        List.of(ReservationStatus.REQUESTED, ReservationStatus.CONFIRMED)
+                )
                 .stream()
                 .map(DoctorReservationResponse::from)
                 .toList();

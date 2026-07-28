@@ -33,6 +33,16 @@ public class DoctorReservationController {
                 doctorReservationService.getDoctorReservations(userDetails.getUserId())
         );
     }
+    
+    // 오늘 예약 조회
+    @GetMapping("/today")
+    public ApiResponse<List<DoctorReservationResponse>> getTodayDoctorReservations(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ApiResponse.success(
+                doctorReservationService.getTodayDoctorReservations(userDetails.getUserId())
+        );
+    }
 
     // 예약 승인
     @PatchMapping("/{reservationId}/approve")
