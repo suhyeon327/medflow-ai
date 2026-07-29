@@ -13,8 +13,10 @@ import com.medflow.patient.repository.PatientRepository;
 import com.medflow.reservation.dto.request.ReservationCreateRequest;
 import com.medflow.reservation.dto.response.*;
 import com.medflow.reservation.entity.ReservationStatus;
+import com.medflow.reservation.entity.ReservationPeriod;
 import com.medflow.reservation.entity.Reservation;
 import com.medflow.reservation.repository.ReservationRepository;
+import com.medflow.reservation.repository.PatientReservationSearchRepository;
 
 import com.medflow.common.exception.BusinessException;
 
@@ -32,6 +34,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -52,6 +56,9 @@ class ReservationServiceTest {
 
     @Mock
     private DoctorRepository doctorRepository;
+
+    @Mock
+    private PatientReservationSearchRepository patientReservationSearchRepository;
 
     @InjectMocks
     private ReservationService reservationService;
@@ -318,6 +325,29 @@ class ReservationServiceTest {
     }
 
     // ----- 테스트용 Reservation 생성 -----
+    @Test
+    void getPatientReservations_filtersTodayReservations() {
+
+        Long userId = 1L;
+        Long patientId = 1L;
+        Patient patient = createPatient(patientId);
+        PageRequest pageable = PageRequest.of(0, 10);
+
+        when(patientRepository.findByUserId(userId)).thenReturn(Optional.of(patient));
+        when(patientReservationSearchRepository.search(
+                patientId, null, null, null, null, ReservationPeriod.TODAY, pageable
+        )).thenReturn(new PageImpl<>(List.of(), pageable, 0));
+
+        PatientReservationPageResponse response = reservationService.getPatientReservations(
+                userId, null, null, null, null, ReservationPeriod.TODAY, pageable
+        );
+
+        assertThat(response.content()).isEmpty();
+        verify(patientReservationSearchRepository).search(
+                patientId, null, null, null, null, ReservationPeriod.TODAY, pageable
+        );
+    }
+
     private Reservation createReservation(Patient patient) {
 
         DoctorSchedule schedule = createAvailableSchedule(1L);

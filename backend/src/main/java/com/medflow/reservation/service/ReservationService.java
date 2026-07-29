@@ -13,12 +13,19 @@ import com.medflow.reservation.dto.request.ReservationCreateRequest;
 import com.medflow.reservation.dto.response.PatientReservationResponse;
 import com.medflow.reservation.dto.response.ReservationCancelResponse;
 import com.medflow.reservation.dto.response.ReservationCreateResponse;
-import com.medflow.reservation.dto.response.ReservationDoctorApproveRejectResponse;
 import com.medflow.reservation.entity.Reservation;
+import com.medflow.reservation.entity.ReservationPeriod;
+import com.medflow.reservation.entity.ReservationStatus;
 import com.medflow.reservation.repository.ReservationRepository;
+import com.medflow.reservation.repository.PatientReservationSearchRepository;
+import com.medflow.reservation.dto.response.PatientReservationPageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.time.LocalDate;
 
 import java.util.List;
 
@@ -30,7 +37,21 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final DoctorScheduleRepository doctorScheduleRepository;
     private final PatientRepository patientRepository;
-    private final DoctorRepository doctorRepository;
+    private final PatientReservationSearchRepository patientReservationSearchRepository;
+    
+    // 환자 예약 내역 조회
+    @Transactional(readOnly = true)
+    public PatientReservationPageResponse getPatientReservations(Long userId, ReservationStatus status, LocalDate date, Long hospitalId, Long doctorId, ReservationPeriod period, Pageable pageable) {
+
+        Patient patient = patientRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PATIENT_NOT_FOUND));
+
+        Page<PatientReservationResponse> reservationPage = patientReservationSearchRepository
+                .search(patient.getId(), status, date, hospitalId, doctorId, period, pageable)
+                .map(PatientReservationResponse::from);
+
+        return PatientReservationPageResponse.from(reservationPage);
+    }
 
     // 예약 생성
     public ReservationCreateResponse createReservation(Long userId, ReservationCreateRequest request) {
