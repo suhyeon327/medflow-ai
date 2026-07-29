@@ -4,6 +4,9 @@ import com.medflow.auth.security.CustomUserDetails;
 import com.medflow.common.response.ApiResponse;
 import com.medflow.reservation.dto.response.ReservationDoctorApproveRejectResponse;
 import com.medflow.reservation.dto.response.DoctorReservationResponse;
+import com.medflow.reservation.dto.response.DoctorReservationPatientResponse;
+import com.medflow.reservation.dto.response.ReservationCompletedResponse;
+import jakarta.validation.Valid;
 import com.medflow.reservation.service.DoctorReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -26,7 +30,7 @@ import java.time.LocalDate;
 public class DoctorReservationController {
 
     private final DoctorReservationService doctorReservationService;
-    
+
     // 의사 담당 예약 목록 조회
     @GetMapping
     public ApiResponse<List<DoctorReservationResponse>> getDoctorReservations(
@@ -55,6 +59,28 @@ public class DoctorReservationController {
     ) {
         return ApiResponse.success(
                 doctorReservationService.getDoctorReservationsByDate(userDetails.getUserId(), date)
+        );
+    }
+
+    // 환자 정보 조회
+    @GetMapping("/{reservationId}/patient")
+    public ApiResponse<DoctorReservationPatientResponse> getReservationPatient(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long reservationId
+    ) {
+        return ApiResponse.success(
+                doctorReservationService.getReservationPatient(userDetails.getUserId(), reservationId)
+        );
+    }
+
+    // ?덉빟 ?곹깭 蹂寃?
+    @PatchMapping("/{reservationId}/status")
+    public ApiResponse<ReservationCompletedResponse> completeReservation(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long reservationId
+    ) {
+        return ApiResponse.success(
+                doctorReservationService.completeReservation(userDetails.getUserId(), reservationId)
         );
     }
 

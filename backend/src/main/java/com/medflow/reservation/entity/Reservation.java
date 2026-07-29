@@ -85,4 +85,14 @@ public class  Reservation extends BaseEntity {
 
         this.status = ReservationStatus.CANCELLED;
     }
+
+    // 진료 완료
+    public void complete() {
+
+        if (this.status != ReservationStatus.CONFIRMED) {
+            throw new BusinessException(ErrorCode.INVALID_STATUS_CHANGE);
+        }
+
+        this.status = ReservationStatus.COMPLETED;
+    }
 }
