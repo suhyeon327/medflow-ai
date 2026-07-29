@@ -5,8 +5,7 @@ import com.medflow.common.response.ApiResponse;
 import com.medflow.reservation.dto.response.ReservationDoctorApproveRejectResponse;
 import com.medflow.reservation.dto.response.DoctorReservationResponse;
 import com.medflow.reservation.dto.response.DoctorReservationPatientResponse;
-import com.medflow.reservation.dto.response.ReservationCompletedResponse;
-import jakarta.validation.Valid;
+import com.medflow.reservation.dto.response.ReservationCompleteResponse;
 import com.medflow.reservation.service.DoctorReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -73,9 +71,9 @@ public class DoctorReservationController {
         );
     }
 
-    // ?덉빟 ?곹깭 蹂寃?
-    @PatchMapping("/{reservationId}/status")
-    public ApiResponse<ReservationCompletedResponse> completeReservation(
+    // 진료 완료
+    @PatchMapping("/{reservationId}/complete")
+    public ApiResponse<ReservationCompleteResponse> completeReservation(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long reservationId
     ) {

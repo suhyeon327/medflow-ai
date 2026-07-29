@@ -8,7 +8,7 @@ import com.medflow.patient.entity.Gender;
 import com.medflow.patient.entity.Patient;
 import com.medflow.reservation.dto.response.DoctorReservationResponse;
 import com.medflow.reservation.dto.response.DoctorReservationPatientResponse;
-import com.medflow.reservation.dto.response.ReservationCompletedResponse;
+import com.medflow.reservation.dto.response.ReservationCompleteResponse;
 import com.medflow.reservation.entity.Reservation;
 import com.medflow.reservation.entity.ReservationStatus;
 import com.medflow.reservation.repository.ReservationRepository;
@@ -412,7 +412,7 @@ class DoctorReservationServiceTest {
         when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
                 .thenReturn(Optional.of(reservation));
 
-        ReservationCompletedResponse response = doctorReservationService.completeReservation(
+        ReservationCompleteResponse response = doctorReservationService.completeReservation(
                 userId,
                 reservationId
         );

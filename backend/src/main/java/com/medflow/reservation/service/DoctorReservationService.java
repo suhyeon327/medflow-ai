@@ -9,7 +9,7 @@ import com.medflow.patient.repository.PatientRepository;
 import com.medflow.reservation.dto.response.ReservationDoctorApproveRejectResponse;
 import com.medflow.reservation.dto.response.DoctorReservationResponse;
 import com.medflow.reservation.dto.response.DoctorReservationPatientResponse;
-import com.medflow.reservation.dto.response.ReservationCompletedResponse;
+import com.medflow.reservation.dto.response.ReservationCompleteResponse;
 import com.medflow.reservation.entity.Reservation;
 import com.medflow.reservation.entity.ReservationStatus;
 import com.medflow.reservation.repository.ReservationRepository;
@@ -92,7 +92,7 @@ public class DoctorReservationService {
     }
 
     // 진료 완료
-    public ReservationCompletedResponse completeReservation(
+    public ReservationCompleteResponse completeReservation(
             Long userId,
             Long reservationId
     ) {
@@ -100,7 +100,7 @@ public class DoctorReservationService {
         Reservation reservation = findDoctorReservation(userId, reservationId);
         reservation.complete();
 
-        return ReservationCompletedResponse.from(reservation);
+        return ReservationCompleteResponse.from(reservation);
     }
 
     // 예약 승인
