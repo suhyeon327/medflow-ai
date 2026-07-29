@@ -91,9 +91,9 @@ public class DoctorReservationSearchRepository {
             Order direction = sortOrder.isAscending() ? Order.ASC : Order.DESC;
 
             switch (sortOrder.getProperty()) {
-                case "date" -> orderSpecifiers.add(new OrderSpecifier<>(direction, doctorSchedule.date));
+                case "reservationDate" -> orderSpecifiers.add(new OrderSpecifier<>(direction, doctorSchedule.date));
                 case "startTime" -> orderSpecifiers.add(new OrderSpecifier<>(direction, doctorSchedule.startTime));
-                case "status" -> orderSpecifiers.add(new OrderSpecifier<>(direction, reservation.status));
+                case "reservationStatus" -> orderSpecifiers.add(new OrderSpecifier<>(direction, reservation.status));
                 default -> {
                 }
             }
