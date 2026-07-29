@@ -10,12 +10,16 @@ import com.medflow.reservation.dto.response.ReservationDoctorApproveRejectRespon
 import com.medflow.reservation.dto.response.DoctorReservationResponse;
 import com.medflow.reservation.dto.response.DoctorReservationPatientResponse;
 import com.medflow.reservation.dto.response.ReservationCompleteResponse;
+import com.medflow.reservation.dto.response.DoctorReservationPageResponse;
 import com.medflow.reservation.entity.Reservation;
 import com.medflow.reservation.entity.ReservationStatus;
 import com.medflow.reservation.repository.ReservationRepository;
+import com.medflow.reservation.repository.DoctorReservationSearchRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -26,9 +30,26 @@ import java.util.List;
 public class DoctorReservationService {
 
     private final ReservationRepository reservationRepository;
-    private final DoctorScheduleRepository doctorScheduleRepository;
-    private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final DoctorReservationSearchRepository doctorReservationSearchRepository;
+
+    // 의사 예약 검색 및 필터링
+    @Transactional(readOnly = true)
+    public DoctorReservationPageResponse searchDoctorReservations(
+            Long userId,
+            LocalDate date,
+            ReservationStatus status,
+            Pageable pageable
+    ) {
+        Doctor doctor = doctorRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
+
+        Page<DoctorReservationResponse> reservationPage = doctorReservationSearchRepository
+                .search(doctor.getId(), date, status, pageable)
+                .map(DoctorReservationResponse::from);
+
+        return DoctorReservationPageResponse.from(reservationPage);
+    }
 
     // 의사 담당 예약 목록 조회
     @Transactional(readOnly = true)

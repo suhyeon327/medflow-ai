@@ -6,6 +6,8 @@ import com.medflow.reservation.dto.response.ReservationDoctorApproveRejectRespon
 import com.medflow.reservation.dto.response.DoctorReservationResponse;
 import com.medflow.reservation.dto.response.DoctorReservationPatientResponse;
 import com.medflow.reservation.dto.response.ReservationCompleteResponse;
+import com.medflow.reservation.dto.response.DoctorReservationPageResponse;
+import com.medflow.reservation.entity.ReservationStatus;
 import com.medflow.reservation.service.DoctorReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,6 +19,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 import java.util.List;
 import java.time.LocalDate;
@@ -57,6 +61,21 @@ public class DoctorReservationController {
     ) {
         return ApiResponse.success(
                 doctorReservationService.getDoctorReservationsByDate(userDetails.getUserId(), date)
+        );
+    }
+
+    // 의사 예약 검색 및 필터링
+    @GetMapping("/search")
+    public ApiResponse<DoctorReservationPageResponse> searchDoctorReservations(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) ReservationStatus status,
+            @PageableDefault(size = 10) Pageable pageable
+    ) {
+        return ApiResponse.success(
+                doctorReservationService.searchDoctorReservations(
+                        userDetails.getUserId(), date, status, pageable
+                )
         );
     }
 

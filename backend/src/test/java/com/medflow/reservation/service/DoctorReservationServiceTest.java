@@ -9,9 +9,11 @@ import com.medflow.patient.entity.Patient;
 import com.medflow.reservation.dto.response.DoctorReservationResponse;
 import com.medflow.reservation.dto.response.DoctorReservationPatientResponse;
 import com.medflow.reservation.dto.response.ReservationCompleteResponse;
+import com.medflow.reservation.dto.response.DoctorReservationPageResponse;
 import com.medflow.reservation.entity.Reservation;
 import com.medflow.reservation.entity.ReservationStatus;
 import com.medflow.reservation.repository.ReservationRepository;
+import com.medflow.reservation.repository.DoctorReservationSearchRepository;
 import com.medflow.user.entity.User;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +26,10 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -39,6 +45,9 @@ class DoctorReservationServiceTest {
 
     @Mock
     private DoctorRepository doctorRepository;
+
+    @Mock
+    private DoctorReservationSearchRepository doctorReservationSearchRepository;
 
     @InjectMocks
     private DoctorReservationService doctorReservationService;
@@ -494,6 +503,148 @@ class DoctorReservationServiceTest {
         assertThatThrownBy(() -> doctorReservationService.completeReservation(
                 userId, reservationId))
                 .isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    void searchDoctorReservations_returnsAllReservations_whenNoConditions() {
+
+        Long userId = 1L;
+        Long doctorId = 10L;
+        Pageable pageable = PageRequest.of(0, 10);
+        Doctor doctor = doctor(doctorId);
+        Reservation reservation = reservation(1L, "Patient", LocalDate.of(2026, 7, 30), LocalTime.of(9, 0));
+
+        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
+        when(doctorReservationSearchRepository.search(doctorId, null, null, pageable))
+                .thenReturn(new PageImpl<>(List.of(reservation), pageable, 1));
+
+        DoctorReservationPageResponse response = doctorReservationService
+                .searchDoctorReservations(userId, null, null, pageable);
+
+        assertThat(response.content()).hasSize(1);
+        assertThat(response.totalElements()).isEqualTo(1);
+    }
+
+    @Test
+    void searchDoctorReservations_filtersByDate() {
+
+        LocalDate date = LocalDate.of(2026, 7, 30);
+        DoctorReservationPageResponse response = searchReservations(date, null, PageRequest.of(0, 10), List.of(
+                reservation(1L, "Patient", date, LocalTime.of(9, 0))
+        ), 1);
+
+        assertThat(response.content()).extracting(DoctorReservationResponse::reservationDate)
+                .containsOnly(date);
+    }
+
+    @Test
+    void searchDoctorReservations_filtersByStatus() {
+
+        DoctorReservationPageResponse response = searchReservations(
+                null,
+                ReservationStatus.CONFIRMED,
+                PageRequest.of(0, 10),
+                List.of(reservation(1L, "Patient", LocalDate.of(2026, 7, 30), LocalTime.of(9, 0), ReservationStatus.CONFIRMED)),
+                1
+        );
+
+        assertThat(response.content()).extracting(DoctorReservationResponse::reservationStatus)
+                .containsOnly(ReservationStatus.CONFIRMED);
+    }
+
+    @Test
+    void searchDoctorReservations_filtersByDateAndStatus() {
+
+        LocalDate date = LocalDate.of(2026, 7, 30);
+        DoctorReservationPageResponse response = searchReservations(
+                date,
+                ReservationStatus.CONFIRMED,
+                PageRequest.of(0, 10),
+                List.of(reservation(1L, "Patient", date, LocalTime.of(9, 0), ReservationStatus.CONFIRMED)),
+                1
+        );
+
+        assertThat(response.content()).singleElement().satisfies(result -> {
+            assertThat(result.reservationDate()).isEqualTo(date);
+            assertThat(result.reservationStatus()).isEqualTo(ReservationStatus.CONFIRMED);
+        });
+    }
+
+    @Test
+    void searchDoctorReservations_doesNotQueryAnotherDoctorsReservations() {
+
+        Long userId = 1L;
+        Long doctorId = 10L;
+        Pageable pageable = PageRequest.of(0, 10);
+        Doctor doctor = doctor(doctorId);
+
+        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
+        when(doctorReservationSearchRepository.search(doctorId, null, null, pageable))
+                .thenReturn(new PageImpl<>(List.of(), pageable, 0));
+
+        assertThat(doctorReservationService.searchDoctorReservations(userId, null, null, pageable).content())
+                .isEmpty();
+        verify(doctorReservationSearchRepository).search(doctorId, null, null, pageable);
+    }
+
+    @Test
+    void searchDoctorReservations_returnsEmptyPage_whenNoResults() {
+
+        DoctorReservationPageResponse response = searchReservations(
+                null, null, PageRequest.of(0, 10), List.of(), 0
+        );
+
+        assertThat(response.content()).isEmpty();
+        assertThat(response.totalElements()).isZero();
+        assertThat(response.totalPages()).isZero();
+    }
+
+    @Test
+    void searchDoctorReservations_preservesDateAndTimeOrder() {
+
+        Reservation first = reservation(1L, "First", LocalDate.of(2026, 7, 30), LocalTime.of(9, 0));
+        Reservation second = reservation(2L, "Second", LocalDate.of(2026, 7, 30), LocalTime.of(10, 0));
+        Reservation third = reservation(3L, "Third", LocalDate.of(2026, 7, 31), LocalTime.of(9, 0));
+
+        DoctorReservationPageResponse response = searchReservations(
+                null, null, PageRequest.of(0, 10), List.of(first, second, third), 3
+        );
+
+        assertThat(response.content()).extracting(DoctorReservationResponse::reservationId)
+                .containsExactly(1L, 2L, 3L);
+    }
+
+    @Test
+    void searchDoctorReservations_returnsRequestedPage() {
+
+        Pageable pageable = PageRequest.of(1, 1);
+        Reservation reservation = reservation(2L, "Patient", LocalDate.of(2026, 7, 30), LocalTime.of(10, 0));
+        DoctorReservationPageResponse response = searchReservations(
+                null, null, pageable, List.of(reservation), 3
+        );
+
+        assertThat(response.page()).isEqualTo(1);
+        assertThat(response.size()).isEqualTo(1);
+        assertThat(response.totalElements()).isEqualTo(3);
+        assertThat(response.totalPages()).isEqualTo(3);
+    }
+
+    private DoctorReservationPageResponse searchReservations(
+            LocalDate date,
+            ReservationStatus status,
+            Pageable pageable,
+            List<Reservation> reservations,
+            long total
+    ) {
+        Long userId = 1L;
+        Long doctorId = 10L;
+        Doctor doctor = doctor(doctorId);
+
+        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
+        when(doctorReservationSearchRepository.search(doctorId, date, status, pageable))
+                .thenReturn(new PageImpl<>(reservations, pageable, total));
+
+        return doctorReservationService.searchDoctorReservations(userId, date, status, pageable);
     }
 
     private void assertTodayReservationsExclude(ReservationStatus excludedStatus) {

@@ -29,4 +29,11 @@ class DoctorReservationControllerTest {
         mockMvc.perform(get("/api/v1/doctors/reservations/date").param("date", "2026-07-30-invalid"))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void searchDoctorReservations_returnsBadRequest_whenStatusIsInvalid() throws Exception {
+
+        mockMvc.perform(get("/api/v1/doctors/reservations/search").param("status", "INVALID"))
+                .andExpect(status().isBadRequest());
+    }
 }
