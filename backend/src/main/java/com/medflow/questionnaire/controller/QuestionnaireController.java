@@ -5,9 +5,11 @@ import com.medflow.common.response.ApiResponse;
 import com.medflow.questionnaire.dto.request.QuestionnaireCreateRequest;
 import com.medflow.questionnaire.dto.request.QuestionnaireUpdateRequest;
 import com.medflow.questionnaire.dto.response.QuestionnaireDetailResponse;
+import com.medflow.questionnaire.dto.response.QuestionnaireAnalysisDetailResponse;
 import com.medflow.questionnaire.dto.response.QuestionnaireResponse;
 import com.medflow.questionnaire.dto.response.QuestionnaireUpdateResponse;
 import com.medflow.questionnaire.service.QuestionnaireService;
+import com.medflow.questionnaire.service.QuestionnaireAnalysisService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class QuestionnaireController {
 
     private final QuestionnaireService questionnaireService;
+    private final QuestionnaireAnalysisService questionnaireAnalysisService;
 
     // 예약 기반 문진 작성
     @PostMapping
@@ -53,6 +56,17 @@ public class QuestionnaireController {
     ) {
         return ApiResponse.success(
                 questionnaireService.updateQuestionnaire(userDetails.getUserId(), questionnaireId, request)
+        );
+    }
+
+    // AI 문진 분석 결과 조회
+    @GetMapping("/{questionnaireId}/analysis")
+    public ApiResponse<QuestionnaireAnalysisDetailResponse> getQuestionnaireAnalysis(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long questionnaireId
+    ) {
+        return ApiResponse.success(
+                questionnaireAnalysisService.getAnalysis(userDetails.getUserId(), questionnaireId)
         );
     }
 }

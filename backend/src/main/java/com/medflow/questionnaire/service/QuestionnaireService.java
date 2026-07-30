@@ -11,12 +11,14 @@ import com.medflow.questionnaire.dto.response.QuestionnaireResponse;
 import com.medflow.questionnaire.dto.response.QuestionnaireUpdateResponse;
 import com.medflow.questionnaire.entity.Questionnaire;
 import com.medflow.questionnaire.entity.QuestionnaireAnalysis;
+import com.medflow.questionnaire.event.QuestionnaireAnalysisRequestedEvent;
 import com.medflow.questionnaire.repository.QuestionnaireAnalysisRepository;
 import com.medflow.questionnaire.repository.QuestionnaireRepository;
 import com.medflow.reservation.entity.Reservation;
 import com.medflow.reservation.entity.ReservationStatus;
 import com.medflow.reservation.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,7 @@ public class QuestionnaireService {
     private final QuestionnaireAnalysisRepository questionnaireAnalysisRepository;
     private final ReservationRepository reservationRepository;
     private final PatientRepository patientRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 예약 문진 작성
     public QuestionnaireResponse createQuestionnaire(Long userId, QuestionnaireCreateRequest request) {
@@ -64,6 +67,7 @@ public class QuestionnaireService {
 
         Questionnaire savedQuestionnaire = questionnaireRepository.save(questionnaire);
         questionnaireAnalysisRepository.save(QuestionnaireAnalysis.pending(savedQuestionnaire));
+        eventPublisher.publishEvent(new QuestionnaireAnalysisRequestedEvent(savedQuestionnaire.getId()));
 
         return QuestionnaireResponse.from(savedQuestionnaire);
     }
@@ -120,8 +124,9 @@ public class QuestionnaireService {
                         .orElseThrow(() -> new BusinessException(ErrorCode.QUESTIONNAIRE_ANALYSIS_NOT_FOUND));
 
         analysis.resetToPending();
+        eventPublisher.publishEvent(new QuestionnaireAnalysisRequestedEvent(questionnaire.getId()));
 
-        return QuestionnaireUpdateResponse.from(questionnaire);
+        return QuestionnaireUpdateResponse.from(questionnaireRepository.saveAndFlush(questionnaire));
     }
 
     private void validateReservation(Patient patient, Reservation reservation) {

@@ -3,6 +3,7 @@ package com.medflow.questionnaire.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.medflow.common.exception.GlobalExceptionHandler;
 import com.medflow.questionnaire.service.QuestionnaireService;
+import com.medflow.questionnaire.service.QuestionnaireAnalysisService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -24,7 +25,10 @@ class QuestionnaireControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new QuestionnaireController(mock(QuestionnaireService.class)))
+                .standaloneSetup(new QuestionnaireController(
+                        mock(QuestionnaireService.class),
+                        mock(QuestionnaireAnalysisService.class)
+                ))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }

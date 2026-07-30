@@ -13,6 +13,7 @@ import com.medflow.questionnaire.dto.response.QuestionnaireUpdateResponse;
 import com.medflow.questionnaire.entity.Questionnaire;
 import com.medflow.questionnaire.entity.QuestionnaireAnalysis;
 import com.medflow.questionnaire.entity.QuestionnaireAnalysisStatus;
+import com.medflow.questionnaire.event.QuestionnaireAnalysisRequestedEvent;
 import com.medflow.questionnaire.repository.QuestionnaireAnalysisRepository;
 import com.medflow.questionnaire.repository.QuestionnaireRepository;
 import com.medflow.reservation.entity.Reservation;
@@ -24,6 +25,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -43,6 +45,7 @@ class QuestionnaireServiceTest {
     @Mock QuestionnaireAnalysisRepository questionnaireAnalysisRepository;
     @Mock ReservationRepository reservationRepository;
     @Mock PatientRepository patientRepository;
+    @Mock ApplicationEventPublisher eventPublisher;
     @InjectMocks QuestionnaireService questionnaireService;
 
     @Test
@@ -78,6 +81,7 @@ class QuestionnaireServiceTest {
                 analysis -> analysis.getQuestionnaire().getId().equals(20L)
                         && analysis.getStatus() == QuestionnaireAnalysisStatus.PENDING
         ));
+        verify(eventPublisher).publishEvent(new QuestionnaireAnalysisRequestedEvent(20L));
     }
 
     @Test
@@ -88,6 +92,7 @@ class QuestionnaireServiceTest {
 
         assertError(ErrorCode.RESERVATION_NOT_FOUND, () -> questionnaireService.createQuestionnaire(100L, request(10L)));
         verify(questionnaireRepository, never()).save(any());
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
     @Test
@@ -216,6 +221,7 @@ class QuestionnaireServiceTest {
         assertThat(response.updatedAt()).isEqualTo(LocalDateTime.of(2026, 7, 30, 15, 0));
         assertThat(analysis.getStatus()).isEqualTo(QuestionnaireAnalysisStatus.PENDING);
         verify(questionnaireAnalysisRepository, never()).save(any());
+        verify(eventPublisher).publishEvent(new QuestionnaireAnalysisRequestedEvent(20L));
     }
 
     @Test
@@ -230,6 +236,7 @@ class QuestionnaireServiceTest {
         assertError(ErrorCode.QUESTIONNAIRE_ANALYSIS_NOT_FOUND,
                 () -> questionnaireService.updateQuestionnaire(100L, 20L, updateRequest(5)));
         verify(questionnaireAnalysisRepository, never()).save(any());
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
     @Test
@@ -282,6 +289,7 @@ class QuestionnaireServiceTest {
         when(questionnaireRepository.findById(20L)).thenReturn(Optional.of(questionnaire));
         assertError(errorCode, () -> questionnaireService.updateQuestionnaire(100L, 20L, updateRequest(5)));
         verify(questionnaireAnalysisRepository, never()).save(any());
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
     private void assertStatusFailure(ReservationStatus status, ErrorCode errorCode) {
@@ -290,6 +298,7 @@ class QuestionnaireServiceTest {
         mockFound(100L, patient, reservation);
         assertError(errorCode, () -> questionnaireService.createQuestionnaire(100L, request(10L)));
         verify(questionnaireRepository, never()).save(any());
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
     private void assertError(ErrorCode errorCode, Runnable action) {
