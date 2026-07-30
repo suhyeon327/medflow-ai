@@ -113,4 +113,29 @@ public class Questionnaire extends BaseEntity {
                 additionalNote
         );
     }
+
+    // 문진 입력 내용 수정
+    public void update(
+            String chiefComplaint,
+            LocalDateTime symptomStartedAt,
+            String symptomDescription,
+            Integer painLevel,
+            BigDecimal temperature,
+            String associatedSymptoms,
+            String medicalHistory,
+            String medications,
+            String allergies,
+            String additionalNote
+    ) {
+        this.chiefComplaint = chiefComplaint;
+        this.symptomStartedAt = symptomStartedAt;
+        this.symptomDescription = symptomDescription;
+        this.painLevel = painLevel;
+        this.temperature = temperature;
+        this.associatedSymptoms = associatedSymptoms;
+        this.medicalHistory = medicalHistory;
+        this.medications = medications;
+        this.allergies = allergies;
+        this.additionalNote = additionalNote;
+    }
 }

@@ -13,6 +13,7 @@ import java.util.Map;
 
 import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class QuestionnaireControllerTest {
@@ -51,6 +52,20 @@ class QuestionnaireControllerTest {
                 "painLevel", 11
         );
         mockMvc.perform(post("/api/v1/questionnaires")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateQuestionnaire_returnsBadRequest_when_painLevelIsOutOfRange() throws Exception {
+        Map<String, Object> request = Map.of(
+                "chiefComplaint", "두통",
+                "symptomStartedAt", "2026-07-30T08:00:00",
+                "symptomDescription", "머리가 아픕니다.",
+                "painLevel", -1
+        );
+        mockMvc.perform(put("/api/v1/questionnaires/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
