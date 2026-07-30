@@ -39,7 +39,13 @@ public enum ErrorCode {
     INVALID_STATUS_CHANGE(HttpStatus.CONFLICT, "RESERVATION_003", "취소된 예약은 상태 변경 불가합니다."),
     SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVATION_004", "예약 가능한 일정을 찾을 수 없습니다."),
     RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVATION_005", "예약을 찾을 수 없습니다."),
-    RESERVATION_ALREADY_CANCELLED(HttpStatus.BAD_REQUEST, "RESERVATION_007", "이미 취소된 예약입니다.");
+    RESERVATION_ALREADY_CANCELLED(HttpStatus.BAD_REQUEST, "RESERVATION_007", "이미 취소된 예약입니다."),
+
+    // Questionnaire
+    QUESTIONNAIRE_ALREADY_EXISTS(HttpStatus.CONFLICT, "QUESTIONNAIRE_001", "해당 예약에 이미 문진이 작성되었습니다."),
+    QUESTIONNAIRE_RESERVATION_FORBIDDEN(HttpStatus.FORBIDDEN, "QUESTIONNAIRE_002", "본인의 예약에만 문진을 작성할 수 있습니다."),
+    QUESTIONNAIRE_CANCELLED_RESERVATION(HttpStatus.BAD_REQUEST, "QUESTIONNAIRE_003", "취소된 예약에는 문진을 작성할 수 없습니다."),
+    QUESTIONNAIRE_COMPLETED_RESERVATION(HttpStatus.BAD_REQUEST, "QUESTIONNAIRE_004", "진료가 완료된 예약에는 문진을 작성할 수 없습니다.");
 
 
     private final HttpStatus status;
