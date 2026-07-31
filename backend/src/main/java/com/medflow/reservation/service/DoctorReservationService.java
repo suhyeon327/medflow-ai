@@ -4,8 +4,8 @@ import com.medflow.common.exception.BusinessException;
 import com.medflow.common.exception.ErrorCode;
 import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.repository.DoctorRepository;
-import com.medflow.doctor.repository.DoctorScheduleRepository;
-import com.medflow.patient.repository.PatientRepository;
+import com.medflow.questionnaire.repository.QuestionnaireRepository;
+import com.medflow.questionnaire.repository.QuestionnaireAnalysisRepository;
 import com.medflow.reservation.dto.response.ReservationDoctorApproveRejectResponse;
 import com.medflow.reservation.dto.response.DoctorReservationResponse;
 import com.medflow.reservation.dto.response.DoctorReservationPatientResponse;
@@ -32,6 +32,8 @@ public class DoctorReservationService {
     private final ReservationRepository reservationRepository;
     private final DoctorRepository doctorRepository;
     private final DoctorReservationSearchRepository doctorReservationSearchRepository;
+    private final QuestionnaireRepository questionnaireRepository;
+    private final QuestionnaireAnalysisRepository questionnaireAnalysisRepository;
 
     // 의사 예약 검색 및 필터링
     @Transactional(readOnly = true)
