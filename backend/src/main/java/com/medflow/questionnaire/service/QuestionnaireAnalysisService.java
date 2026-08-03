@@ -62,7 +62,7 @@ public class QuestionnaireAnalysisService {
                     result.keyFindings(),
                     result.riskSignals(),
                     result.doctorCheckpoints(),
-                    result.urgencyLevel()
+                    result.priorityLevel()
             );
         } catch (Exception e) {
             log.error(

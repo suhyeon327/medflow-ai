@@ -2,7 +2,7 @@ package com.medflow.questionnaire.analysis;
 
 import com.medflow.questionnaire.dto.response.QuestionnaireAnalysisResponse;
 import com.medflow.questionnaire.entity.Questionnaire;
-import com.medflow.questionnaire.entity.UrgencyLevel;
+import com.medflow.questionnaire.entity.PriorityLevel;
 import com.medflow.reservation.entity.Reservation;
 import org.junit.jupiter.api.Test;
 
@@ -39,6 +39,6 @@ class FakeQuestionnaireAnalyzerTest {
                 "증상의 시작 시점과 변화 양상을 추가로 확인해 주세요.",
                 "동반 증상의 지속 여부를 확인해 주세요."
         );
-        assertThat(result.urgencyLevel()).isEqualTo(UrgencyLevel.NORMAL);
+        assertThat(result.priorityLevel()).isEqualTo(PriorityLevel.NORMAL);
     }
 }

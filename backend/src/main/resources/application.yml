@@ -13,6 +13,13 @@ spring:
   profiles:
     active: dev
 
+gemini:
+  api-key: ${GEMINI_API_KEY}
+  model: ${GEMINI_MODEL:gemini-3.6-flash}
+
+ai:
+  provider: ${AI_PROVIDER:gemini}
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

@@ -49,7 +49,7 @@ class QuestionnaireAnalysisServiceTest {
         assertThat(analysis.getKeyFindings()).containsExactly("통증과 체온 확인");
         assertThat(analysis.getRiskSignals()).containsExactly("병력 종합 확인");
         assertThat(analysis.getDoctorCheckpoints()).containsExactly("복부 상태 확인");
-        assertThat(analysis.getPriorityLevel()).isEqualTo(com.medflow.questionnaire.entity.UrgencyLevel.NORMAL);
+        assertThat(analysis.getPriorityLevel()).isEqualTo(PriorityLevel.NORMAL);
         assertThat(analysis.getStatus()).isEqualTo(QuestionnaireAnalysisStatus.COMPLETED);
         verify(questionnaireAnalysisRepository, never()).save(any());
     }
@@ -161,7 +161,7 @@ class QuestionnaireAnalysisServiceTest {
                 List.of("3일간 지속된 기침", "38도의 발열"),
                 List.of("발열 지속"),
                 List.of("호흡곤란 여부 확인", "발열 지속 시간 확인"),
-                UrgencyLevel.CAUTION
+                PriorityLevel.CAUTION
         );
         mockAnalysisFound(100L, patient, questionnaire, analysis);
 
@@ -171,7 +171,7 @@ class QuestionnaireAnalysisServiceTest {
         assertThat(response.keyFindings()).containsExactly("3일간 지속된 기침", "38도의 발열");
         assertThat(response.riskSignals()).containsExactly("발열 지속");
         assertThat(response.doctorCheckpoints()).containsExactly("호흡곤란 여부 확인", "발열 지속 시간 확인");
-        assertThat(response.priorityLevel()).isEqualTo(UrgencyLevel.CAUTION);
+        assertThat(response.priorityLevel()).isEqualTo(PriorityLevel.CAUTION);
         assertThat(response.status()).isEqualTo(QuestionnaireAnalysisStatus.COMPLETED);
     }
 
@@ -263,7 +263,7 @@ class QuestionnaireAnalysisServiceTest {
                 List.of("통증과 체온 확인"),
                 List.of("병력 종합 확인"),
                 List.of("복부 상태 확인"),
-                com.medflow.questionnaire.entity.UrgencyLevel.NORMAL
+                PriorityLevel.NORMAL
         );
     }
 }

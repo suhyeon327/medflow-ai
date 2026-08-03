@@ -51,7 +51,8 @@ public enum ErrorCode {
     QUESTIONNAIRE_ANALYSIS_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTIONNAIRE_007", "문진 분석 내용을 찾을 수 없습니다."),
 
     // AI
-    AI_ANALYSIS_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI_001", "AI 문진 분석 중 오류가 발생했습니다.");
+    AI_ANALYSIS_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI_001", "AI 문진 분석 중 오류가 발생했습니다."),
+    GEMINI_API_KEY_NOT_CONFIGURED(HttpStatus.INTERNAL_SERVER_ERROR, "AI_002", "Gemini API Key가 설정되지 않았습니다.");
 
     private final HttpStatus status;
     private final String code;

@@ -2,7 +2,7 @@ package com.medflow.questionnaire.dto.response;
 
 import com.medflow.questionnaire.entity.QuestionnaireAnalysis;
 import com.medflow.questionnaire.entity.QuestionnaireAnalysisStatus;
-import com.medflow.questionnaire.entity.UrgencyLevel;
+import com.medflow.questionnaire.entity.PriorityLevel;
 
 import java.util.List;
 
@@ -13,7 +13,7 @@ public record QuestionnaireAnalysisDetailResponse(
         List<String> keyFindings,
         List<String> riskSignals,
         List<String> doctorCheckpoints,
-        UrgencyLevel priorityLevel,
+        PriorityLevel priorityLevel,
         QuestionnaireAnalysisStatus status
 ) {
     public static QuestionnaireAnalysisDetailResponse from(QuestionnaireAnalysis analysis) {

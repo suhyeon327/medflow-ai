@@ -58,7 +58,7 @@ public class QuestionnaireAnalysis extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
-    private UrgencyLevel priorityLevel;   // 의료진 확인 우선순위
+    private PriorityLevel priorityLevel;   // 의료진 확인 우선순위
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -91,7 +91,7 @@ public class QuestionnaireAnalysis extends BaseEntity {
             List<String> keyFindings,
             List<String> riskSignals,
             List<String> doctorCheckpoints,
-            UrgencyLevel priorityLevel
+            PriorityLevel priorityLevel
     ) {
         this.summary = summary;
         replaceElements(this.keyFindings, keyFindings);

@@ -1,15 +1,19 @@
 package com.medflow.questionnaire.analysis;
 
 import com.medflow.questionnaire.dto.response.QuestionnaireAnalysisResponse;
+import com.medflow.questionnaire.entity.PriorityLevel;
 import com.medflow.questionnaire.entity.Questionnaire;
-import com.medflow.questionnaire.entity.UrgencyLevel;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import org.springframework.context.annotation.Profile;
 
 import java.util.List;
 
 @Component
-@Profile({"dev", "test"})
+@ConditionalOnProperty(
+        name = "ai.provider",
+        havingValue = "fake",
+        matchIfMissing = true
+)
 public class FakeQuestionnaireAnalyzer implements AiQuestionnaireAnalyzer {
 
     @Override
@@ -33,7 +37,7 @@ public class FakeQuestionnaireAnalyzer implements AiQuestionnaireAnalyzer {
                         "증상의 시작 시점과 변화 양상을 추가로 확인해 주세요.",
                         "동반 증상의 지속 여부를 확인해 주세요."
                 ),
-                UrgencyLevel.NORMAL
+                PriorityLevel.NORMAL
         );
     }
 

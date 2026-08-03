@@ -41,7 +41,7 @@ class DoctorQuestionnairesServiceTest {
         data.analysis().startProcessing();
         data.analysis().complete(
                 "기침과 발열이 있습니다.", List.of("지속된 기침"), List.of("발열 지속"),
-                List.of("호흡곤란 확인"), UrgencyLevel.CAUTION
+                List.of("호흡곤란 확인"), PriorityLevel.CAUTION
         );
         mockFound(100L, data);
 
@@ -55,7 +55,7 @@ class DoctorQuestionnairesServiceTest {
         assertThat(response.keyFindings()).containsExactly("지속된 기침");
         assertThat(response.riskSignals()).containsExactly("발열 지속");
         assertThat(response.doctorCheckpoints()).containsExactly("호흡곤란 확인");
-        assertThat(response.priorityLevel()).isEqualTo(UrgencyLevel.CAUTION);
+        assertThat(response.priorityLevel()).isEqualTo(PriorityLevel.CAUTION);
         assertThat(response.status()).isEqualTo(QuestionnaireAnalysisStatus.COMPLETED);
     }
 
