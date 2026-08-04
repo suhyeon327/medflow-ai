@@ -58,10 +58,11 @@ public class AuthController {
     // 회원 탈퇴
     @DeleteMapping("/withdraw")
     public ApiResponse<WithdrawResponse> withdraw(
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody @Valid WithdrawRequest request
     ) {
         return ApiResponse.success(
-                authService.withdraw(userDetails.getUserId())
+                authService.withdraw(userDetails.getUserId(), request)
         );
     }
 }

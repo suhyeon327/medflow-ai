@@ -27,7 +27,7 @@ public class SwaggerConfig {
     private Info apiInfo() {
         return new Info()
                 .title("Spring Boot JWT API TEST")
-                .description("Spring Security + JWT + Redis + Swagger API 문서")
+                .description("Spring Security + JWT + Swagger API 문서")
                 .version("1.0.0");
     }
 }

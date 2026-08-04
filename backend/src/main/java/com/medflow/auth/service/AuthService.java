@@ -169,19 +169,23 @@ public class AuthService {
     }
 
     // 회원탈퇴
-    public WithdrawResponse withdraw(Long userId) {
+    public WithdrawResponse withdraw(Long userId, WithdrawRequest request) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
-        Patient patient = patientRepository.findByUserId(userId)
-                .orElseThrow(PatientNotFoundException::new);
+        // 탈퇴 요청 비밀번호가 현재 사용자의 비밀번호와 일치하는지 확인
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new InvalidPasswordException();
+        }
 
         user.withdraw();
 
         user.softDelete();
 
-        patient.softDelete();
+        // 환자 프로필은 선택 정보이므로 존재하는 경우에만 함께 탈퇴 처리
+        patientRepository.findByUserId(userId)
+                .ifPresent(Patient::softDelete);
 
         refreshTokenRepository.deleteByUserId(userId);
 

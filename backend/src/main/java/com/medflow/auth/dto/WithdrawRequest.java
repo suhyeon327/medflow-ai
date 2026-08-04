@@ -9,9 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class WithdrawRequest {
 
-    @NotNull
-    private Long id;
-
     @NotBlank
     private String password;
 }
