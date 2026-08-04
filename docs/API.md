@@ -1,6 +1,6 @@
 # MedFlow AI API
 
-> 기준일: 2026-08-04  
+> 기준일: 2026-08-05
 > 근거: Controller, DTO, Service, SecurityConfig, ErrorCode, GlobalExceptionHandler  
 > Base URL/Host: [작성자 확인 필요: 배포 환경별 API Host]
 
@@ -59,15 +59,15 @@ Authorization: Bearer {accessToken}
 
 Controller: `com.medflow.auth.controller.AuthController`
 
-현재 Controller에 선언된 API는 전체 44개다.
+현재 Controller에 선언된 API 메서드는 전체 46개다. 관리자 의사 API 4개는 각 메서드마다 `/api/v1/admin/doctors`와 `/admin/doctors` 두 경로로 매핑된다.
 
 | Method | Path | 요청 DTO | 응답 DTO | 인증 | Role |
 |---|---|---|---|---|---|
 | POST | `/api/v1/auth/signup` | `SignupRequest` | `SignupResponse` | 불필요 | 공개 |
 | POST | `/api/v1/auth/login` | `LoginRequest` | `JwtToken` | 불필요 | 공개 |
-| POST | `/api/v1/auth/reissue` | `ReissueRequest` | `JwtToken` | 필요 | 모든 인증 Role |
+| POST | `/api/v1/auth/reissue` | `ReissueRequest` | `JwtToken` | 불필요 | 공개 |
 | POST | `/api/v1/auth/logout` | `LogoutRequest` | `Void` | 필요 | 모든 인증 Role |
-| DELETE | `/api/v1/auth/withdraw` | 없음 | `WithdrawResponse` | 필요 | 모든 인증 Role |
+| DELETE | `/api/v1/auth/withdraw` | `WithdrawRequest` | `WithdrawResponse` | 필요 | 모든 인증 Role |
 
 DTO 필드:
 
@@ -76,17 +76,19 @@ DTO 필드:
 - `LoginRequest`: `email`, `password`
 - `JwtToken`: `grantType`, `accessToken`, `refreshToken`
 - `ReissueRequest`/`LogoutRequest`: `refreshToken`
+- `WithdrawRequest`: `password`
 - `WithdrawResponse`: `id`, `deleteAt`, `message`
 
 주요 예외:
 
 - 409 `AUTH_001`: 이메일 중복
 - 409 `AUTH_008`: ADMIN 역할 회원가입 요청
+- 401 `AUTH_002`: 회원 탈퇴 비밀번호 불일치
 - 401 `AUTH_005`: 로그인 실패 또는 Refresh Token 무효/만료
 - 404 `AUTH_003`: 사용자 없음
 - 401 `AUTH_004`: JWT에 권한 claim 없음
 
-`/reissue`는 기능상 Refresh Token을 처리하지만 공개 matcher에 없으므로 현재 Access Token도 필요하다. `WithdrawRequest` 클래스는 존재하지만 탈퇴 Controller에서 사용하지 않는다.
+`/reissue`는 `SecurityConfig`의 공개 matcher에 포함되어 Access Token 없이 Refresh Token으로 호출한다. 회원 탈퇴는 로그인 사용자의 ID와 요청 본문의 비밀번호를 함께 검증한다.
 
 ## 3. 사용자 관리 API
 
@@ -135,9 +137,9 @@ Controller: `com.medflow.hospital.controller.HospitalController`
 
 | Method | Path | 요청 | 응답 DTO | 인증 | Role |
 |---|---|---|---|---|---|
-| GET | `/api/v1/hospitals` | 없음 | `List<HospitalListResponse>` | 불필요 | 공개 |
+| GET | `/api/v1/hospitals` | Query `keyword?: String` | `List<HospitalListResponse>` | 불필요 | 공개 |
 | GET | `/api/v1/hospitals/{hospitalId}` | Path `hospitalId: Long` | `HospitalDetailResponse` | 불필요 | 공개 |
-| GET | `/api/v1/hospitals/{hospitalId}/doctors` | Path `hospitalId: Long` | `List<PublicDoctorResponse>` | 불필요 | 공개 |
+| GET | `/api/v1/hospitals/{hospitalId}/doctors` | Path `hospitalId: Long` | `List<DoctorResponse>` | 불필요 | 공개 |
 
 ### 관리자 병원 관리
 
@@ -154,9 +156,9 @@ DTO 필드:
 
 - `HospitalCreateRequest`: `name`, `address`, `region`, `tel`
 - `HospitalUpdateRequest`: 위 필드 + `status`
-- `HospitalListResponse`: `id`, `name`
+- `HospitalListResponse`: `id`, `name`, `region`, `address`
 - `HospitalDetailResponse`: `id`, `name`, `address`, `region`, `tel`
-- `PublicDoctorResponse`: `doctorId`, `doctorName`, `hospitalId`, `hospitalName`
+- `DoctorResponse`: `doctorId`, `doctorName`, `hospitalId`, `hospitalName`, `specialty`, `introduction`, `contact`
 - `AdminHospitalResponse`: 상세 정보 + `status`, `createdAt`, `updatedAt`, `deletedAt`
 - `deleteResponse`: `hospitalId`, `deleteAt`, `message`
 
@@ -174,9 +176,11 @@ Controller: `com.medflow.doctor.controller.PublicDoctorController`
 
 | Method | Path | 요청 | 응답 DTO | 인증 | Role |
 |---|---|---|---|---|---|
-| GET | `/api/v1/doctors/{doctorId}` | Path `doctorId: Long` | `PublicDoctorResponse` | 불필요 | 공개 |
+| GET | `/api/v1/doctors/{doctorId}` | Path `doctorId: Long` | `DoctorResponse` | 불필요 | 공개 |
 
 공개 병원별 의사 목록과 의사 상세 조회는 승인 상태와 연결 계정 상태가 모두 `ACTIVE`인 의사만 반환한다. 공개 응답에는 면허번호, 이메일, 승인 상태 등 관리자 전용 정보를 포함하지 않는다.
+
+`GET /api/v1/hospitals?keyword=서울`은 운영 중인 병원의 병원명, 지역, 주소를 통합 검색한다.
 
 ### 의사 신청/프로필
 
@@ -184,17 +188,18 @@ Controller: `com.medflow.doctor.controller.DoctorController`
 
 | Method | Path | 요청 DTO | 응답 DTO | 인증 | Role |
 |---|---|---|---|---|---|
-| POST | `/doctor/apply` | `DoctorApplyRequest` | `DoctorApplyResponse` | 필요 | DOCTOR |
-| GET | `/doctor/profile` | 없음 | `DoctorInfoResponse` | 필요 | 모든 인증 Role |
-| PATCH | `/doctor/profile` | `DoctorUpdateRequest` | `DoctorUpdateResponse` | 필요 | DOCTOR, ADMIN |
-| DELETE | `/doctor/profile` | 없음 | `DoctorDeleteResponse` | 필요 | DOCTOR |
+| POST | `/api/v1/doctors/apply` | `DoctorApplyRequest` | `DoctorApplyResponse` | 필요 | DOCTOR |
+| GET | `/api/v1/doctors/profile` | 없음 | `DoctorInfoResponse` | 필요 | DOCTOR |
+| PATCH | `/api/v1/doctors/profile` | `DoctorUpdateRequest` | `DoctorResponse` | 필요 | DOCTOR |
+| DELETE | `/api/v1/doctors/profile` | 없음 | `DoctorDeleteResponse` | 필요 | DOCTOR |
 
 DTO 필드:
 
-- `DoctorApplyRequest`/`DoctorUpdateRequest`: `hospitalId`, `name`, `licenseNumber`
+- `DoctorApplyRequest`: `hospitalId`, `name`, `licenseNumber`, `specialty`, `introduction?`, `contact?`
+- `DoctorUpdateRequest`: `hospitalId`, `name`, `licenseNumber`, `specialty?`, `introduction?`, `contact?`
 - `DoctorApplyResponse`: `doctorId`, `doctorName`, `doctorstatus`
 - `DoctorInfoResponse`: `doctorId`, `doctorName`, `hospitalName`, `licenseNumber`, `status`
-- `DoctorUpdateResponse`: `doctorId`, `doctorName`, `doctorstatus`
+- `DoctorResponse`: `doctorId`, `doctorName`, `hospitalId`, `hospitalName`, `specialty`, `introduction`, `contact`
 - `DoctorDeleteResponse`: `doctorId`, `message`
 
 ### 관리자 의사 관리
@@ -208,7 +213,7 @@ Controller: `com.medflow.doctor.controller.DoctorAdminController`
 | PATCH | `/api/v1/admin/doctors/{doctorId}/approve` | 없음 | `DoctorApproveResponse` | 필요 | ADMIN |
 | PATCH | `/api/v1/admin/doctors/{doctorId}/reject` | 없음 | `DoctorRejectResponse` | 필요 | ADMIN |
 
-기존 클라이언트 호환을 위해 `/admin/doctors` 기반 경로도 동일하게 유지한다.
+각 관리자 의사 API는 `/api/v1/admin/doctors`뿐 아니라 `/admin/doctors` 기반 경로에도 동일하게 매핑되어 있다. 두 경로 모두 인증 및 ADMIN 권한이 필요하다.
 
 주요 응답 필드:
 
@@ -415,11 +420,11 @@ Controller: `com.medflow.questionnaire.controller.DoctorQuestionnairesController
 | 500 | `AI_001` | AI 분석 실패 |
 | 500 | `AI_002` | Gemini API Key 미설정 |
 
-`RESERVATION_006`은 정의되어 있지 않다. `INVALID_PASSWORD(AUTH_002)`와 `WithdrawRequest`는 현재 Controller 실행 경로에서 사용되지 않는다.
+`RESERVATION_006`은 정의되어 있지 않다. `INVALID_PASSWORD(AUTH_002)`는 회원 탈퇴 시 비밀번호가 일치하지 않을 때 사용된다.
 
 ## 코드로 확인한 내용
 
-- Controller에 선언된 44개 API의 Method, 정확한 path, 요청/응답 DTO
+- Controller에 선언된 46개 API 메서드의 Method, 정확한 path, 요청/응답 DTO
 - SecurityConfig와 `@PreAuthorize`를 합친 인증/Role 정책
 - DTO의 실제 필드와 validation 적용 여부
 - 공통 성공/실패 응답 구조
@@ -429,9 +434,7 @@ Controller: `com.medflow.questionnaire.controller.DoctorQuestionnairesController
 ## 작성자 확인이 필요한 내용
 
 - [작성자 확인 필요: API 서버 Host와 환경별 base URL]
-- [작성자 확인 필요: `/doctor` 프로필 경로를 `/api/v1`로 통합할지]
 - [작성자 확인 필요: 생성/삭제 API의 목표 HTTP status 정책]
-- [작성자 확인 필요: `/reissue`의 Access Token 인증 요구가 의도된 것인지]
 - [작성자 확인 필요: 환자 프로필 API의 목표 Role 범위]
 - [작성자 확인 필요: 병원 미존재가 409로 정의된 것이 의도된 것인지]
 - [작성자 확인 필요: 문진 DTO의 공식 JSON 예시와 의료 데이터 필드별 허용 범위]
