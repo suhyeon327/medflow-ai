@@ -1,11 +1,13 @@
 import { createContext, useContext } from 'react';
-import type { AuthUser, LoginRequest } from '../types/auth';
+import type { AuthUser, LoginRequest, WithdrawResponse } from '../types/auth';
 
 export interface AuthContextValue {
   user: AuthUser | null;
   isAuthenticated: boolean;
+  isRestoring: boolean;
   login: (request: LoginRequest) => Promise<AuthUser>;
   logout: () => Promise<void>;
+  withdraw: (password: string) => Promise<WithdrawResponse>;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);

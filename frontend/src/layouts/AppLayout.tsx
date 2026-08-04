@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { LOGIN_PATH } from '../routes/routePaths';
+import { LOGIN_PATH, WITHDRAW_PATH } from '../routes/routePaths';
 
 const ROLE_LABEL = { PATIENT: '환자', DOCTOR: '의사', ADMIN: '관리자' } as const;
 
@@ -28,14 +28,19 @@ export function AppLayout() {
             <p className="text-lg font-bold text-blue-700">MedFlow AI</p>
             {user && <p className="text-xs text-slate-500">{user.email} · {ROLE_LABEL[user.role]}</p>}
           </div>
-          <button
-            type="button"
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
-          </button>
+          <div className="flex items-center gap-2">
+            {user?.role === 'PATIENT' && (
+              <Link to={WITHDRAW_PATH} className="rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">회원 탈퇴</Link>
+            )}
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
+            </button>
+          </div>
         </div>
       </header>
       <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6"><Outlet /></main>

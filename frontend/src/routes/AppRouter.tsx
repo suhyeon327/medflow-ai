@@ -6,8 +6,9 @@ import { NotFoundPage } from '../pages/NotFoundPage';
 import { RoleHomePage } from '../pages/RoleHomePage';
 import { SignupPage } from '../pages/SignupPage';
 import { UnauthorizedPage } from '../pages/UnauthorizedPage';
+import { WithdrawPage } from '../pages/WithdrawPage';
 import { ProtectedRoute, PublicOnlyRoute, RoleRoute } from './RouteGuards';
-import { LOGIN_PATH, ROLE_HOME_PATH, SIGNUP_PATH, UNAUTHORIZED_PATH } from './routePaths';
+import { LOGIN_PATH, ROLE_HOME_PATH, SIGNUP_PATH, UNAUTHORIZED_PATH, WITHDRAW_PATH } from './routePaths';
 
 function HomeRedirect() {
   const { user } = useAuth();
@@ -28,6 +29,7 @@ export function AppRouter() {
         <Route element={<AppLayout />}>
           <Route element={<RoleRoute allowedRole="PATIENT" />}>
             <Route path={ROLE_HOME_PATH.PATIENT} element={<RoleHomePage />} />
+            <Route path={WITHDRAW_PATH} element={<WithdrawPage />} />
           </Route>
           <Route element={<RoleRoute allowedRole="DOCTOR" />}>
             <Route path={ROLE_HOME_PATH.DOCTOR} element={<RoleHomePage />} />

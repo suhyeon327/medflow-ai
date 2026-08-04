@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getApiErrorMessage } from '../api/apiError';
@@ -13,7 +13,18 @@ export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const signupCompleted = (location.state as { signupCompleted?: boolean } | null)?.signupCompleted;
+  const [completionMessage] = useState(() => {
+    const state = location.state as { signupCompleted?: boolean; withdrawCompleted?: boolean } | null;
+    if (state?.withdrawCompleted) return '회원 탈퇴가 완료되었습니다.';
+    if (state?.signupCompleted) return '회원가입이 완료되었습니다. 로그인해 주세요.';
+    return null;
+  });
+
+  useEffect(() => {
+    if (completionMessage) {
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [completionMessage, location.pathname, navigate]);
 
   const loginMutation = useMutation({
     mutationFn: login,
@@ -34,9 +45,9 @@ export function LoginPage() {
           <p className="mt-2 text-sm text-slate-600">등록된 계정으로 서비스를 이용하세요.</p>
         </div>
 
-        {signupCompleted && (
+        {completionMessage && (
           <p role="status" className="mb-5 rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
-            회원가입이 완료되었습니다. 로그인해 주세요.
+            {completionMessage}
           </p>
         )}
 
