@@ -1,6 +1,6 @@
 # MedFlow AI ERD
 
-> 기준일: 2026-08-04  
+> 기준일: 2026-08-05
 > 근거: `backend/src/main/java/com/medflow/**/entity`의 JPA annotation과 필드  
 > 주의: 물리 컬럼명은 명시된 `@Column`/`@JoinColumn`과 Spring Boot 기본 naming strategy를 기준으로 표기했다. 실제 운영 DB DDL은 저장소에 없다.
 
@@ -63,6 +63,9 @@ erDiagram
         bigint hospital_id FK
         varchar_50 name
         varchar_30 license_number UK
+        varchar_100 specialty
+        varchar_1000 introduction
+        varchar_20 contact
         varchar status
         datetime created_at
         datetime updated_at
@@ -216,6 +219,9 @@ erDiagram
 | `hospital` | `Hospital` | N:1 LAZY, `hospital_id` NOT NULL FK |
 | `name` | `String` | NOT NULL, length 50 |
 | `licenseNumber` | `String` | NOT NULL, UNIQUE, length 30 |
+| `specialty` | `String` | nullable, length 100 |
+| `introduction` | `String` | nullable, length 1000 |
+| `contact` | `String` | nullable, length 20 |
 | `status` | `DoctorStatus` | STRING enum, NOT NULL |
 | 공통 감사 필드 |  | BaseEntity |
 
@@ -399,4 +405,3 @@ Entity에 `@SQLDelete`, `@SQLRestriction`, `@Where`가 없다. Repository 조회
 - [작성자 확인 필요: 모든 주요 Entity에 적용할 최종 Soft Delete 조회/복구 정책]
 - [작성자 확인 필요: 의사 신청 취소의 물리 삭제가 의도된 것인지]
 - [작성자 확인 필요: Department 도메인의 도입 여부와 관계]
-
