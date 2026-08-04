@@ -38,6 +38,15 @@ public class Doctor extends BaseEntity {
     @Column(name = "license_number", nullable = false, unique = true, length = 30)
     private String licenseNumber;
 
+    @Column(name = "specialty", length = 100)
+    private String specialty;
+
+    @Column(name = "introduction", length = 1000)
+    private String introduction;
+
+    @Column(name = "contact", length = 20)
+    private String contact;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private DoctorStatus status;
@@ -45,39 +54,68 @@ public class Doctor extends BaseEntity {
     private Doctor(
             User user,
             Hospital hospital,
-//            Department department,
             String name,
-            String licenseNumber
+            String licenseNumber,
+            String specialty,
+            String introduction,
+            String contact
     ) {
         this.user = user;
         this.hospital = hospital;
-//        this.department = department;
         this.name = name;
         this.licenseNumber = licenseNumber;
+        this.specialty = specialty;
+        this.introduction = introduction;
+        this.contact = contact;
         this.status = DoctorStatus.PENDING;
     }
 
     public static Doctor create(
             User user,
             Hospital hospital,
-//            Department department,
+            String name,
+            String licenseNumber,
+            String specialty,
+            String introduction,
+            String contact
+    ) {
+        return new Doctor(user, hospital, name, licenseNumber, specialty, introduction, contact);
+    }
+
+    public static Doctor create(
+            User user,
+            Hospital hospital,
             String name,
             String licenseNumber
     ) {
-//        return new Doctor(user, hospital, department, name, licenseNumber);
-        return new Doctor(user, hospital, name, licenseNumber);
+        return create(user, hospital, name, licenseNumber, null, null, null);
     }
 
     // 의사 정보 수정
-    public void update(Hospital hospital, String name, String licenseNumber) {
+    public void update(
+            Hospital hospital,
+            String name,
+            String licenseNumber,
+            String specialty,
+            String introduction,
+            String contact
+    ) {
+        boolean certificationChanged = this.hospital != hospital
+                || !this.name.equals(name)
+                || !this.licenseNumber.equals(licenseNumber);
 
-        if (this.status != DoctorStatus.PENDING) {
+        if (this.status != DoctorStatus.PENDING && certificationChanged) {
             throw new BusinessException(ErrorCode.INVALID_DOCTOR_STATUS);
         }
 
-        this.hospital = hospital;
-        this.name = name;
-        this.licenseNumber = licenseNumber;
+        if (this.status == DoctorStatus.PENDING) {
+            this.hospital = hospital;
+            this.name = name;
+            this.licenseNumber = licenseNumber;
+        }
+        this.specialty = specialty;
+        this.introduction = introduction;
+        this.contact = contact;
     }
 
     // 의사 인증 취소 가능 여부

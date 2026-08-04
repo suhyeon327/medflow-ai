@@ -6,19 +6,27 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class PublicDoctorResponse {
+public class DoctorResponse {
 
     private Long doctorId;
     private String doctorName;
     private Long hospitalId;
     private String hospitalName;
+    private String specialty;
+    private String introduction;
+    private String contact;
 
-    public static PublicDoctorResponse from(Doctor doctor) {
-        return PublicDoctorResponse.builder()
+    public static DoctorResponse from(Doctor doctor) {
+        return DoctorResponse.builder()
                 .doctorId(doctor.getId())
                 .doctorName(doctor.getName())
                 .hospitalId(doctor.getHospital().getId())
                 .hospitalName(doctor.getHospital().getName())
+                .specialty(doctor.getSpecialty())
+                .introduction(doctor.getIntroduction())
+                .contact(doctor.getContact() != null
+                        ? doctor.getContact()
+                        : doctor.getHospital().getTel())
                 .build();
     }
 }

@@ -7,7 +7,7 @@ import com.medflow.doctor.dto.request.DoctorUpdateRequest;
 import com.medflow.doctor.dto.response.DoctorApplyResponse;
 import com.medflow.doctor.dto.response.DoctorDeleteResponse;
 import com.medflow.doctor.dto.response.DoctorInfoResponse;
-import com.medflow.doctor.dto.response.DoctorUpdateResponse;
+import com.medflow.doctor.dto.response.DoctorResponse;
 import com.medflow.doctor.service.DoctorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,12 +17,12 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/doctor")
+@PreAuthorize("hasRole('DOCTOR')")
+@RequestMapping("/api/v1/doctors")
 public class DoctorController {
 
     private final DoctorService doctorService;
 
-    @PreAuthorize("hasRole('DOCTOR')")
     @PostMapping("/apply")
     public ApiResponse<DoctorApplyResponse> apply(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -45,9 +45,8 @@ public class DoctorController {
     }
 
     // 의사 정보 수정
-    @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN')")
     @PatchMapping("/profile")
-    public ApiResponse<DoctorUpdateResponse> update(
+    public ApiResponse<DoctorResponse> update(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody DoctorUpdateRequest request
     ) {
@@ -57,7 +56,6 @@ public class DoctorController {
     }
 
     // 의사 인증 신청 취소
-    @PreAuthorize("hasRole('DOCTOR')")
     @DeleteMapping("/profile")
     public ApiResponse<DoctorDeleteResponse> cancel(
             @AuthenticationPrincipal CustomUserDetails userDetails

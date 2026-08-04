@@ -7,8 +7,7 @@ import com.medflow.doctor.dto.request.DoctorUpdateRequest;
 import com.medflow.doctor.dto.response.DoctorApplyResponse;
 import com.medflow.doctor.dto.response.DoctorDeleteResponse;
 import com.medflow.doctor.dto.response.DoctorInfoResponse;
-import com.medflow.doctor.dto.response.DoctorUpdateResponse;
-import com.medflow.doctor.dto.response.PublicDoctorResponse;
+import com.medflow.doctor.dto.response.DoctorResponse;
 import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorStatus;
 import com.medflow.doctor.repository.DoctorRepository;
@@ -53,7 +52,10 @@ public class DoctorService {
                 user,
                 hospital,
                 request.getName(),
-                request.getLicenseNumber()
+                request.getLicenseNumber(),
+                request.getSpecialty(),
+                request.getIntroduction(),
+                request.getContact()
         );
 
         doctorRepository.save(doctor);
@@ -72,7 +74,7 @@ public class DoctorService {
     }
 
     // 의사 정보 수정
-    public DoctorUpdateResponse update(Long userId, DoctorUpdateRequest request) {
+    public DoctorResponse update(Long userId, DoctorUpdateRequest request) {
 
         Doctor doctor = doctorRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
@@ -88,10 +90,13 @@ public class DoctorService {
         doctor.update(
                 hospital,
                 request.getName(),
-                request.getLicenseNumber()
+                request.getLicenseNumber(),
+                request.getSpecialty(),
+                request.getIntroduction(),
+                request.getContact()
         );
 
-        return DoctorUpdateResponse.from(doctor);
+        return DoctorResponse.from(doctor);
     }
 
     // 의사 인증 신청 취소
@@ -109,7 +114,7 @@ public class DoctorService {
 
     // 공개 의사 상세 조회
     @Transactional(readOnly = true)
-    public PublicDoctorResponse getPublicDoctor(Long doctorId) {
+    public DoctorResponse getPublicDoctor(Long doctorId) {
         Doctor doctor = doctorRepository.findByIdAndStatusAndUserStatus(
                         doctorId,
                         DoctorStatus.ACTIVE,
@@ -117,6 +122,6 @@ public class DoctorService {
                 )
                 .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
 
-        return PublicDoctorResponse.from(doctor);
+        return DoctorResponse.from(doctor);
     }
 }

@@ -1,7 +1,7 @@
 package com.medflow.hospital.controller;
 
 import com.medflow.common.response.ApiResponse;
-import com.medflow.doctor.dto.response.PublicDoctorResponse;
+import com.medflow.doctor.dto.response.DoctorResponse;
 import com.medflow.hospital.dto.response.HospitalDetailResponse;
 import com.medflow.hospital.dto.response.HospitalListResponse;
 import com.medflow.hospital.service.HospitalService;
@@ -21,11 +21,13 @@ public class HospitalController {
     private final HospitalService hospitalService;
 
     // 병원 목록 조회
-    @Operation(summary = "병원 목록 조회", security = {})
+    @Operation(summary = "병원 목록 및 검색", description = "병원명, 지역, 주소를 하나의 검색어로 검색합니다.", security = {})
     @GetMapping
-    public ApiResponse<List<HospitalListResponse>> getHospitals() {
+    public ApiResponse<List<HospitalListResponse>> getHospitals(
+            @RequestParam(required = false) String keyword
+    ) {
         return ApiResponse.success(
-                hospitalService.getAvailableHospitals()
+                hospitalService.getAvailableHospitals(keyword)
         );
     }
 
@@ -43,7 +45,7 @@ public class HospitalController {
     // 병원별 의사 목록 조회
     @Operation(summary = "병원별 의사 목록 조회", description = "승인 완료되고 활성화된 의사만 반환합니다.", security = {})
     @GetMapping("/{hospitalId}/doctors")
-    public ApiResponse<List<PublicDoctorResponse>> getDoctors(
+    public ApiResponse<List<DoctorResponse>> getDoctors(
             @PathVariable Long hospitalId
     ) {
         return ApiResponse.success(

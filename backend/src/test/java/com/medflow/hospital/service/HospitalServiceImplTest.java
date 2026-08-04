@@ -35,6 +35,26 @@ class HospitalServiceImplTest {
     private HospitalServiceImpl hospitalService;
 
     @Test
+    void getAvailableHospitals_searchesNameRegionAndAddressByKeyword() {
+        String keyword = "서울";
+        Hospital hospital = mock(Hospital.class);
+
+        when(hospitalRepository.searchByStatusAndKeyword(HospitalStatus.ACTIVE, keyword))
+                .thenReturn(List.of(hospital));
+
+        assertThat(hospitalService.getAvailableHospitals("  서울  ")).hasSize(1);
+        verify(hospitalRepository).searchByStatusAndKeyword(HospitalStatus.ACTIVE, keyword);
+    }
+
+    @Test
+    void getAvailableHospitals_withoutKeywordReturnsAllActiveHospitals() {
+        when(hospitalRepository.findAllByStatus(HospitalStatus.ACTIVE)).thenReturn(List.of());
+
+        assertThat(hospitalService.getAvailableHospitals(" ")).isEmpty();
+        verify(hospitalRepository).findAllByStatus(HospitalStatus.ACTIVE);
+    }
+
+    @Test
     void getAvailableDoctors_returnsOnlyActiveApprovedDoctors() {
         Long hospitalId = 1L;
         Hospital hospital = mock(Hospital.class);

@@ -3,8 +3,8 @@ package com.medflow.hospital.service;
 import com.medflow.common.exception.BusinessException;
 import com.medflow.common.exception.ErrorCode;
 import com.medflow.common.exception.HospitalAlreadyExistsException;
-import com.medflow.doctor.dto.response.PublicDoctorResponse;
 import com.medflow.doctor.entity.DoctorStatus;
+import com.medflow.doctor.dto.response.DoctorResponse;
 import com.medflow.doctor.repository.DoctorRepository;
 import com.medflow.hospital.dto.request.HospitalCreateRequest;
 import com.medflow.hospital.dto.request.HospitalUpdateRequest;
@@ -109,8 +109,12 @@ public class HospitalServiceImpl implements HospitalService {
     // 사용자 병원 목록 조회
     @Override
     @Transactional(readOnly = true)
-    public List<HospitalListResponse> getAvailableHospitals() {
-        return hospitalRepository.findAllByStatus(HospitalStatus.ACTIVE)
+    public List<HospitalListResponse> getAvailableHospitals(String keyword) {
+        List<Hospital> hospitals = keyword == null || keyword.isBlank()
+                ? hospitalRepository.findAllByStatus(HospitalStatus.ACTIVE)
+                : hospitalRepository.searchByStatusAndKeyword(HospitalStatus.ACTIVE, keyword.trim());
+
+        return hospitals
                 .stream()
                 .map(HospitalListResponse::from)
                 .toList();
@@ -130,7 +134,7 @@ public class HospitalServiceImpl implements HospitalService {
     // 병원별 공개 의사 목록 조회
     @Override
     @Transactional(readOnly = true)
-    public List<PublicDoctorResponse> getAvailableDoctors(Long hospitalId) {
+    public List<DoctorResponse> getAvailableDoctors(Long hospitalId) {
         hospitalRepository.findByIdAndStatus(hospitalId, HospitalStatus.ACTIVE)
                 .orElseThrow(() -> new BusinessException(ErrorCode.HOSPITAL_NOT_FOUND));
 
@@ -139,7 +143,7 @@ public class HospitalServiceImpl implements HospitalService {
                         DoctorStatus.ACTIVE,
                         UserStatus.ACTIVE
                 ).stream()
-                .map(PublicDoctorResponse::from)
+                .map(DoctorResponse::from)
                 .toList();
     }
 }
