@@ -19,6 +19,7 @@ public class DoctorApplyRequest {
     @NotBlank
     private String licenseNumber;
 
+    @NotBlank
     @Size(max = 100)
     private String specialty;
 
