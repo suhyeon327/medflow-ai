@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getApiErrorMessage } from '../api/apiError';
 import { useAuth } from '../auth/AuthContext';
-import { ROLE_HOME_PATH, SIGNUP_PATH } from '../routes/routePaths';
+import { HOSPITALS_PATH, ROLE_HOME_PATH, SIGNUP_PATH } from '../routes/routePaths';
 import type { LoginRequest } from '../types/auth';
 
 const INITIAL_FORM: LoginRequest = { email: '', password: '' };
@@ -100,9 +100,10 @@ export function LoginPage() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-slate-600">
-          계정이 없나요? <Link to={SIGNUP_PATH} className="font-semibold text-blue-700">회원가입</Link>
-        </p>
+        <div className="mt-6 space-y-2 text-center text-sm text-slate-600">
+          <p>계정이 없나요? <Link to={SIGNUP_PATH} className="font-semibold text-blue-700">회원가입</Link></p>
+          <p><Link to={HOSPITALS_PATH} className="font-semibold text-blue-700">로그인 없이 병원 찾기</Link></p>
+        </div>
       </section>
     </main>
   );

@@ -1,6 +1,10 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { AppLayout } from '../layouts/AppLayout';
+import { PublicLayout } from '../layouts/PublicLayout';
+import { DoctorDetailPage } from '../pages/DoctorDetailPage';
+import { HospitalDetailPage } from '../pages/HospitalDetailPage';
+import { HospitalListPage } from '../pages/HospitalListPage';
 import { LoginPage } from '../pages/LoginPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { RoleHomePage } from '../pages/RoleHomePage';
@@ -8,11 +12,11 @@ import { SignupPage } from '../pages/SignupPage';
 import { UnauthorizedPage } from '../pages/UnauthorizedPage';
 import { WithdrawPage } from '../pages/WithdrawPage';
 import { ProtectedRoute, PublicOnlyRoute, RoleRoute } from './RouteGuards';
-import { LOGIN_PATH, ROLE_HOME_PATH, SIGNUP_PATH, UNAUTHORIZED_PATH, WITHDRAW_PATH } from './routePaths';
+import { HOSPITALS_PATH, LOGIN_PATH, ROLE_HOME_PATH, SIGNUP_PATH, UNAUTHORIZED_PATH, WITHDRAW_PATH } from './routePaths';
 
 function HomeRedirect() {
   const { user } = useAuth();
-  return <Navigate to={user ? ROLE_HOME_PATH[user.role] : LOGIN_PATH} replace />;
+  return <Navigate to={user ? ROLE_HOME_PATH[user.role] : HOSPITALS_PATH} replace />;
 }
 
 export function AppRouter() {
@@ -22,6 +26,12 @@ export function AppRouter() {
       <Route element={<PublicOnlyRoute />}>
         <Route path={LOGIN_PATH} element={<LoginPage />} />
         <Route path={SIGNUP_PATH} element={<SignupPage />} />
+      </Route>
+
+      <Route element={<PublicLayout />}>
+        <Route path={HOSPITALS_PATH} element={<HospitalListPage />} />
+        <Route path="/hospitals/:hospitalId" element={<HospitalDetailPage />} />
+        <Route path="/doctors/:doctorId" element={<DoctorDetailPage />} />
       </Route>
 
       <Route element={<ProtectedRoute />}>

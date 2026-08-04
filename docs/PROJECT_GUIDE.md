@@ -1,6 +1,6 @@
 # MedFlow AI 프로젝트 가이드
 
-> 기준일: 2026-08-04  
+> 기준일: 2026-08-05
 > 근거: `backend/src/main`, `backend/src/test`, `backend/build.gradle`, 애플리케이션 설정 및 `docs/adr`  
 > 원칙: 이 문서의 **구현 완료**는 현재 소스 코드에 실행 경로가 존재한다는 뜻이다. 테스트 전체 통과나 운영 배포 완료를 뜻하지 않는다.
 
@@ -58,8 +58,8 @@ MedFlow AI는 환자, 의사, 관리자가 병원 진료 예약과 사전 문진
 | 인증 | `AuthService`, `JwtGenerator`, `JwtProvider` | 인증, JWT와 Refresh Token 수명주기 |
 | 토큰 | `RefreshToken` | DB 저장 Refresh Token과 만료 시각 |
 | 환자 | `Patient`, `PatientServiceImpl` | 사용자와 연결된 환자 프로필 |
-| 병원 | `Hospital`, `HospitalServiceImpl` | 병원 정보와 운영 상태 |
-| 의사 | `Doctor`, `DoctorService`, `DoctorAdminService` | 자격 신청, 수정, 취소, 승인/반려 |
+| 병원 | `Hospital`, `HospitalServiceImpl` | 병원 정보, 운영 상태, 공개 통합 검색 |
+| 의사 | `Doctor`, `DoctorService`, `DoctorAdminService` | 자격 신청, 공개 프로필, 수정, 취소, 승인/반려 |
 | 스케줄 | `DoctorSchedule`, `DoctorScheduleService` | 진료 슬롯 생성과 예약 가능 상태 |
 | 예약 | `Reservation`, 예약 서비스 3종 | 환자/의사/관리자 관점 예약 유스케이스 |
 | 문진 | `Questionnaire`, `QuestionnaireService` | 예약별 사전 문진 생성/조회/수정 |
@@ -114,9 +114,10 @@ com.medflow
 ### 환자, 병원, 의사
 
 - 환자 프로필 생성/본인 조회/수정, 관리자 전체 조회
-- 활성 병원 목록/상세 조회
+- 활성 병원 목록/상세 조회 및 병원명·지역·주소 통합 검색
 - 관리자 병원 등록/목록/수정/폐쇄 및 soft delete
 - 의사 자격 신청/프로필 조회/대기 상태 수정/신청 취소
+- 의사 전문과목·소개·연락처 공개 프로필 조회 및 수정
 - 관리자 의사 상태별 목록/상세/승인/반려
 - 승인된 의사의 진료 슬롯 생성과 가용 슬롯 조회
 
@@ -147,7 +148,7 @@ com.medflow
 - 진료 기록/의무 기록 도메인
 - 알림 도메인과 발송 채널
 - 결제 기능
-- 의사 진료과(Doctor의 Department 연관관계는 주석 상태)
+- 구조화된 진료과 Department 도메인(현재 Doctor에는 자유 입력 전문과목만 존재)
 - Redis 연동
 - 단일 응답으로 예약·환자·문진·AI 결과를 묶는 의사용 통합 조회 API
 - AI 작업 큐 또는 `@Async` 기반 비동기 실행
