@@ -1,9 +1,11 @@
 package com.medflow.auth.service;
 
 import com.medflow.auth.dto.WithdrawRequest;
+import com.medflow.auth.dto.LoginRequest;
 import com.medflow.auth.jwt.JwtGenerator;
 import com.medflow.auth.jwt.JwtProvider;
 import com.medflow.common.exception.InvalidPasswordException;
+import com.medflow.common.exception.InvalidCredentialsException;
 import com.medflow.patient.entity.Patient;
 import com.medflow.patient.repository.PatientRepository;
 import com.medflow.token.repository.RefreshTokenRepository;
@@ -17,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -24,6 +27,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -54,6 +58,19 @@ class AuthServiceTest {
 
     @InjectMocks
     private AuthService authService;
+
+    @Test
+    void login_withUnregisteredEmail_throwsInvalidCredentialsException() {
+        LoginRequest request = mock(LoginRequest.class);
+
+        when(request.getEmail()).thenReturn("unknown@example.com");
+        when(request.getPassword()).thenReturn("password123!");
+        when(authenticationManager.authenticate(any()))
+                .thenThrow(new InternalAuthenticationServiceException("사용자를 찾을 수 없습니다."));
+
+        assertThatThrownBy(() -> authService.login(request))
+                .isInstanceOf(InvalidCredentialsException.class);
+    }
 
     @Test
     void withdraw_withMatchingPassword_withdrawsUser() {

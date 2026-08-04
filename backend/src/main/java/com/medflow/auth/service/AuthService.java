@@ -14,7 +14,7 @@ import com.medflow.user.entity.UserRole;
 import com.medflow.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -88,7 +88,7 @@ public class AuthService {
             // Refresh Token을 DB에 저장하거나 기존 토큰을 갱신
             saveOrRenewRefreshToken(authentication.getName(), jwtToken.refreshToken());
             return jwtToken;
-        } catch (BadCredentialsException e) {
+        } catch (AuthenticationException e) {
             // 이메일 또는 비밀번호가 틀린 경우 401 응답으로 변환
             throw new InvalidCredentialsException();
         }
