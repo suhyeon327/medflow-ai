@@ -135,8 +135,9 @@ Controller: `com.medflow.hospital.controller.HospitalController`
 
 | Method | Path | 요청 | 응답 DTO | 인증 | Role |
 |---|---|---|---|---|---|
-| GET | `/api/v1/hospitals/` | 없음 | `List<HospitalListResponse>` | 필요 | 모든 인증 Role |
-| GET | `/api/v1/hospitals/{hospitalId}` | Path `hospitalId: Long` | `HospitalDetailResponse` | 필요 | 모든 인증 Role |
+| GET | `/api/v1/hospitals` | 없음 | `List<HospitalListResponse>` | 불필요 | 공개 |
+| GET | `/api/v1/hospitals/{hospitalId}` | Path `hospitalId: Long` | `HospitalDetailResponse` | 불필요 | 공개 |
+| GET | `/api/v1/hospitals/{hospitalId}/doctors` | Path `hospitalId: Long` | `List<PublicDoctorResponse>` | 불필요 | 공개 |
 
 ### 관리자 병원 관리
 
@@ -155,6 +156,7 @@ DTO 필드:
 - `HospitalUpdateRequest`: 위 필드 + `status`
 - `HospitalListResponse`: `id`, `name`
 - `HospitalDetailResponse`: `id`, `name`, `address`, `region`, `tel`
+- `PublicDoctorResponse`: `doctorId`, `doctorName`, `hospitalId`, `hospitalName`
 - `AdminHospitalResponse`: 상세 정보 + `status`, `createdAt`, `updatedAt`, `deletedAt`
 - `deleteResponse`: `hospitalId`, `deleteAt`, `message`
 
@@ -165,6 +167,16 @@ DTO 필드:
 - 403 `AUTH_006`: 관리자 권한 없음
 
 ## 6. 의사 API
+
+### 공개 의사 조회
+
+Controller: `com.medflow.doctor.controller.PublicDoctorController`
+
+| Method | Path | 요청 | 응답 DTO | 인증 | Role |
+|---|---|---|---|---|---|
+| GET | `/api/v1/doctors/{doctorId}` | Path `doctorId: Long` | `PublicDoctorResponse` | 불필요 | 공개 |
+
+공개 병원별 의사 목록과 의사 상세 조회는 승인 상태와 연결 계정 상태가 모두 `ACTIVE`인 의사만 반환한다. 공개 응답에는 면허번호, 이메일, 승인 상태 등 관리자 전용 정보를 포함하지 않는다.
 
 ### 의사 신청/프로필
 
@@ -191,10 +203,12 @@ Controller: `com.medflow.doctor.controller.DoctorAdminController`
 
 | Method | Path | 요청 | 응답 DTO | 인증 | Role |
 |---|---|---|---|---|---|
-| GET | `/admin/doctors` | Query `status?: DoctorStatus` | `List<DoctorListResponse>` | 필요 | ADMIN |
-| GET | `/admin/doctors/{doctorId}` | Path `doctorId: Long` | `DoctorDetailResponse` | 필요 | ADMIN |
-| PATCH | `/admin/doctors/{doctorId}/approve` | 없음 | `DoctorApproveResponse` | 필요 | ADMIN |
-| PATCH | `/admin/doctors/{doctorId}/reject` | 없음 | `DoctorRejectResponse` | 필요 | ADMIN |
+| GET | `/api/v1/admin/doctors` | Query `status?: DoctorStatus` | `List<DoctorListResponse>` | 필요 | ADMIN |
+| GET | `/api/v1/admin/doctors/{doctorId}` | Path `doctorId: Long` | `DoctorDetailResponse` | 필요 | ADMIN |
+| PATCH | `/api/v1/admin/doctors/{doctorId}/approve` | 없음 | `DoctorApproveResponse` | 필요 | ADMIN |
+| PATCH | `/api/v1/admin/doctors/{doctorId}/reject` | 없음 | `DoctorRejectResponse` | 필요 | ADMIN |
+
+기존 클라이언트 호환을 위해 `/admin/doctors` 기반 경로도 동일하게 유지한다.
 
 주요 응답 필드:
 
@@ -415,8 +429,7 @@ Controller: `com.medflow.questionnaire.controller.DoctorQuestionnairesController
 ## 작성자 확인이 필요한 내용
 
 - [작성자 확인 필요: API 서버 Host와 환경별 base URL]
-- [작성자 확인 필요: trailing slash를 포함한 현재 경로를 외부 계약으로 유지할지]
-- [작성자 확인 필요: `/doctor`, `/admin/doctors` 경로를 `/api/v1`로 통합할지]
+- [작성자 확인 필요: `/doctor` 프로필 경로를 `/api/v1`로 통합할지]
 - [작성자 확인 필요: 생성/삭제 API의 목표 HTTP status 정책]
 - [작성자 확인 필요: `/reissue`의 Access Token 인증 요구가 의도된 것인지]
 - [작성자 확인 필요: 환자 프로필 API의 목표 Role 범위]

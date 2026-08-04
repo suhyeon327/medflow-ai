@@ -1,6 +1,7 @@
 import type { UserRole } from '../types/auth';
 
 export const LOGIN_PATH = '/login';
+export const SIGNUP_PATH = '/signup';
 export const UNAUTHORIZED_PATH = '/unauthorized';
 
 export const ROLE_HOME_PATH: Record<UserRole, string> = {

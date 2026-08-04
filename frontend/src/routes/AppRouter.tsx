@@ -4,9 +4,10 @@ import { AppLayout } from '../layouts/AppLayout';
 import { LoginPage } from '../pages/LoginPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { RoleHomePage } from '../pages/RoleHomePage';
+import { SignupPage } from '../pages/SignupPage';
 import { UnauthorizedPage } from '../pages/UnauthorizedPage';
 import { ProtectedRoute, PublicOnlyRoute, RoleRoute } from './RouteGuards';
-import { LOGIN_PATH, ROLE_HOME_PATH, UNAUTHORIZED_PATH } from './routePaths';
+import { LOGIN_PATH, ROLE_HOME_PATH, SIGNUP_PATH, UNAUTHORIZED_PATH } from './routePaths';
 
 function HomeRedirect() {
   const { user } = useAuth();
@@ -19,6 +20,7 @@ export function AppRouter() {
       <Route path="/" element={<HomeRedirect />} />
       <Route element={<PublicOnlyRoute />}>
         <Route path={LOGIN_PATH} element={<LoginPage />} />
+        <Route path={SIGNUP_PATH} element={<SignupPage />} />
       </Route>
 
       <Route element={<ProtectedRoute />}>
