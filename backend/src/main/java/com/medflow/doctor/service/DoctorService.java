@@ -8,11 +8,14 @@ import com.medflow.doctor.dto.response.DoctorApplyResponse;
 import com.medflow.doctor.dto.response.DoctorDeleteResponse;
 import com.medflow.doctor.dto.response.DoctorInfoResponse;
 import com.medflow.doctor.dto.response.DoctorUpdateResponse;
+import com.medflow.doctor.dto.response.PublicDoctorResponse;
 import com.medflow.doctor.entity.Doctor;
+import com.medflow.doctor.entity.DoctorStatus;
 import com.medflow.doctor.repository.DoctorRepository;
 import com.medflow.hospital.entity.Hospital;
 import com.medflow.hospital.repository.HospitalRepository;
 import com.medflow.user.entity.User;
+import com.medflow.user.entity.UserStatus;
 import com.medflow.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -102,5 +105,18 @@ public class DoctorService {
         doctorRepository.delete(doctor);
 
         return DoctorDeleteResponse.from(doctor);
+    }
+
+    // 공개 의사 상세 조회
+    @Transactional(readOnly = true)
+    public PublicDoctorResponse getPublicDoctor(Long doctorId) {
+        Doctor doctor = doctorRepository.findByIdAndStatusAndUserStatus(
+                        doctorId,
+                        DoctorStatus.ACTIVE,
+                        UserStatus.ACTIVE
+                )
+                .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
+
+        return PublicDoctorResponse.from(doctor);
     }
 }

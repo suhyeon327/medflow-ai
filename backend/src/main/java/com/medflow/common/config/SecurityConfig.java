@@ -51,6 +51,12 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()   // 누구나 접속 가능한 주소
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/hospitals",
+                                "/api/v1/hospitals/{hospitalId}",
+                                "/api/v1/hospitals/{hospitalId}/doctors",
+                                "/api/v1/doctors/{doctorId}"
+                        ).permitAll()
                         .anyRequest().authenticated()   // 인증(로그인) 해야 접속 가능
                 )
 

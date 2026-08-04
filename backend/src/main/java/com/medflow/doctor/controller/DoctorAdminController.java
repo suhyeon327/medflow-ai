@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/admin/doctors")
+@RequestMapping({"/api/v1/admin/doctors", "/admin/doctors"})
 @PreAuthorize("hasRole('ADMIN')")
 public class DoctorAdminController {
 

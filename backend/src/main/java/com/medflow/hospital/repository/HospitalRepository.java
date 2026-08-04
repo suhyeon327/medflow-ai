@@ -18,4 +18,7 @@ public interface HospitalRepository extends JpaRepository<Hospital, Long> {
 
     // 운영중인 병원만 조회
     List<Hospital> findAllByStatus(HospitalStatus status);
+
+    // 운영중인 병원 상세 조회
+    Optional<Hospital> findByIdAndStatus(Long hospitalId, HospitalStatus status);
 }

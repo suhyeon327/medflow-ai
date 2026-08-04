@@ -2,6 +2,7 @@ package com.medflow.doctor.repository;
 
 import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorStatus;
+import com.medflow.user.entity.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -14,4 +15,16 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
     boolean existsByLicenseNumber(String licenseNumber);
 
     List<Doctor> findAllByStatus(DoctorStatus status);
+
+    List<Doctor> findAllByHospitalIdAndStatusAndUserStatus(
+            Long hospitalId,
+            DoctorStatus status,
+            UserStatus userStatus
+    );
+
+    Optional<Doctor> findByIdAndStatusAndUserStatus(
+            Long doctorId,
+            DoctorStatus status,
+            UserStatus userStatus
+    );
 }

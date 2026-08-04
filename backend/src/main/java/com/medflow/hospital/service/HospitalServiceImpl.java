@@ -3,6 +3,9 @@ package com.medflow.hospital.service;
 import com.medflow.common.exception.BusinessException;
 import com.medflow.common.exception.ErrorCode;
 import com.medflow.common.exception.HospitalAlreadyExistsException;
+import com.medflow.doctor.dto.response.PublicDoctorResponse;
+import com.medflow.doctor.entity.DoctorStatus;
+import com.medflow.doctor.repository.DoctorRepository;
 import com.medflow.hospital.dto.request.HospitalCreateRequest;
 import com.medflow.hospital.dto.request.HospitalUpdateRequest;
 import com.medflow.hospital.dto.response.AdminHospitalResponse;
@@ -12,6 +15,7 @@ import com.medflow.hospital.dto.response.deleteResponse;
 import com.medflow.hospital.entity.Hospital;
 import com.medflow.hospital.entity.HospitalStatus;
 import com.medflow.hospital.repository.HospitalRepository;
+import com.medflow.user.entity.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +28,7 @@ import java.util.List;
 public class HospitalServiceImpl implements HospitalService {
 
     private final HospitalRepository hospitalRepository;
+    private final DoctorRepository doctorRepository;
 
     // 관리자 기능
 
@@ -103,6 +108,7 @@ public class HospitalServiceImpl implements HospitalService {
 
     // 사용자 병원 목록 조회
     @Override
+    @Transactional(readOnly = true)
     public List<HospitalListResponse> getAvailableHospitals() {
         return hospitalRepository.findAllByStatus(HospitalStatus.ACTIVE)
                 .stream()
@@ -111,11 +117,29 @@ public class HospitalServiceImpl implements HospitalService {
     }
 
     // 병원 상세 정보 조회
+    @Override
+    @Transactional(readOnly = true)
     public HospitalDetailResponse getDetailHospital(Long hospitalId) {
 
-        Hospital hospital = hospitalRepository.findById(hospitalId)
+        Hospital hospital = hospitalRepository.findByIdAndStatus(hospitalId, HospitalStatus.ACTIVE)
                 .orElseThrow(() -> new BusinessException(ErrorCode.HOSPITAL_NOT_FOUND));
 
         return HospitalDetailResponse.from(hospital);
+    }
+
+    // 병원별 공개 의사 목록 조회
+    @Override
+    @Transactional(readOnly = true)
+    public List<PublicDoctorResponse> getAvailableDoctors(Long hospitalId) {
+        hospitalRepository.findByIdAndStatus(hospitalId, HospitalStatus.ACTIVE)
+                .orElseThrow(() -> new BusinessException(ErrorCode.HOSPITAL_NOT_FOUND));
+
+        return doctorRepository.findAllByHospitalIdAndStatusAndUserStatus(
+                        hospitalId,
+                        DoctorStatus.ACTIVE,
+                        UserStatus.ACTIVE
+                ).stream()
+                .map(PublicDoctorResponse::from)
+                .toList();
     }
 }

@@ -6,6 +6,7 @@ import com.medflow.hospital.dto.response.AdminHospitalResponse;
 import com.medflow.hospital.dto.response.HospitalDetailResponse;
 import com.medflow.hospital.dto.response.HospitalListResponse;
 import com.medflow.hospital.dto.response.deleteResponse;
+import com.medflow.doctor.dto.response.PublicDoctorResponse;
 
 import java.util.List;
 
@@ -32,4 +33,7 @@ public interface HospitalService {
 
     // 병원 상세 정보 조회
     HospitalDetailResponse getDetailHospital(Long hospitalId);
+
+    // 병원별 공개 의사 목록 조회
+    List<PublicDoctorResponse> getAvailableDoctors(Long hospitalId);
 }
