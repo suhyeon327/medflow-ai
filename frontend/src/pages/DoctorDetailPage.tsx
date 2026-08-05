@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
 import { QueryError } from '../components/QueryError';
+import { ScheduleBookingSection } from '../features/reservations/ScheduleBookingSection';
 import { useDoctorQuery } from '../features/doctors/doctorQueries';
 import { HOSPITAL_DETAIL_PATH } from '../routes/routePaths';
 
@@ -45,6 +46,7 @@ export function DoctorDetailPage() {
           </p>
         </div>
       </div>
+      <ScheduleBookingSection doctorId={doctorId} />
     </section>
   );
 }

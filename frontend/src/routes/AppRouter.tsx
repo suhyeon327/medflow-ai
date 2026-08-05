@@ -7,12 +7,13 @@ import { HospitalDetailPage } from '../pages/HospitalDetailPage';
 import { HospitalListPage } from '../pages/HospitalListPage';
 import { LoginPage } from '../pages/LoginPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
+import { PatientReservationsPage } from '../pages/PatientReservationsPage';
 import { RoleHomePage } from '../pages/RoleHomePage';
 import { SignupPage } from '../pages/SignupPage';
 import { UnauthorizedPage } from '../pages/UnauthorizedPage';
 import { WithdrawPage } from '../pages/WithdrawPage';
 import { ProtectedRoute, PublicOnlyRoute, RoleRoute } from './RouteGuards';
-import { HOSPITALS_PATH, LOGIN_PATH, ROLE_HOME_PATH, SIGNUP_PATH, UNAUTHORIZED_PATH, WITHDRAW_PATH } from './routePaths';
+import { HOSPITALS_PATH, LOGIN_PATH, PATIENT_RESERVATIONS_PATH, ROLE_HOME_PATH, SIGNUP_PATH, UNAUTHORIZED_PATH, WITHDRAW_PATH } from './routePaths';
 
 function HomeRedirect() {
   const { user } = useAuth();
@@ -39,6 +40,7 @@ export function AppRouter() {
         <Route element={<AppLayout />}>
           <Route element={<RoleRoute allowedRole="PATIENT" />}>
             <Route path={ROLE_HOME_PATH.PATIENT} element={<RoleHomePage />} />
+            <Route path={PATIENT_RESERVATIONS_PATH} element={<PatientReservationsPage />} />
             <Route path={WITHDRAW_PATH} element={<WithdrawPage />} />
           </Route>
           <Route element={<RoleRoute allowedRole="DOCTOR" />}>
