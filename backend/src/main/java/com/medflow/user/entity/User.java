@@ -33,8 +33,6 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private UserStatus status;
 
-    private LocalDateTime lastLoginAt;
-
     @Builder
     public User(String email, String password, UserRole role) {
         this.email = email;
@@ -54,21 +52,6 @@ public class User extends BaseEntity {
         user.role = role;
         user.status = UserStatus.ACTIVE;
         return user;
-    }
-
-    // 비밀번호 번경
-    public void changePassword(String encodedPassword) {
-        this.password = encodedPassword;
-    }
-
-    // 로그인 시간 갱신
-    public void updateLastLogin() {
-        this.lastLoginAt = LocalDateTime.now();
-    }
-
-    // 회원 잠금
-    public void lock() {
-        this.status = UserStatus.LOCKED;
     }
 
     // 회원 탈퇴
