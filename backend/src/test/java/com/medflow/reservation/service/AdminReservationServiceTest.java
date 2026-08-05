@@ -71,15 +71,15 @@ class AdminReservationServiceTest {
     @Test
     void searchReservations_byDateAndStatus() {
         LocalDate date = LocalDate.of(2026, 7, 30);
-        search(null, null, null, date, ReservationStatus.CONFIRMED, PageRequest.of(0, 20), List.of());
-        verify(adminReservationSearchRepository).search(eq(null), eq(null), eq(null), eq(date), eq(ReservationStatus.CONFIRMED), any());
+        search(null, null, null, date, ReservationStatus.APPROVED, PageRequest.of(0, 20), List.of());
+        verify(adminReservationSearchRepository).search(eq(null), eq(null), eq(null), eq(date), eq(ReservationStatus.APPROVED), any());
     }
 
     @Test
     void searchReservations_byCombinedConditions() {
         LocalDate date = LocalDate.of(2026, 7, 30);
-        search(1L, 2L, 3L, date, ReservationStatus.CONFIRMED, PageRequest.of(0, 20), List.of());
-        verify(adminReservationSearchRepository).search(eq(1L), eq(2L), eq(3L), eq(date), eq(ReservationStatus.CONFIRMED), any());
+        search(1L, 2L, 3L, date, ReservationStatus.APPROVED, PageRequest.of(0, 20), List.of());
+        verify(adminReservationSearchRepository).search(eq(1L), eq(2L), eq(3L), eq(date), eq(ReservationStatus.APPROVED), any());
     }
 
     @Test

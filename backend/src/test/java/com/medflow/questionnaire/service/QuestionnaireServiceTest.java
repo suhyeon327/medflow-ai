@@ -51,7 +51,7 @@ class QuestionnaireServiceTest {
     @Test
     void createQuestionnaire_success_and_savesAllFields() {
         Patient patient = patient(1L);
-        Reservation reservation = reservation(10L, patient, ReservationStatus.CONFIRMED);
+        Reservation reservation = reservation(10L, patient, ReservationStatus.APPROVED);
         QuestionnaireCreateRequest request = request(10L);
         mockFound(100L, patient, reservation);
         when(questionnaireRepository.save(any(Questionnaire.class))).thenAnswer(invocation -> {
@@ -98,7 +98,7 @@ class QuestionnaireServiceTest {
     @Test
     void createQuestionnaire_fails_for_another_patients_reservation() {
         Patient loginPatient = patient(1L);
-        Reservation reservation = reservation(10L, patient(2L), ReservationStatus.REQUESTED);
+        Reservation reservation = reservation(10L, patient(2L), ReservationStatus.PENDING);
         mockFound(100L, loginPatient, reservation);
 
         assertError(ErrorCode.QUESTIONNAIRE_RESERVATION_FORBIDDEN,
@@ -108,7 +108,7 @@ class QuestionnaireServiceTest {
     @Test
     void createQuestionnaire_fails_when_duplicate() {
         Patient patient = patient(1L);
-        Reservation reservation = reservation(10L, patient, ReservationStatus.REQUESTED);
+        Reservation reservation = reservation(10L, patient, ReservationStatus.PENDING);
         mockFound(100L, patient, reservation);
         when(questionnaireRepository.existsByReservationId(10L)).thenReturn(true);
 
@@ -129,7 +129,7 @@ class QuestionnaireServiceTest {
     @Test
     void getQuestionnaire_success_and_returnsAllFields() {
         Patient patient = patient(1L);
-        Reservation reservation = reservation(10L, patient, ReservationStatus.CONFIRMED);
+        Reservation reservation = reservation(10L, patient, ReservationStatus.APPROVED);
         Questionnaire questionnaire = questionnaire(reservation);
         mockFound(100L, patient, reservation);
         when(questionnaireRepository.findByReservationId(10L)).thenReturn(Optional.of(questionnaire));
@@ -156,7 +156,7 @@ class QuestionnaireServiceTest {
     @Test
     void getQuestionnaire_fails_for_another_patients_reservation() {
         Patient loginPatient = patient(1L);
-        Reservation reservation = reservation(10L, patient(2L), ReservationStatus.CONFIRMED);
+        Reservation reservation = reservation(10L, patient(2L), ReservationStatus.APPROVED);
         mockFound(100L, loginPatient, reservation);
 
         assertError(ErrorCode.QUESTIONNAIRE_RESERVATION_FORBIDDEN,
@@ -178,7 +178,7 @@ class QuestionnaireServiceTest {
     @Test
     void getQuestionnaire_fails_when_questionnaire_not_found() {
         Patient patient = patient(1L);
-        Reservation reservation = reservation(10L, patient, ReservationStatus.CONFIRMED);
+        Reservation reservation = reservation(10L, patient, ReservationStatus.APPROVED);
         mockFound(100L, patient, reservation);
         when(questionnaireRepository.findByReservationId(10L)).thenReturn(Optional.empty());
 
@@ -189,7 +189,7 @@ class QuestionnaireServiceTest {
     @Test
     void updateQuestionnaire_success_updatesAllFields_and_resetsAnalysisToPending() {
         Patient patient = patient(1L);
-        Reservation reservation = updatableReservation(10L, patient, ReservationStatus.CONFIRMED);
+        Reservation reservation = updatableReservation(10L, patient, ReservationStatus.APPROVED);
         Questionnaire questionnaire = questionnaire(reservation);
         QuestionnaireAnalysis analysis = QuestionnaireAnalysis.pending(questionnaire);
         ReflectionTestUtils.setField(analysis, "status", QuestionnaireAnalysisStatus.COMPLETED);
@@ -227,7 +227,7 @@ class QuestionnaireServiceTest {
     @Test
     void updateQuestionnaire_fails_when_analysis_does_not_exist() {
         Patient patient = patient(1L);
-        Reservation reservation = updatableReservation(10L, patient, ReservationStatus.REQUESTED);
+        Reservation reservation = updatableReservation(10L, patient, ReservationStatus.PENDING);
         Questionnaire questionnaire = questionnaire(reservation);
         when(patientRepository.findByUserId(100L)).thenReturn(Optional.of(patient));
         when(questionnaireRepository.findById(20L)).thenReturn(Optional.of(questionnaire));
@@ -242,7 +242,7 @@ class QuestionnaireServiceTest {
     @Test
     void updateQuestionnaire_fails_for_another_patients_questionnaire() {
         Patient loginPatient = patient(1L);
-        Questionnaire questionnaire = questionnaire(updatableReservation(10L, patient(2L), ReservationStatus.CONFIRMED));
+        Questionnaire questionnaire = questionnaire(updatableReservation(10L, patient(2L), ReservationStatus.APPROVED));
         when(patientRepository.findByUserId(100L)).thenReturn(Optional.of(loginPatient));
         when(questionnaireRepository.findById(20L)).thenReturn(Optional.of(questionnaire));
 
@@ -272,7 +272,7 @@ class QuestionnaireServiceTest {
     @Test
     void updateQuestionnaire_fails_after_appointment_start() {
         Patient patient = patient(1L);
-        Reservation reservation = updatableReservation(10L, patient, ReservationStatus.CONFIRMED);
+        Reservation reservation = updatableReservation(10L, patient, ReservationStatus.APPROVED);
         when(reservation.getDoctorSchedule().getDate()).thenReturn(LocalDate.of(2020, 1, 1));
         Questionnaire questionnaire = questionnaire(reservation);
         when(patientRepository.findByUserId(100L)).thenReturn(Optional.of(patient));

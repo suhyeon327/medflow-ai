@@ -15,7 +15,7 @@ import com.medflow.reservation.entity.Reservation;
 import com.medflow.reservation.entity.ReservationPeriod;
 import com.medflow.reservation.entity.ReservationStatus;
 import com.medflow.reservation.repository.ReservationRepository;
-import com.medflow.reservation.repository.PatientReservationSearchRepository;
+import com.medflow.reservation.repository.ReservationSearchRepository;
 import com.medflow.reservation.dto.response.PatientReservationPageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,7 +35,7 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final DoctorScheduleRepository doctorScheduleRepository;
     private final PatientRepository patientRepository;
-    private final PatientReservationSearchRepository patientReservationSearchRepository;
+    private final ReservationSearchRepository reservationSearchRepository;
     
     // 환자 예약 내역 조회
     @Transactional(readOnly = true)
@@ -44,7 +44,7 @@ public class ReservationService {
         Patient patient = patientRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PATIENT_NOT_FOUND));
 
-        Page<PatientReservationResponse> reservationPage = patientReservationSearchRepository
+        Page<PatientReservationResponse> reservationPage = reservationSearchRepository
                 .search(patient.getId(), status, date, hospitalId, doctorId, period, pageable)
                 .map(PatientReservationResponse::from);
 

@@ -37,7 +37,7 @@ public enum ErrorCode {
     // Reservation
     SCHEDULE_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "RESERVATION_001", "예약할 수 없는 시간입니다."),
     COMPLETED_RESERVATION(HttpStatus.BAD_REQUEST, "RESERVATION_002", "진료가 완료된 예약은 취소할 수 없습니다."),
-    INVALID_STATUS_CHANGE(HttpStatus.CONFLICT, "RESERVATION_003", "취소된 예약은 상태 변경 불가합니다."),
+    INVALID_STATUS_CHANGE(HttpStatus.CONFLICT, "RESERVATION_003", "현재 예약 상태에서는 요청한 상태로 변경할 수 없습니다."),
     SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVATION_004", "예약 가능한 일정을 찾을 수 없습니다."),
     RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVATION_005", "예약을 찾을 수 없습니다."),
     RESERVATION_ALREADY_CANCELLED(HttpStatus.BAD_REQUEST, "RESERVATION_007", "이미 취소된 예약입니다."),

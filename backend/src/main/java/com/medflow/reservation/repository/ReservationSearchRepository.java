@@ -22,7 +22,7 @@ import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
-public class PatientReservationSearchRepository {
+public class ReservationSearchRepository {
 
     private final JPAQueryFactory queryFactory;
 

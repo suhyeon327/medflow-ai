@@ -297,22 +297,19 @@ Controller: `com.medflow.reservation.controller.DoctorReservationController`
 
 | Method | Path | 요청 | 응답 DTO | 인증 | Role |
 |---|---|---|---|---|---|
-| GET | `/api/v1/doctors/reservations` | 없음 | `List<DoctorReservationResponse>` | 필요 | DOCTOR |
-| GET | `/api/v1/doctors/reservations/today` | 없음 | `List<DoctorReservationResponse>` | 필요 | DOCTOR |
-| GET | `/api/v1/doctors/reservations/date` | Query `date: LocalDate` | `List<DoctorReservationResponse>` | 필요 | DOCTOR |
-| GET | `/api/v1/doctors/reservations/search` | Query `date?`, `status?`, Pageable | `DoctorReservationPageResponse` | 필요 | DOCTOR |
+| GET | `/api/v1/doctors/reservations` | Query `date?`, `status?`, Pageable | `DoctorReservationPageResponse` | 필요 | DOCTOR |
 | GET | `/api/v1/doctors/reservations/{reservationId}/patient` | Path `reservationId` | `DoctorReservationPatientResponse` | 필요 | DOCTOR |
-| PATCH | `/api/v1/doctors/reservations/{reservationId}/complete` | Path `reservationId` | `ReservationCompleteResponse` | 필요 | DOCTOR |
-| PATCH | `/api/v1/doctors/reservations/{reservationId}/approve` | Path `reservationId` | `ReservationDoctorApproveRejectResponse` | 필요 | DOCTOR |
-| PATCH | `/api/v1/doctors/reservations/{reservationId}/reject` | Path `reservationId` | `ReservationDoctorApproveRejectResponse` | 필요 | DOCTOR |
+| PATCH | `/api/v1/doctors/reservations/{reservationId}/status` | Path `reservationId` + `ReservationStatusUpdateRequest` | `ReservationStatusResponse` | 필요 | DOCTOR |
 
 DTO:
 
 - `DoctorReservationResponse`: `reservationId`, `patientName`, `reservationDate`, `startTime`, `endTime`, `reservationStatus`
+- `ReservationStatusUpdateRequest`: `status` (`APPROVED`, `REJECTED`, `COMPLETED`만 허용)
+- `ReservationStatusResponse`: `reservationId`, `status`
+
+상태 전이: `PENDING → APPROVED`, `PENDING → REJECTED`, `APPROVED → COMPLETED`. 그 외 전이는 `RESERVATION_003`을 반환한다.
 - `DoctorReservationPageResponse`: `content`, `page`, `size`, `totalElements`, `totalPages`; 기본 size 10
 - `DoctorReservationPatientResponse`: 환자 ID/이름/성별/생년월일/전화번호 + 예약 ID/날짜/시간/상태
-- `ReservationCompleteResponse`: `reservationId`, `reservationStatus`
-- `ReservationDoctorApproveRejectResponse`: `reservationId`, `status`
 
 주요 예외:
 

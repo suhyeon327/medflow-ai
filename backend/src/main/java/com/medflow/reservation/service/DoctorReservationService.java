@@ -6,11 +6,10 @@ import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.repository.DoctorRepository;
 import com.medflow.questionnaire.repository.QuestionnaireRepository;
 import com.medflow.questionnaire.repository.QuestionnaireAnalysisRepository;
-import com.medflow.reservation.dto.response.ReservationDoctorApproveRejectResponse;
 import com.medflow.reservation.dto.response.DoctorReservationResponse;
 import com.medflow.reservation.dto.response.DoctorReservationPatientResponse;
-import com.medflow.reservation.dto.response.ReservationCompleteResponse;
 import com.medflow.reservation.dto.response.DoctorReservationPageResponse;
+import com.medflow.reservation.dto.response.ReservationStatusResponse;
 import com.medflow.reservation.entity.Reservation;
 import com.medflow.reservation.entity.ReservationStatus;
 import com.medflow.reservation.repository.ReservationRepository;
@@ -22,7 +21,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -37,7 +35,7 @@ public class DoctorReservationService {
 
     // 의사 예약 검색 및 필터링
     @Transactional(readOnly = true)
-    public DoctorReservationPageResponse searchDoctorReservations(
+    public DoctorReservationPageResponse getDoctorReservations(
             Long userId,
             LocalDate date,
             ReservationStatus status,
@@ -53,54 +51,6 @@ public class DoctorReservationService {
         return DoctorReservationPageResponse.from(reservationPage);
     }
 
-    // 의사 담당 예약 목록 조회
-    @Transactional(readOnly = true)
-    public List<DoctorReservationResponse> getDoctorReservations(Long userId) {
-
-        Doctor doctor = doctorRepository.findByUserId(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
-
-        return reservationRepository
-                .findAllByDoctorScheduleDoctorIdOrderByDoctorScheduleDateAscDoctorScheduleStartTimeAsc(doctor.getId())
-                .stream()
-                .map(DoctorReservationResponse::from)
-                .toList();
-    }
-    
-    // 오늘 예약 조회
-    @Transactional(readOnly = true)
-    public List<DoctorReservationResponse> getTodayDoctorReservations(Long userId) {
-
-        Doctor doctor = doctorRepository.findByUserId(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
-
-        return reservationRepository.findTodayReservationsByDoctorId(
-                        doctor.getId(),
-                        LocalDate.now(),
-                        List.of(ReservationStatus.REQUESTED, ReservationStatus.CONFIRMED)
-                )
-                .stream()
-                .map(DoctorReservationResponse::from)
-                .toList();
-    }
-    
-    // 날짜별 예약 조회
-    @Transactional(readOnly = true)
-    public List<DoctorReservationResponse> getDoctorReservationsByDate(Long userId, LocalDate date) {
-
-        Doctor doctor = doctorRepository.findByUserId(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
-
-        return reservationRepository
-                .findAllByDoctorScheduleDoctorIdAndDoctorScheduleDateOrderByDoctorScheduleStartTimeAsc(
-                        doctor.getId(),
-                        date
-                )
-                .stream()
-                .map(DoctorReservationResponse::from)
-                .toList();
-    }
-
     // 환자 정보 조회
     @Transactional(readOnly = true)
     public DoctorReservationPatientResponse getReservationPatient(Long userId, Long reservationId) {
@@ -114,35 +64,25 @@ public class DoctorReservationService {
         return DoctorReservationPatientResponse.from(reservation);
     }
 
-    // 진료 완료
-    public ReservationCompleteResponse completeReservation(
+    // 예약 상태 변경
+    public ReservationStatusResponse updateReservationStatus(
             Long userId,
-            Long reservationId
+            Long reservationId,
+            ReservationStatus status
     ) {
-    
         Reservation reservation = findDoctorReservation(userId, reservationId);
-        reservation.complete();
 
-        return ReservationCompleteResponse.from(reservation);
-    }
+        switch (status) {
+            case APPROVED -> reservation.approve();
+            case REJECTED -> {
+                reservation.reject();
+                reservation.getDoctorSchedule().release();
+            }
+            case COMPLETED -> reservation.complete();
+            default -> throw new BusinessException(ErrorCode.INVALID_STATUS_CHANGE);
+        }
 
-    // 예약 승인
-    public ReservationDoctorApproveRejectResponse approveReservation(Long userId, Long reservationId) {
-
-        Reservation reservation = findDoctorReservation(userId, reservationId);
-        reservation.approve();
-
-        return ReservationDoctorApproveRejectResponse.from(reservation);
-    }
-
-    // 예약 취소
-    public ReservationDoctorApproveRejectResponse rejectReservation(Long userId, Long reservationId) {
-
-        Reservation reservation = findDoctorReservation(userId, reservationId);
-        reservation.reject();
-        reservation.getDoctorSchedule().release();
-
-        return ReservationDoctorApproveRejectResponse.from(reservation);
+        return ReservationStatusResponse.from(reservation);
     }
 
     private Reservation findDoctorReservation(Long userId, Long reservationId) {

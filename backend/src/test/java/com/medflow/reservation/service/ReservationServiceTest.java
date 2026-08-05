@@ -16,7 +16,7 @@ import com.medflow.reservation.entity.ReservationStatus;
 import com.medflow.reservation.entity.ReservationPeriod;
 import com.medflow.reservation.entity.Reservation;
 import com.medflow.reservation.repository.ReservationRepository;
-import com.medflow.reservation.repository.PatientReservationSearchRepository;
+import com.medflow.reservation.repository.ReservationSearchRepository;
 
 import com.medflow.common.exception.BusinessException;
 
@@ -58,7 +58,7 @@ class ReservationServiceTest {
     private DoctorScheduleRepository doctorScheduleRepository;
 
     @Mock
-    private PatientReservationSearchRepository patientReservationSearchRepository;
+    private ReservationSearchRepository reservationSearchRepository;
 
     @InjectMocks
     private ReservationService reservationService;
@@ -98,7 +98,7 @@ class ReservationServiceTest {
 
         // then - 검증
         assertThat(response.status())
-                .isEqualTo(ReservationStatus.REQUESTED);
+                .isEqualTo(ReservationStatus.PENDING);
 
         assertThat(schedule.getStatus())
                 .isEqualTo(DoctorScheduleStatus.RESERVED);
@@ -334,7 +334,7 @@ class ReservationServiceTest {
         PageRequest pageable = PageRequest.of(0, 10);
 
         when(patientRepository.findByUserId(userId)).thenReturn(Optional.of(patient));
-        when(patientReservationSearchRepository.search(
+        when(reservationSearchRepository.search(
                 patientId, null, null, null, null, ReservationPeriod.TODAY, pageable
         )).thenReturn(new PageImpl<>(List.of(), pageable, 0));
 
@@ -343,7 +343,7 @@ class ReservationServiceTest {
         );
 
         assertThat(response.content()).isEmpty();
-        verify(patientReservationSearchRepository).search(
+        verify(reservationSearchRepository).search(
                 patientId, null, null, null, null, ReservationPeriod.TODAY, pageable
         );
     }
@@ -520,9 +520,9 @@ class ReservationServiceTest {
         when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
                 .thenReturn(Optional.of(reservation));
 
-        ReservationDoctorApproveRejectResponse response = doctorReservationService.approveReservation(userId, reservationId);
+        ReservationStatusResponse response = doctorReservationService.updateReservationStatus(userId, reservationId, ReservationStatus.APPROVED);
 
-        assertThat(response.status()).isEqualTo(ReservationStatus.CONFIRMED);
+        assertThat(response.status()).isEqualTo(ReservationStatus.APPROVED);
         assertThat(schedule.getStatus()).isEqualTo(DoctorScheduleStatus.RESERVED);
     }
 
@@ -543,9 +543,9 @@ class ReservationServiceTest {
         when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
                 .thenReturn(Optional.of(reservation));
 
-        ReservationDoctorApproveRejectResponse response = doctorReservationService.rejectReservation(userId, reservationId);
+        ReservationStatusResponse response = doctorReservationService.updateReservationStatus(userId, reservationId, ReservationStatus.REJECTED);
 
-        assertThat(response.status()).isEqualTo(ReservationStatus.CANCELLED);
+        assertThat(response.status()).isEqualTo(ReservationStatus.REJECTED);
         assertThat(schedule.getStatus()).isEqualTo(DoctorScheduleStatus.AVAILABLE);
     }
 
@@ -562,7 +562,7 @@ class ReservationServiceTest {
         when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
                 .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> doctorReservationService.approveReservation(userId, reservationId))
+        assertThatThrownBy(() -> doctorReservationService.updateReservationStatus(userId, reservationId, ReservationStatus.APPROVED))
                 .isInstanceOf(BusinessException.class);
     }
 
@@ -584,7 +584,7 @@ class ReservationServiceTest {
         when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
                 .thenReturn(Optional.of(reservation));
 
-        assertThatThrownBy(() -> doctorReservationService.rejectReservation(userId, reservationId))
+        assertThatThrownBy(() -> doctorReservationService.updateReservationStatus(userId, reservationId, ReservationStatus.REJECTED))
                 .isInstanceOf(BusinessException.class);
         assertThat(schedule.getStatus()).isEqualTo(DoctorScheduleStatus.RESERVED);
     }

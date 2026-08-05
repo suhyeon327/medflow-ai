@@ -1,35 +1,33 @@
 package com.medflow.reservation.service;
 
 import com.medflow.common.exception.BusinessException;
+import com.medflow.common.exception.ErrorCode;
 import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorSchedule;
+import com.medflow.doctor.entity.DoctorScheduleStatus;
 import com.medflow.doctor.repository.DoctorRepository;
 import com.medflow.patient.entity.Gender;
 import com.medflow.patient.entity.Patient;
-import com.medflow.reservation.dto.response.DoctorReservationResponse;
-import com.medflow.reservation.dto.response.DoctorReservationPatientResponse;
-import com.medflow.reservation.dto.response.ReservationCompleteResponse;
 import com.medflow.reservation.dto.response.DoctorReservationPageResponse;
+import com.medflow.reservation.dto.response.ReservationStatusResponse;
 import com.medflow.reservation.entity.Reservation;
 import com.medflow.reservation.entity.ReservationStatus;
-import com.medflow.reservation.repository.ReservationRepository;
 import com.medflow.reservation.repository.DoctorReservationSearchRepository;
+import com.medflow.reservation.repository.ReservationRepository;
 import com.medflow.user.entity.User;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
-
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -40,655 +38,104 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class DoctorReservationServiceTest {
 
-    @Mock
-    private ReservationRepository reservationRepository;
-
-    @Mock
-    private DoctorRepository doctorRepository;
-
-    @Mock
-    private DoctorReservationSearchRepository doctorReservationSearchRepository;
-
-    @InjectMocks
-    private DoctorReservationService doctorReservationService;
+    @Mock ReservationRepository reservationRepository;
+    @Mock DoctorRepository doctorRepository;
+    @Mock DoctorReservationSearchRepository searchRepository;
+    @InjectMocks DoctorReservationService service;
 
     @Test
-    void getDoctorReservations_success() {
-
+    void getDoctorReservations_combinesDateAndStatusFilters() {
         Long userId = 1L;
-        Long doctorId = 10L;
-        Doctor doctor = doctor(doctorId);
-        Reservation reservation = reservation(1L, "Patient", LocalDate.of(2026, 8, 1), LocalTime.of(9, 0));
+        Doctor doctor = doctor(10L);
+        LocalDate date = LocalDate.of(2026, 8, 6);
+        PageRequest pageable = PageRequest.of(0, 10);
+        Reservation reservation = reservation(100L);
+        reservation.approve();
 
         when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findAllByDoctorScheduleDoctorIdOrderByDoctorScheduleDateAscDoctorScheduleStartTimeAsc(doctorId))
-                .thenReturn(List.of(reservation));
-
-        List<DoctorReservationResponse> result = doctorReservationService.getDoctorReservations(userId);
-
-        assertThat(result).singleElement().satisfies(response -> {
-            assertThat(response.reservationId()).isEqualTo(1L);
-            assertThat(response.patientName()).isEqualTo("Patient");
-            assertThat(response.reservationDate()).isEqualTo(LocalDate.of(2026, 8, 1));
-            assertThat(response.startTime()).isEqualTo(LocalTime.of(9, 0));
-        });
-    }
-
-    @Test
-    void getDoctorReservations_doesNotQueryAnotherDoctorsReservations() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        Doctor doctor = doctor(doctorId);
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findAllByDoctorScheduleDoctorIdOrderByDoctorScheduleDateAscDoctorScheduleStartTimeAsc(doctorId))
-                .thenReturn(List.of());
-
-        assertThat(doctorReservationService.getDoctorReservations(userId)).isEmpty();
-        verify(reservationRepository)
-                .findAllByDoctorScheduleDoctorIdOrderByDoctorScheduleDateAscDoctorScheduleStartTimeAsc(doctorId);
-    }
-
-    @Test
-    void getDoctorReservations_returnsEmptyList_whenNoReservations() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        Doctor doctor = doctor(doctorId);
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findAllByDoctorScheduleDoctorIdOrderByDoctorScheduleDateAscDoctorScheduleStartTimeAsc(doctorId))
-                .thenReturn(List.of());
-
-        assertThat(doctorReservationService.getDoctorReservations(userId)).isEmpty();
-    }
-
-    @Test
-    void getDoctorReservations_returnsReservationsInDateAndTimeOrder() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        Doctor doctor = doctor(doctorId);
-        Reservation first = reservation(1L, "First", LocalDate.of(2026, 8, 1), LocalTime.of(9, 0));
-        Reservation second = reservation(2L, "Second", LocalDate.of(2026, 8, 1), LocalTime.of(10, 0));
-        Reservation third = reservation(3L, "Third", LocalDate.of(2026, 8, 2), LocalTime.of(9, 0));
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findAllByDoctorScheduleDoctorIdOrderByDoctorScheduleDateAscDoctorScheduleStartTimeAsc(doctorId))
-                .thenReturn(List.of(first, second, third));
-
-        List<DoctorReservationResponse> result = doctorReservationService.getDoctorReservations(userId);
-
-        assertThat(result).extracting(DoctorReservationResponse::reservationId)
-                .containsExactly(1L, 2L, 3L);
-    }
-
-    @Test
-    void getTodayDoctorReservations_success() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        LocalDate today = LocalDate.now();
-        Doctor doctor = doctor(doctorId);
-        Reservation reservation = reservation(1L, "Patient", today, LocalTime.of(9, 0), ReservationStatus.CONFIRMED);
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findTodayReservationsByDoctorId(
-                doctorId, today, List.of(ReservationStatus.REQUESTED, ReservationStatus.CONFIRMED)))
-                .thenReturn(List.of(reservation));
-
-        List<DoctorReservationResponse> result = doctorReservationService.getTodayDoctorReservations(userId);
-
-        assertThat(result).singleElement().satisfies(response -> {
-            assertThat(response.reservationId()).isEqualTo(1L);
-            assertThat(response.reservationDate()).isEqualTo(today);
-            assertThat(response.reservationStatus()).isEqualTo(ReservationStatus.CONFIRMED);
-        });
-    }
-
-    @Test
-    void getTodayDoctorReservations_doesNotIncludeAnotherDoctorsReservations() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        LocalDate today = LocalDate.now();
-        Doctor doctor = doctor(doctorId);
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findTodayReservationsByDoctorId(
-                doctorId, today, List.of(ReservationStatus.REQUESTED, ReservationStatus.CONFIRMED)))
-                .thenReturn(List.of());
-
-        assertThat(doctorReservationService.getTodayDoctorReservations(userId)).isEmpty();
-        verify(reservationRepository).findTodayReservationsByDoctorId(
-                doctorId, today, List.of(ReservationStatus.REQUESTED, ReservationStatus.CONFIRMED));
-    }
-
-    @Test
-    void getTodayDoctorReservations_excludesYesterdayAndTomorrowReservations() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        LocalDate today = LocalDate.now();
-        Doctor doctor = doctor(doctorId);
-        Reservation todayReservation = reservation(2L, "Today", today, LocalTime.of(9, 0), ReservationStatus.REQUESTED);
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findTodayReservationsByDoctorId(
-                doctorId, today, List.of(ReservationStatus.REQUESTED, ReservationStatus.CONFIRMED)))
-                .thenReturn(List.of(todayReservation));
-
-        List<DoctorReservationResponse> result = doctorReservationService.getTodayDoctorReservations(userId);
-
-        assertThat(result).extracting(DoctorReservationResponse::reservationDate)
-                .containsOnly(today);
-        verify(reservationRepository).findTodayReservationsByDoctorId(
-                doctorId, today, List.of(ReservationStatus.REQUESTED, ReservationStatus.CONFIRMED));
-    }
-
-    @Test
-    void getTodayDoctorReservations_returnsReservationsInStartTimeOrder() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        LocalDate today = LocalDate.now();
-        Doctor doctor = doctor(doctorId);
-        Reservation first = reservation(1L, "First", today, LocalTime.of(9, 0), ReservationStatus.REQUESTED);
-        Reservation second = reservation(2L, "Second", today, LocalTime.of(10, 0), ReservationStatus.CONFIRMED);
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findTodayReservationsByDoctorId(
-                doctorId, today, List.of(ReservationStatus.REQUESTED, ReservationStatus.CONFIRMED)))
-                .thenReturn(List.of(first, second));
-
-        assertThat(doctorReservationService.getTodayDoctorReservations(userId))
-                .extracting(DoctorReservationResponse::startTime)
-                .containsExactly(LocalTime.of(9, 0), LocalTime.of(10, 0));
-    }
-
-    @Test
-    void getTodayDoctorReservations_excludesCancelledReservations() {
-
-        assertTodayReservationsExclude(ReservationStatus.CANCELLED);
-    }
-
-    @Test
-    void getTodayDoctorReservations_excludesCompletedReservations() {
-
-        assertTodayReservationsExclude(ReservationStatus.COMPLETED);
-    }
-
-    @Test
-    void getTodayDoctorReservations_returnsEmptyList_whenNoReservations() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        LocalDate today = LocalDate.now();
-        Doctor doctor = doctor(doctorId);
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findTodayReservationsByDoctorId(
-                doctorId, today, List.of(ReservationStatus.REQUESTED, ReservationStatus.CONFIRMED)))
-                .thenReturn(List.of());
-
-        assertThat(doctorReservationService.getTodayDoctorReservations(userId)).isEmpty();
-    }
-
-    @Test
-    void getTodayDoctorReservations_throwsException_whenUserIsNotDoctor() {
-
-        when(doctorRepository.findByUserId(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> doctorReservationService.getTodayDoctorReservations(1L))
-                .isInstanceOf(BusinessException.class);
-    }
-
-    @Test
-    void getDoctorReservationsByDate_success() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        LocalDate date = LocalDate.of(2026, 7, 30);
-        Doctor doctor = doctor(doctorId);
-        Reservation reservation = reservation(1L, "Patient", date, LocalTime.of(9, 0));
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findAllByDoctorScheduleDoctorIdAndDoctorScheduleDateOrderByDoctorScheduleStartTimeAsc(
-                doctorId, date)).thenReturn(List.of(reservation));
-
-        List<DoctorReservationResponse> result = doctorReservationService.getDoctorReservationsByDate(userId, date);
-
-        assertThat(result).singleElement().satisfies(response -> {
-            assertThat(response.reservationId()).isEqualTo(1L);
-            assertThat(response.reservationDate()).isEqualTo(date);
-            assertThat(response.patientName()).isEqualTo("Patient");
-        });
-    }
-
-    @Test
-    void getDoctorReservationsByDate_doesNotQueryAnotherDoctorsReservations() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        LocalDate date = LocalDate.of(2026, 7, 30);
-        Doctor doctor = doctor(doctorId);
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findAllByDoctorScheduleDoctorIdAndDoctorScheduleDateOrderByDoctorScheduleStartTimeAsc(
-                doctorId, date)).thenReturn(List.of());
-
-        assertThat(doctorReservationService.getDoctorReservationsByDate(userId, date)).isEmpty();
-        verify(reservationRepository)
-                .findAllByDoctorScheduleDoctorIdAndDoctorScheduleDateOrderByDoctorScheduleStartTimeAsc(doctorId, date);
-    }
-
-    @Test
-    void getDoctorReservationsByDate_returnsEmptyList_whenNoReservations() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        LocalDate date = LocalDate.of(2026, 7, 30);
-        Doctor doctor = doctor(doctorId);
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findAllByDoctorScheduleDoctorIdAndDoctorScheduleDateOrderByDoctorScheduleStartTimeAsc(
-                doctorId, date)).thenReturn(List.of());
-
-        assertThat(doctorReservationService.getDoctorReservationsByDate(userId, date)).isEmpty();
-    }
-
-    @Test
-    void getDoctorReservationsByDate_returnsReservationsInStartTimeOrder() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        LocalDate date = LocalDate.of(2026, 7, 30);
-        Doctor doctor = doctor(doctorId);
-        Reservation first = reservation(1L, "First", date, LocalTime.of(9, 0));
-        Reservation second = reservation(2L, "Second", date, LocalTime.of(10, 0));
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findAllByDoctorScheduleDoctorIdAndDoctorScheduleDateOrderByDoctorScheduleStartTimeAsc(
-                doctorId, date)).thenReturn(List.of(first, second));
-
-        assertThat(doctorReservationService.getDoctorReservationsByDate(userId, date))
-                .extracting(DoctorReservationResponse::startTime)
-                .containsExactly(LocalTime.of(9, 0), LocalTime.of(10, 0));
-    }
-
-    @Test
-    void getReservationPatient_success() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        Long reservationId = 100L;
-        Long patientId = 20L;
-        Doctor doctor = doctor(doctorId);
-        Reservation reservation = reservation(
-                reservationId,
-                "Patient",
-                LocalDate.of(2026, 7, 30),
-                LocalTime.of(9, 0),
-                ReservationStatus.CONFIRMED
-        );
-        ReflectionTestUtils.setField(reservation.getPatient(), "id", patientId);
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
-                .thenReturn(Optional.of(reservation));
-
-        DoctorReservationPatientResponse response = doctorReservationService.getReservationPatient(userId, reservationId);
-
-        assertThat(response.patientId()).isEqualTo(patientId);
-        assertThat(response.patientName()).isEqualTo("Patient");
-        assertThat(response.gender()).isEqualTo(Gender.MALE);
-        assertThat(response.birthDate()).isEqualTo(LocalDate.of(2000, 1, 1));
-        assertThat(response.phoneNumber()).isEqualTo("01012345678");
-        assertThat(response.reservationId()).isEqualTo(reservationId);
-        assertThat(response.reservationDate()).isEqualTo(LocalDate.of(2026, 7, 30));
-        assertThat(response.startTime()).isEqualTo(LocalTime.of(9, 0));
-        assertThat(response.endTime()).isEqualTo(LocalTime.of(9, 30));
-        assertThat(response.reservationStatus()).isEqualTo(ReservationStatus.CONFIRMED);
-    }
-
-    @Test
-    void getReservationPatient_fails_whenReservationBelongsToAnotherDoctor() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        Long reservationId = 100L;
-        Doctor doctor = doctor(doctorId);
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
-                .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> doctorReservationService.getReservationPatient(userId, reservationId))
-                .isInstanceOf(BusinessException.class);
-    }
-
-    @Test
-    void getReservationPatient_fails_whenReservationDoesNotExist() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        Long reservationId = 999L;
-        Doctor doctor = doctor(doctorId);
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
-                .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> doctorReservationService.getReservationPatient(userId, reservationId))
-                .isInstanceOf(BusinessException.class);
-    }
-
-    @Test
-    void getReservationPatient_fails_whenPatientIsMissing() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        Long reservationId = 100L;
-        Doctor doctor = doctor(doctorId);
-        Reservation reservation = reservation(reservationId, "Patient", LocalDate.of(2026, 7, 30), LocalTime.of(9, 0));
-        ReflectionTestUtils.setField(reservation, "patient", null);
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
-                .thenReturn(Optional.of(reservation));
-
-        assertThatThrownBy(() -> doctorReservationService.getReservationPatient(userId, reservationId))
-                .isInstanceOf(BusinessException.class);
-    }
-
-    @Test
-    void completeReservation_success() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        Long reservationId = 100L;
-        Doctor doctor = doctor(doctorId);
-        Reservation reservation = reservation(
-                reservationId,
-                "Patient",
-                LocalDate.of(2026, 7, 30),
-                LocalTime.of(9, 0),
-                ReservationStatus.CONFIRMED
-        );
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
-                .thenReturn(Optional.of(reservation));
-
-        ReservationCompleteResponse response = doctorReservationService.completeReservation(
-                userId,
-                reservationId
-        );
-
-        assertThat(response.reservationId()).isEqualTo(reservationId);
-        assertThat(response.reservationStatus()).isEqualTo(ReservationStatus.COMPLETED);
-    }
-
-    @Test
-    void completeReservation_fails_whenReservationBelongsToAnotherDoctor() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        Long reservationId = 100L;
-        Doctor doctor = doctor(doctorId);
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
-                .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> doctorReservationService.completeReservation(
-                userId, reservationId))
-                .isInstanceOf(BusinessException.class);
-    }
-
-    @Test
-    void completeReservation_fails_whenRequested() {
-
-        assertCompleteReservationFails(ReservationStatus.REQUESTED);
-    }
-
-    @Test
-    void completeReservation_fails_whenCancelled() {
-
-        assertCompleteReservationFails(ReservationStatus.CANCELLED);
-    }
-
-    @Test
-    void completeReservation_fails_whenAlreadyCompleted() {
-
-        assertCompleteReservationFails(ReservationStatus.COMPLETED);
-    }
-
-    @Test
-    void completeReservation_fails_whenReservationDoesNotExist() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        Long reservationId = 999L;
-        Doctor doctor = doctor(doctorId);
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
-                .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> doctorReservationService.completeReservation(
-                userId, reservationId))
-                .isInstanceOf(BusinessException.class);
-    }
-
-    private void assertCompleteReservationFails(ReservationStatus currentStatus) {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        Long reservationId = 100L;
-        Doctor doctor = doctor(doctorId);
-        Reservation reservation = reservation(
-                reservationId,
-                "Patient",
-                LocalDate.of(2026, 7, 30),
-                LocalTime.of(9, 0),
-                currentStatus
-        );
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
-                .thenReturn(Optional.of(reservation));
-
-        assertThatThrownBy(() -> doctorReservationService.completeReservation(
-                userId, reservationId))
-                .isInstanceOf(BusinessException.class);
-    }
-
-    @Test
-    void searchDoctorReservations_returnsAllReservations_whenNoConditions() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        Pageable pageable = PageRequest.of(0, 10);
-        Doctor doctor = doctor(doctorId);
-        Reservation reservation = reservation(1L, "Patient", LocalDate.of(2026, 7, 30), LocalTime.of(9, 0));
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(doctorReservationSearchRepository.search(doctorId, null, null, pageable))
+        when(searchRepository.search(10L, date, ReservationStatus.APPROVED, pageable))
                 .thenReturn(new PageImpl<>(List.of(reservation), pageable, 1));
 
-        DoctorReservationPageResponse response = doctorReservationService
-                .searchDoctorReservations(userId, null, null, pageable);
+        DoctorReservationPageResponse response = service.getDoctorReservations(
+                userId, date, ReservationStatus.APPROVED, pageable
+        );
 
         assertThat(response.content()).hasSize(1);
-        assertThat(response.totalElements()).isEqualTo(1);
+        assertThat(response.content().getFirst().reservationStatus()).isEqualTo(ReservationStatus.APPROVED);
     }
 
     @Test
-    void searchDoctorReservations_filtersByDate() {
+    void updateReservationStatus_approvesPendingReservation() {
+        Reservation reservation = ownedReservation(1L, 10L, 100L);
 
-        LocalDate date = LocalDate.of(2026, 7, 30);
-        DoctorReservationPageResponse response = searchReservations(date, null, PageRequest.of(0, 10), List.of(
-                reservation(1L, "Patient", date, LocalTime.of(9, 0))
-        ), 1);
+        ReservationStatusResponse response = service.updateReservationStatus(1L, 100L, ReservationStatus.APPROVED);
 
-        assertThat(response.content()).extracting(DoctorReservationResponse::reservationDate)
-                .containsOnly(date);
+        assertThat(response.status()).isEqualTo(ReservationStatus.APPROVED);
+        assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.APPROVED);
     }
 
     @Test
-    void searchDoctorReservations_filtersByStatus() {
+    void updateReservationStatus_rejectsPendingReservationAndReleasesSchedule() {
+        Reservation reservation = ownedReservation(1L, 10L, 100L);
+        reservation.getDoctorSchedule().reserve();
 
-        DoctorReservationPageResponse response = searchReservations(
-                null,
-                ReservationStatus.CONFIRMED,
-                PageRequest.of(0, 10),
-                List.of(reservation(1L, "Patient", LocalDate.of(2026, 7, 30), LocalTime.of(9, 0), ReservationStatus.CONFIRMED)),
-                1
-        );
+        ReservationStatusResponse response = service.updateReservationStatus(1L, 100L, ReservationStatus.REJECTED);
 
-        assertThat(response.content()).extracting(DoctorReservationResponse::reservationStatus)
-                .containsOnly(ReservationStatus.CONFIRMED);
+        assertThat(response.status()).isEqualTo(ReservationStatus.REJECTED);
+        assertThat(reservation.getDoctorSchedule().getStatus()).isEqualTo(DoctorScheduleStatus.AVAILABLE);
     }
 
     @Test
-    void searchDoctorReservations_filtersByDateAndStatus() {
+    void updateReservationStatus_completesApprovedReservation() {
+        Reservation reservation = ownedReservation(1L, 10L, 100L);
+        reservation.approve();
 
-        LocalDate date = LocalDate.of(2026, 7, 30);
-        DoctorReservationPageResponse response = searchReservations(
-                date,
-                ReservationStatus.CONFIRMED,
-                PageRequest.of(0, 10),
-                List.of(reservation(1L, "Patient", date, LocalTime.of(9, 0), ReservationStatus.CONFIRMED)),
-                1
-        );
+        ReservationStatusResponse response = service.updateReservationStatus(1L, 100L, ReservationStatus.COMPLETED);
 
-        assertThat(response.content()).singleElement().satisfies(result -> {
-            assertThat(result.reservationDate()).isEqualTo(date);
-            assertThat(result.reservationStatus()).isEqualTo(ReservationStatus.CONFIRMED);
-        });
+        assertThat(response.status()).isEqualTo(ReservationStatus.COMPLETED);
     }
 
     @Test
-    void searchDoctorReservations_doesNotQueryAnotherDoctorsReservations() {
+    void updateReservationStatus_rejectsUnsupportedTargetStatus() {
+        ownedReservation(1L, 10L, 100L);
 
-        Long userId = 1L;
-        Long doctorId = 10L;
-        Pageable pageable = PageRequest.of(0, 10);
+        assertThatThrownBy(() -> service.updateReservationStatus(1L, 100L, ReservationStatus.CANCELLED))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_STATUS_CHANGE);
+    }
+
+    @Test
+    void updateReservationStatus_rejectsReservationOwnedByAnotherDoctor() {
+        Doctor doctor = doctor(10L);
+        when(doctorRepository.findByUserId(1L)).thenReturn(Optional.of(doctor));
+        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(100L, 10L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.updateReservationStatus(1L, 100L, ReservationStatus.APPROVED))
+                .isInstanceOf(BusinessException.class);
+        verify(reservationRepository).findByIdAndDoctorScheduleDoctorId(100L, 10L);
+    }
+
+    private Reservation ownedReservation(Long userId, Long doctorId, Long reservationId) {
         Doctor doctor = doctor(doctorId);
-
+        Reservation reservation = reservation(reservationId);
         when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(doctorReservationSearchRepository.search(doctorId, null, null, pageable))
-                .thenReturn(new PageImpl<>(List.of(), pageable, 0));
-
-        assertThat(doctorReservationService.searchDoctorReservations(userId, null, null, pageable).content())
-                .isEmpty();
-        verify(doctorReservationSearchRepository).search(doctorId, null, null, pageable);
-    }
-
-    @Test
-    void searchDoctorReservations_returnsEmptyPage_whenNoResults() {
-
-        DoctorReservationPageResponse response = searchReservations(
-                null, null, PageRequest.of(0, 10), List.of(), 0
-        );
-
-        assertThat(response.content()).isEmpty();
-        assertThat(response.totalElements()).isZero();
-        assertThat(response.totalPages()).isZero();
-    }
-
-    @Test
-    void searchDoctorReservations_preservesDateAndTimeOrder() {
-
-        Reservation first = reservation(1L, "First", LocalDate.of(2026, 7, 30), LocalTime.of(9, 0));
-        Reservation second = reservation(2L, "Second", LocalDate.of(2026, 7, 30), LocalTime.of(10, 0));
-        Reservation third = reservation(3L, "Third", LocalDate.of(2026, 7, 31), LocalTime.of(9, 0));
-
-        DoctorReservationPageResponse response = searchReservations(
-                null, null, PageRequest.of(0, 10), List.of(first, second, third), 3
-        );
-
-        assertThat(response.content()).extracting(DoctorReservationResponse::reservationId)
-                .containsExactly(1L, 2L, 3L);
-    }
-
-    @Test
-    void searchDoctorReservations_returnsRequestedPage() {
-
-        Pageable pageable = PageRequest.of(1, 1);
-        Reservation reservation = reservation(2L, "Patient", LocalDate.of(2026, 7, 30), LocalTime.of(10, 0));
-        DoctorReservationPageResponse response = searchReservations(
-                null, null, pageable, List.of(reservation), 3
-        );
-
-        assertThat(response.page()).isEqualTo(1);
-        assertThat(response.size()).isEqualTo(1);
-        assertThat(response.totalElements()).isEqualTo(3);
-        assertThat(response.totalPages()).isEqualTo(3);
-    }
-
-    private DoctorReservationPageResponse searchReservations(
-            LocalDate date,
-            ReservationStatus status,
-            Pageable pageable,
-            List<Reservation> reservations,
-            long total
-    ) {
-        Long userId = 1L;
-        Long doctorId = 10L;
-        Doctor doctor = doctor(doctorId);
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(doctorReservationSearchRepository.search(doctorId, date, status, pageable))
-                .thenReturn(new PageImpl<>(reservations, pageable, total));
-
-        return doctorReservationService.searchDoctorReservations(userId, date, status, pageable);
-    }
-
-    private void assertTodayReservationsExclude(ReservationStatus excludedStatus) {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        LocalDate today = LocalDate.now();
-        Doctor doctor = doctor(doctorId);
-
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findTodayReservationsByDoctorId(
-                doctorId, today, List.of(ReservationStatus.REQUESTED, ReservationStatus.CONFIRMED)))
-                .thenReturn(List.of());
-
-        List<DoctorReservationResponse> result = doctorReservationService.getTodayDoctorReservations(userId);
-
-        assertThat(result).noneMatch(response -> response.reservationStatus() == excludedStatus);
-        verify(reservationRepository).findTodayReservationsByDoctorId(
-                doctorId, today, List.of(ReservationStatus.REQUESTED, ReservationStatus.CONFIRMED));
-    }
-
-    private Doctor doctor(Long doctorId) {
-        Doctor doctor = mock(Doctor.class);
-        when(doctor.getId()).thenReturn(doctorId);
-        return doctor;
-    }
-
-    private Reservation reservation(Long reservationId, String patientName, LocalDate date, LocalTime startTime) {
-        Patient patient = Patient.create(mock(User.class), patientName, LocalDate.of(2000, 1, 1), Gender.MALE, "01012345678");
-        DoctorSchedule schedule = DoctorSchedule.create(mock(Doctor.class), date, startTime, startTime.plusMinutes(30));
-        Reservation reservation = Reservation.create(patient, schedule);
-        ReflectionTestUtils.setField(reservation, "id", reservationId);
+        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
+                .thenReturn(Optional.of(reservation));
         return reservation;
     }
 
-    private Reservation reservation(
-            Long reservationId,
-            String patientName,
-            LocalDate date,
-            LocalTime startTime,
-            ReservationStatus status
-    ) {
-        Reservation reservation = reservation(reservationId, patientName, date, startTime);
-        ReflectionTestUtils.setField(reservation, "status", status);
+    private Doctor doctor(Long id) {
+        Doctor doctor = mock(Doctor.class);
+        when(doctor.getId()).thenReturn(id);
+        return doctor;
+    }
+
+    private Reservation reservation(Long id) {
+        Patient patient = Patient.create(mock(User.class), "환자", LocalDate.of(2000, 1, 1), Gender.MALE, "01012345678");
+        DoctorSchedule schedule = DoctorSchedule.create(mock(Doctor.class), LocalDate.of(2026, 8, 6), LocalTime.of(9, 0), LocalTime.of(9, 30));
+        Reservation reservation = Reservation.create(patient, schedule);
+        ReflectionTestUtils.setField(reservation, "id", id);
         return reservation;
     }
 }
