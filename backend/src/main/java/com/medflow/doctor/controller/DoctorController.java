@@ -2,18 +2,26 @@ package com.medflow.doctor.controller;
 
 import com.medflow.auth.security.CustomUserDetails;
 import com.medflow.common.response.ApiResponse;
-import com.medflow.doctor.dto.request.DoctorApplyRequest;
+import com.medflow.doctor.dto.request.DoctorScheduleCreateRequest;
 import com.medflow.doctor.dto.request.DoctorUpdateRequest;
-import com.medflow.doctor.dto.response.DoctorApplyResponse;
-import com.medflow.doctor.dto.response.DoctorDeleteResponse;
-import com.medflow.doctor.dto.response.DoctorInfoResponse;
-import com.medflow.doctor.dto.response.DoctorResponse;
+import com.medflow.doctor.dto.response.DoctorProfileResponse;
+import com.medflow.doctor.dto.response.DoctorScheduleResponse;
 import com.medflow.doctor.service.DoctorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,44 +31,41 @@ public class DoctorController {
 
     private final DoctorService doctorService;
 
-    @PostMapping("/apply")
-    public ApiResponse<DoctorApplyResponse> apply(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody DoctorApplyRequest request
-    ) {
-        return ApiResponse.success(
-                doctorService.apply(userDetails.getUserId(), request)
-        );
-    }
-
-    // 의사 프로필 조회
     @GetMapping("/profile")
-    public ApiResponse<DoctorInfoResponse> getMyDoctorInfo(
+    public ApiResponse<DoctorProfileResponse> getDoctorProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-
-        return ApiResponse.success(
-                doctorService.getMyDoctorInfo(userDetails.getUserId())
-        );
+        return ApiResponse.success(doctorService.getDoctorProfile(userDetails.getUserId()));
     }
 
-    // 의사 정보 수정
-    @PatchMapping("/profile")
-    public ApiResponse<DoctorResponse> update(
+    @PutMapping("/profile")
+    public ApiResponse<DoctorProfileResponse> updateDoctorProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody DoctorUpdateRequest request
     ) {
         return ApiResponse.success(
-                doctorService.update(userDetails.getUserId(), request)
+                doctorService.updateDoctorProfile(userDetails.getUserId(), request)
         );
     }
 
-    // 의사 인증 신청 취소
-    @DeleteMapping("/profile")
-    public ApiResponse<DoctorDeleteResponse> cancel(
-            @AuthenticationPrincipal CustomUserDetails userDetails
+    @PostMapping("/schedules")
+    public ApiResponse<List<DoctorScheduleResponse>> createDoctorSchedules(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody DoctorScheduleCreateRequest request
     ) {
         return ApiResponse.success(
-                doctorService.cancel(userDetails.getUserId()));
+                doctorService.createDoctorSchedules(userDetails.getUserId(), request)
+        );
+    }
+
+    @GetMapping("/schedules")
+    public ApiResponse<List<DoctorScheduleResponse>> getDoctorSchedules(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        return ApiResponse.success(
+                doctorService.getDoctorSchedules(userDetails.getUserId(), date)
+        );
     }
 }

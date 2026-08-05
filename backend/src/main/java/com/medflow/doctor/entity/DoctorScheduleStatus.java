@@ -8,8 +8,7 @@ import lombok.RequiredArgsConstructor;
 public enum DoctorScheduleStatus {
 
     AVAILABLE("예약 가능"),
-    RESERVED("예약 완료"),
-    BLOCKED("예약 불가");
+    RESERVED("예약 완료");
 
     private final String description;
 }

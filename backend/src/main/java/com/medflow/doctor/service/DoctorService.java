@@ -2,23 +2,24 @@ package com.medflow.doctor.service;
 
 import com.medflow.common.exception.BusinessException;
 import com.medflow.common.exception.ErrorCode;
-import com.medflow.doctor.dto.request.DoctorApplyRequest;
+import com.medflow.doctor.dto.request.DoctorScheduleCreateRequest;
 import com.medflow.doctor.dto.request.DoctorUpdateRequest;
-import com.medflow.doctor.dto.response.DoctorApplyResponse;
-import com.medflow.doctor.dto.response.DoctorDeleteResponse;
-import com.medflow.doctor.dto.response.DoctorInfoResponse;
-import com.medflow.doctor.dto.response.DoctorResponse;
+import com.medflow.doctor.dto.response.DoctorProfileResponse;
+import com.medflow.doctor.dto.response.DoctorScheduleResponse;
 import com.medflow.doctor.entity.Doctor;
+import com.medflow.doctor.entity.DoctorSchedule;
 import com.medflow.doctor.entity.DoctorStatus;
 import com.medflow.doctor.repository.DoctorRepository;
 import com.medflow.hospital.entity.Hospital;
 import com.medflow.hospital.repository.HospitalRepository;
-import com.medflow.user.entity.User;
-import com.medflow.user.entity.UserStatus;
-import com.medflow.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,58 +27,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class DoctorService {
 
     private final DoctorRepository doctorRepository;
-    private final UserRepository userRepository;
     private final HospitalRepository hospitalRepository;
 
-    // 의사 등록 신청
-    public DoctorApplyResponse apply(Long userId, DoctorApplyRequest request) {
-
-        // 회원 중복 여부 확인
-        if (doctorRepository.findByUserId(userId).isPresent()) {
-            throw new BusinessException(ErrorCode.DOCTOR_ALREADY_EXISTS);
-        }
-
-        // 등록된 면허번호인지 확인
-        if (doctorRepository.existsByLicenseNumber(request.getLicenseNumber())) {
-            throw new BusinessException(ErrorCode.DOCTOR_ALREADY_EXISTS);
-        }
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        Hospital hospital = hospitalRepository.findById(request.getHospitalId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.HOSPITAL_NOT_FOUND));
-
-        Doctor doctor = Doctor.create(
-                user,
-                hospital,
-                request.getName(),
-                request.getLicenseNumber(),
-                request.getSpecialty(),
-                request.getIntroduction(),
-                request.getContact()
-        );
-
-        doctorRepository.save(doctor);
-
-        return DoctorApplyResponse.from(doctor);
-    }
-
-    // 의사 프로필 조회
     @Transactional(readOnly = true)
-    public DoctorInfoResponse getMyDoctorInfo(Long userId) {
-
-        Doctor doctor = doctorRepository.findByUserId(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
-
-        return DoctorInfoResponse.from(doctor);
+    public DoctorProfileResponse getDoctorProfile(Long userId) {
+        Doctor doctor = getDoctorByUserId(userId);
+        return DoctorProfileResponse.from(doctor);
     }
 
-    // 의사 정보 수정
-    public DoctorResponse update(Long userId, DoctorUpdateRequest request) {
-
-        Doctor doctor = doctorRepository.findByUserId(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
+    public DoctorProfileResponse updateDoctorProfile(Long userId, DoctorUpdateRequest request) {
+        Doctor doctor = getDoctorByUserId(userId);
 
         Hospital hospital = hospitalRepository.findById(request.getHospitalId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.HOSPITAL_NOT_FOUND));
@@ -96,32 +55,52 @@ public class DoctorService {
                 request.getContact()
         );
 
-        return DoctorResponse.from(doctor);
+        return DoctorProfileResponse.from(doctor);
     }
 
-    // 의사 인증 신청 취소
-    public DoctorDeleteResponse cancel(Long userId) {
+    public List<DoctorScheduleResponse> createDoctorSchedules(
+            Long userId,
+            DoctorScheduleCreateRequest request
+    ) {
+        Doctor doctor = getDoctorByUserId(userId);
 
-        Doctor doctor = doctorRepository.findByUserId(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
+        if (doctor.getStatus() != DoctorStatus.ACTIVE) {
+            throw new BusinessException(ErrorCode.DOCTOR_NOT_APPROVED);
+        }
 
-        doctor.cancel();
+        List<DoctorScheduleResponse> responses = new ArrayList<>();
+        LocalTime start = request.startTime();
 
-        doctorRepository.delete(doctor);
+        while (start.isBefore(request.endTime())) {
+            LocalTime next = start.plusMinutes(request.slotMinutes());
 
-        return DoctorDeleteResponse.from(doctor);
+            if (next.isAfter(request.endTime())) {
+                break;
+            }
+
+            if (!doctorRepository.existsSchedule(doctor.getId(), request.date(), start)) {
+                DoctorSchedule schedule = DoctorSchedule.create(doctor, request.date(), start, next);
+                responses.add(DoctorScheduleResponse.from(doctorRepository.saveSchedule(schedule)));
+            }
+
+            start = next;
+        }
+
+        return responses;
     }
 
-    // 공개 의사 상세 조회
     @Transactional(readOnly = true)
-    public DoctorResponse getPublicDoctor(Long doctorId) {
-        Doctor doctor = doctorRepository.findByIdAndStatusAndUserStatus(
-                        doctorId,
-                        DoctorStatus.ACTIVE,
-                        UserStatus.ACTIVE
-                )
-                .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
+    public List<DoctorScheduleResponse> getDoctorSchedules(Long userId, LocalDate date) {
+        Doctor doctor = getDoctorByUserId(userId);
 
-        return DoctorResponse.from(doctor);
+        return doctorRepository.findSchedules(doctor.getId(), date)
+                .stream()
+                .map(DoctorScheduleResponse::from)
+                .toList();
+    }
+
+    private Doctor getDoctorByUserId(Long userId) {
+        return doctorRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
     }
 }
