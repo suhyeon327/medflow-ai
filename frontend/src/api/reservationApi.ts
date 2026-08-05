@@ -2,7 +2,7 @@ import type { DoctorSchedule, PatientReservationPage, ReservationCancelResponse,
 import { apiClient } from './apiClient';
 
 export function getAvailableSchedules(doctorId: number): Promise<DoctorSchedule[]> {
-  return apiClient<DoctorSchedule[]>({ url: `/api/v1/doctors/${doctorId}/schedules`, method: 'GET' });
+  return apiClient<DoctorSchedule[]>({ url: `/api/v1/doctors/${doctorId}/available-schedules`, method: 'GET' }, false);
 }
 
 export function createReservation(request: ReservationCreateRequest): Promise<ReservationCreateResponse> {

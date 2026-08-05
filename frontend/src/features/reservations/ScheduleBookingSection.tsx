@@ -13,6 +13,9 @@ export function ScheduleBookingSection({ doctorId }: { doctorId: number }) {
   const canReserve = user?.role === 'PATIENT';
   const schedulesQuery = useAvailableSchedulesQuery(doctorId);
   const createMutation = useCreateReservationMutation(doctorId);
+  const availableSchedules = (schedulesQuery.data ?? [])
+    .filter((schedule) => new Date(`${schedule.date}T${schedule.startTime}`).getTime() > Date.now())
+    .sort((left, right) => `${left.date}T${left.startTime}`.localeCompare(`${right.date}T${right.startTime}`));
 
   return (
     <div className="mt-8 rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
@@ -23,10 +26,10 @@ export function ScheduleBookingSection({ doctorId }: { doctorId: number }) {
       <div className="mt-5">
         {schedulesQuery.isPending && <p role="status" className="text-sm text-slate-600">예약 가능 시간을 불러오고 있습니다.</p>}
         {schedulesQuery.isError && <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{getApiErrorMessage(schedulesQuery.error)}</p>}
-        {schedulesQuery.isSuccess && schedulesQuery.data.length === 0 && <p className="text-sm text-slate-600">현재 예약 가능한 시간이 없습니다.</p>}
-        {schedulesQuery.data && schedulesQuery.data.length > 0 && (
+        {schedulesQuery.isSuccess && availableSchedules.length === 0 && <p className="text-sm text-slate-600">현재 예약 가능한 시간이 없습니다.</p>}
+        {availableSchedules.length > 0 && (
           <ul className="space-y-3">
-            {schedulesQuery.data.map((schedule) => (
+            {availableSchedules.map((schedule) => (
               <li key={schedule.scheduleId} className="flex flex-col justify-between gap-3 rounded-lg border border-slate-200 p-4 sm:flex-row sm:items-center">
                 <div>
                   <p className="font-semibold">{formatDate(schedule.date)}</p>

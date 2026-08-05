@@ -1,11 +1,16 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { QueryError } from '../components/QueryError';
 import { useAdminUsersQuery } from '../features/admin/users/adminUserQueries';
+import { useAdminDoctorsQuery } from '../features/doctors/doctorQueries';
 import type { UserRole } from '../types/auth';
 import type { AdminUserFilters, UserStatus } from '../types/adminUser';
+import type { DoctorStatus } from '../types/doctor';
+import { ADMIN_DOCTOR_DETAIL_PATH } from '../routes/routePaths';
 
 const ROLE_LABEL: Record<UserRole, string> = { PATIENT: '환자', DOCTOR: '의사', ADMIN: '관리자' };
 const STATUS_LABEL: Record<UserStatus, string> = { ACTIVE: '활성', LOCKED: '잠김', WITHDRAWN: '탈퇴' };
+const DOCTOR_STATUS_LABEL: Record<DoctorStatus, string> = { PENDING: '승인 대기', ACTIVE: '승인 완료', REJECTED: '승인 거절' };
 const PAGE_SIZE = 20;
 
 function formatDate(value: string | null): string {
@@ -16,6 +21,8 @@ function formatDate(value: string | null): string {
 export function AdminUsersPage() {
   const [filters, setFilters] = useState<AdminUserFilters>({ page: 0, size: PAGE_SIZE });
   const usersQuery = useAdminUsersQuery(filters);
+  const [doctorStatus, setDoctorStatus] = useState<DoctorStatus | undefined>('PENDING');
+  const doctorsQuery = useAdminDoctorsQuery(doctorStatus);
 
   const updateRole = (value: string) => {
     setFilters((current) => ({ ...current, role: (value || undefined) as UserRole | undefined, page: 0 }));
@@ -48,6 +55,23 @@ export function AdminUsersPage() {
         </label>
       </div>
 
+      <section className="mt-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div><h2 className="text-lg font-bold">의사 인증 목록</h2><p className="mt-1 text-sm text-slate-600">의사를 선택하면 상세 정보와 승인 상태를 확인할 수 있습니다.</p></div>
+          <label className="text-sm font-medium text-slate-700">승인 상태
+            <select value={doctorStatus ?? ''} onChange={(event) => setDoctorStatus((event.target.value || undefined) as DoctorStatus | undefined)} className="ml-2 rounded-md border border-slate-300 px-3 py-2">
+              <option value="">전체</option>
+              {Object.entries(DOCTOR_STATUS_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            </select>
+          </label>
+        </div>
+        {doctorsQuery.isPending && <p className="mt-5 text-sm text-slate-600">의사 목록을 불러오고 있습니다.</p>}
+        {doctorsQuery.isError && <div className="mt-5"><QueryError error={doctorsQuery.error} onRetry={() => doctorsQuery.refetch()} /></div>}
+        {doctorsQuery.data?.length === 0 && <p className="mt-5 text-sm text-slate-600">해당 상태의 의사가 없습니다.</p>}
+        <ul className="mt-5 grid gap-3 sm:grid-cols-2">{doctorsQuery.data?.map((doctor) => (
+          <li key={doctor.doctorId}><Link to={ADMIN_DOCTOR_DETAIL_PATH(doctor.doctorId)} className="block rounded-lg border border-slate-200 p-4 hover:border-blue-300 hover:bg-blue-50"><div className="flex items-center justify-between gap-3"><strong>{doctor.doctorName} 의사</strong><span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold">{DOCTOR_STATUS_LABEL[doctor.status]}</span></div><p className="mt-2 text-sm text-slate-600">{doctor.hospitalName}</p><p className="mt-1 text-xs text-slate-500">면허번호 {doctor.licenseNumber}</p></Link></li>
+        ))}</ul>
+      </section>
       <div className="mt-6">
         {usersQuery.isPending && <p role="status" className="text-sm text-slate-600">사용자 목록을 불러오고 있습니다.</p>}
         {usersQuery.isError && <QueryError error={usersQuery.error} onRetry={() => usersQuery.refetch()} />}
