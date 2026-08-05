@@ -10,6 +10,7 @@ export const DOCTOR_PROFILE_PATH = '/doctor/profile';
 export const DOCTOR_SCHEDULES_PATH = '/doctor/schedules';
 export const ADMIN_DOCTOR_DETAIL_PATH = (doctorId: number) => `/admin/doctors/${doctorId}`;
 export const ADMIN_USERS_PATH = '/admin/users';
+export const ADMIN_HOSPITALS_PATH = '/admin/hospitals';
 export const HOSPITALS_PATH = '/hospitals';
 export const HOSPITAL_DETAIL_PATH = (hospitalId: number) => `/hospitals/${hospitalId}`;
 export const DOCTOR_DETAIL_PATH = (doctorId: number) => `/doctors/${doctorId}`;
