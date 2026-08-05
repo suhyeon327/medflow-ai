@@ -26,6 +26,9 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,6 +44,7 @@ class DoctorReservationServiceTest {
     @Mock ReservationRepository reservationRepository;
     @Mock DoctorRepository doctorRepository;
     @Mock DoctorReservationSearchRepository searchRepository;
+    @Mock Clock clock;
     @InjectMocks DoctorReservationService service;
 
     @Test
@@ -89,10 +93,24 @@ class DoctorReservationServiceTest {
     void updateReservationStatus_completesApprovedReservation() {
         Reservation reservation = ownedReservation(1L, 10L, 100L);
         reservation.approve();
+        setCurrentTime("2026-08-06T01:00:00Z");
 
         ReservationStatusResponse response = service.updateReservationStatus(1L, 100L, ReservationStatus.COMPLETED);
 
         assertThat(response.status()).isEqualTo(ReservationStatus.COMPLETED);
+    }
+
+    @Test
+    void updateReservationStatus_rejectsCompletionBeforeEndTime() {
+        Reservation reservation = ownedReservation(1L, 10L, 100L);
+        reservation.approve();
+        setCurrentTime("2026-08-05T23:30:00Z");
+
+        assertThatThrownBy(() -> service.updateReservationStatus(1L, 100L, ReservationStatus.COMPLETED))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.RESERVATION_NOT_ENDED);
+        assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.APPROVED);
     }
 
     @Test
@@ -109,18 +127,39 @@ class DoctorReservationServiceTest {
     void updateReservationStatus_rejectsReservationOwnedByAnotherDoctor() {
         Doctor doctor = doctor(10L);
         when(doctorRepository.findByUserId(1L)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(100L, 10L)).thenReturn(Optional.empty());
+        when(reservationRepository.findDoctorReservationForUpdate(100L, 10L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.updateReservationStatus(1L, 100L, ReservationStatus.APPROVED))
                 .isInstanceOf(BusinessException.class);
-        verify(reservationRepository).findByIdAndDoctorScheduleDoctorId(100L, 10L);
+        verify(reservationRepository).findDoctorReservationForUpdate(100L, 10L);
+    }
+
+    @Test
+    void updateReservationStatus_rejectsDuplicateCompletionAfterSchedulerCompletion() {
+        Reservation reservation = ownedReservation(1L, 10L, 100L);
+        reservation.approve();
+        Clock fixedClock = Clock.fixed(Instant.parse("2026-08-06T01:00:00Z"), ZoneId.of("Asia/Seoul"));
+        when(reservationRepository.findCompletionTargets(
+                ReservationStatus.APPROVED,
+                LocalDate.of(2026, 8, 6),
+                LocalTime.of(10, 0),
+                PageRequest.of(0, 100)
+        )).thenReturn(List.of(reservation));
+
+        new ReservationCompletionService(reservationRepository, fixedClock).completeEndedReservations();
+        setCurrentTime("2026-08-06T01:00:00Z");
+
+        assertThatThrownBy(() -> service.updateReservationStatus(1L, 100L, ReservationStatus.COMPLETED))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_STATUS_CHANGE);
     }
 
     private Reservation ownedReservation(Long userId, Long doctorId, Long reservationId) {
         Doctor doctor = doctor(doctorId);
         Reservation reservation = reservation(reservationId);
         when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
+        when(reservationRepository.findDoctorReservationForUpdate(reservationId, doctorId))
                 .thenReturn(Optional.of(reservation));
         return reservation;
     }
@@ -137,5 +176,10 @@ class DoctorReservationServiceTest {
         Reservation reservation = Reservation.create(patient, schedule);
         ReflectionTestUtils.setField(reservation, "id", id);
         return reservation;
+    }
+
+    private void setCurrentTime(String instant) {
+        when(clock.instant()).thenReturn(Instant.parse(instant));
+        when(clock.getZone()).thenReturn(ZoneId.of("Asia/Seoul"));
     }
 }

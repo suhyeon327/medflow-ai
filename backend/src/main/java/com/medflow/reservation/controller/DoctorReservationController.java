@@ -52,7 +52,7 @@ public class DoctorReservationController {
         );
     }
 
-    @Operation(summary = "예약 상태 변경", description = "APPROVED, REJECTED, COMPLETED 상태로 변경할 수 있습니다.")
+    @Operation(summary = "예약 상태 변경", description = "APPROVED, REJECTED 상태로 변경하거나 종료 시간이 지난 APPROVED 예약을 COMPLETED로 변경할 수 있습니다.")
     @PatchMapping("/{reservationId}/status")
     public ApiResponse<ReservationStatusResponse> updateReservationStatus(
             @AuthenticationPrincipal CustomUserDetails userDetails,

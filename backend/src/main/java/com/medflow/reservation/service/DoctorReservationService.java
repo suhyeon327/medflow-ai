@@ -21,6 +21,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
+import java.time.Clock;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +34,7 @@ public class DoctorReservationService {
     private final DoctorReservationSearchRepository doctorReservationSearchRepository;
     private final QuestionnaireRepository questionnaireRepository;
     private final QuestionnaireAnalysisRepository questionnaireAnalysisRepository;
+    private final Clock clock;
 
     // 의사 예약 검색 및 필터링
     @Transactional(readOnly = true)
@@ -55,7 +58,7 @@ public class DoctorReservationService {
     @Transactional(readOnly = true)
     public DoctorReservationPatientResponse getReservationPatient(Long userId, Long reservationId) {
 
-        Reservation reservation = findDoctorReservation(userId, reservationId);
+        Reservation reservation = findDoctorReservation(userId, reservationId, false);
 
         if (reservation.getPatient() == null) {
             throw new BusinessException(ErrorCode.PATIENT_NOT_FOUND);
@@ -70,7 +73,7 @@ public class DoctorReservationService {
             Long reservationId,
             ReservationStatus status
     ) {
-        Reservation reservation = findDoctorReservation(userId, reservationId);
+        Reservation reservation = findDoctorReservation(userId, reservationId, true);
 
         switch (status) {
             case APPROVED -> reservation.approve();
@@ -78,17 +81,22 @@ public class DoctorReservationService {
                 reservation.reject();
                 reservation.getDoctorSchedule().release();
             }
-            case COMPLETED -> reservation.complete();
+            case COMPLETED -> reservation.complete(LocalDateTime.now(clock));
             default -> throw new BusinessException(ErrorCode.INVALID_STATUS_CHANGE);
         }
 
         return ReservationStatusResponse.from(reservation);
     }
 
-    private Reservation findDoctorReservation(Long userId, Long reservationId) {
+    private Reservation findDoctorReservation(Long userId, Long reservationId, boolean forUpdate) {
 
         Doctor doctor = doctorRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
+
+        if (forUpdate) {
+            return reservationRepository.findDoctorReservationForUpdate(reservationId, doctor.getId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
+        }
 
         return reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctor.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));

@@ -40,6 +40,7 @@ public enum ErrorCode {
     INVALID_STATUS_CHANGE(HttpStatus.CONFLICT, "RESERVATION_003", "현재 예약 상태에서는 요청한 상태로 변경할 수 없습니다."),
     SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVATION_004", "예약 가능한 일정을 찾을 수 없습니다."),
     RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVATION_005", "예약을 찾을 수 없습니다."),
+    RESERVATION_NOT_ENDED(HttpStatus.CONFLICT, "RESERVATION_006", "종료 시간이 지나지 않은 예약은 완료할 수 없습니다."),
     RESERVATION_ALREADY_CANCELLED(HttpStatus.BAD_REQUEST, "RESERVATION_007", "이미 취소된 예약입니다."),
 
     // Questionnaire

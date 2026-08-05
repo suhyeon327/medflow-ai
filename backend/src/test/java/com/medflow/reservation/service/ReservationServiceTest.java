@@ -517,7 +517,7 @@ class ReservationServiceTest {
 
         when(doctor.getId()).thenReturn(doctorId);
         when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
+        when(reservationRepository.findDoctorReservationForUpdate(reservationId, doctorId))
                 .thenReturn(Optional.of(reservation));
 
         ReservationStatusResponse response = doctorReservationService.updateReservationStatus(userId, reservationId, ReservationStatus.APPROVED);
@@ -540,7 +540,7 @@ class ReservationServiceTest {
 
         when(doctor.getId()).thenReturn(doctorId);
         when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
+        when(reservationRepository.findDoctorReservationForUpdate(reservationId, doctorId))
                 .thenReturn(Optional.of(reservation));
 
         ReservationStatusResponse response = doctorReservationService.updateReservationStatus(userId, reservationId, ReservationStatus.REJECTED);
@@ -559,7 +559,7 @@ class ReservationServiceTest {
 
         when(doctor.getId()).thenReturn(doctorId);
         when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
+        when(reservationRepository.findDoctorReservationForUpdate(reservationId, doctorId))
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> doctorReservationService.updateReservationStatus(userId, reservationId, ReservationStatus.APPROVED))
@@ -581,7 +581,7 @@ class ReservationServiceTest {
 
         when(doctor.getId()).thenReturn(doctorId);
         when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(reservationId, doctorId))
+        when(reservationRepository.findDoctorReservationForUpdate(reservationId, doctorId))
                 .thenReturn(Optional.of(reservation));
 
         assertThatThrownBy(() -> doctorReservationService.updateReservationStatus(userId, reservationId, ReservationStatus.REJECTED))

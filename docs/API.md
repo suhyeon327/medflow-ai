@@ -308,6 +308,11 @@ DTO:
 - `ReservationStatusResponse`: `reservationId`, `status`
 
 상태 전이: `PENDING → APPROVED`, `PENDING → REJECTED`, `APPROVED → COMPLETED`. 그 외 전이는 `RESERVATION_003`을 반환한다.
+
+- `APPROVED → COMPLETED` 수동 변경은 `Asia/Seoul` 기준 예약 종료 시각 이후에만 허용한다.
+- 종료 전 완료 요청은 `RESERVATION_006`을 반환한다.
+- 종료 시각이 지난 `APPROVED` 예약은 스케줄러가 최대 100건씩 조회하여 자동으로 `COMPLETED` 처리한다.
+- 자동 완료와 수동 완료는 비관적 쓰기 잠금으로 동일 예약의 동시 변경을 방지한다.
 - `DoctorReservationPageResponse`: `content`, `page`, `size`, `totalElements`, `totalPages`; 기본 size 10
 - `DoctorReservationPatientResponse`: 환자 ID/이름/성별/생년월일/전화번호 + 예약 ID/날짜/시간/상태
 
