@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { ADMIN_HOSPITALS_PATH, ADMIN_USERS_PATH, DOCTOR_PROFILE_PATH, DOCTOR_SCHEDULES_PATH, HOSPITALS_PATH, LOGIN_PATH, PATIENT_PROFILE_PATH, PATIENT_RESERVATIONS_PATH, WITHDRAW_PATH } from '../routes/routePaths';
+import { ADMIN_HOSPITALS_PATH, ADMIN_RESERVATIONS_PATH, ADMIN_USERS_PATH, DOCTOR_PROFILE_PATH, DOCTOR_RESERVATIONS_PATH, DOCTOR_SCHEDULES_PATH, HOSPITALS_PATH, LOGIN_PATH, PATIENT_PROFILE_PATH, PATIENT_RESERVATIONS_PATH, WITHDRAW_PATH } from '../routes/routePaths';
 
 const ROLE_LABEL = { PATIENT: '환자', DOCTOR: '의사', ADMIN: '관리자' } as const;
 
@@ -33,6 +33,7 @@ export function AppLayout() {
             {user?.role === 'ADMIN' && (
               <>
                 <Link to={ADMIN_HOSPITALS_PATH} className="rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">병원 관리</Link>
+                <Link to={ADMIN_RESERVATIONS_PATH} className="rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">예약 관리</Link>
                 <Link to={ADMIN_USERS_PATH} className="rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">사용자 관리</Link>
               </>
             )}
@@ -40,6 +41,7 @@ export function AppLayout() {
               <>
                 <Link to={DOCTOR_PROFILE_PATH} className="rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">내 프로필</Link>
                 <Link to={DOCTOR_SCHEDULES_PATH} className="rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">진료 스케줄</Link>
+                <Link to={DOCTOR_RESERVATIONS_PATH} className="rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">예약 관리</Link>
               </>
             )}
             {user?.role === 'PATIENT' && (

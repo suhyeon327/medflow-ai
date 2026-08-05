@@ -369,7 +369,7 @@ Service는 `findByUser(user)`로 사용자당 한 Refresh Token을 갱신하지�
 | `HospitalStatus` | `ACTIVE`, `INACTIVE`, `CLOSED` |
 | `DoctorStatus` | `PENDING`, `ACTIVE`, `REJECTED` |
 | `DoctorScheduleStatus` | `AVAILABLE`, `RESERVED`, `BLOCKED` |
-| `ReservationStatus` | `REQUESTED`, `CONFIRMED`, `COMPLETED`, `CANCELLED` |
+| `ReservationStatus` | `PENDING`, `APPROVED`, `REJECTED`, `COMPLETED`, `CANCELLED` |
 | `ReservationPeriod` | `UPCOMING`, `TODAY`, `PAST` (검색 DTO용, Entity 필드 아님) |
 | `QuestionnaireAnalysisStatus` | `PENDING`, `PROCESSING`, `COMPLETED`, `FAILED` |
 | `PriorityLevel` | `NORMAL`, `CAUTION`, `HIGH_PRIORITY` |

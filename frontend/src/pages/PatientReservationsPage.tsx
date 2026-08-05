@@ -7,7 +7,7 @@ import { DOCTOR_DETAIL_PATH, HOSPITALS_PATH } from '../routes/routePaths';
 import type { ReservationFilters, ReservationPeriod, ReservationStatus } from '../types/reservation';
 
 const STATUS_LABEL: Record<ReservationStatus, string> = {
-  REQUESTED: '승인 대기', CONFIRMED: '예약 확정', COMPLETED: '진료 완료', CANCELLED: '취소',
+  PENDING: '승인 대기', APPROVED: '예약 승인', REJECTED: '예약 거절', COMPLETED: '진료 완료', CANCELLED: '취소',
 };
 const PERIOD_LABEL: Record<ReservationPeriod, string> = {
   UPCOMING: '예정', TODAY: '오늘', PAST: '지난 예약',
@@ -73,7 +73,7 @@ export function PatientReservationsPage() {
         {reservationsQuery.data && reservationsQuery.data.content.length > 0 && (
           <ul className="space-y-4">
             {reservationsQuery.data.content.map((reservation) => {
-              const cancellable = (reservation.reservationStatus === 'REQUESTED' || reservation.reservationStatus === 'CONFIRMED')
+              const cancellable = (reservation.reservationStatus === 'PENDING' || reservation.reservationStatus === 'APPROVED')
                 && isFutureReservation(reservation.reservationDate, reservation.startTime);
               const cancelling = cancelMutation.isPending && cancelMutation.variables?.reservationId === reservation.reservationId;
               return (

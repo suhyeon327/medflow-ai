@@ -7,6 +7,7 @@ import { PublicLayout } from '../layouts/PublicLayout';
 import { DoctorDetailPage } from '../pages/DoctorDetailPage';
 import { DoctorProfilePage } from '../pages/DoctorProfilePage';
 import { DoctorSchedulesPage } from '../pages/DoctorSchedulesPage';
+import { DoctorReservationsPage } from '../pages/DoctorReservationsPage';
 import { AdminDoctorDetailPage } from '../pages/AdminDoctorDetailPage';
 import { HospitalDetailPage } from '../pages/HospitalDetailPage';
 import { HospitalListPage } from '../pages/HospitalListPage';
@@ -14,12 +15,13 @@ import { LoginPage } from '../pages/LoginPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { PatientReservationsPage } from '../pages/PatientReservationsPage';
 import { PatientProfilePage } from '../pages/PatientProfilePage';
+import { AdminReservationsPage } from '../pages/AdminReservationsPage';
 import { RoleHomePage } from '../pages/RoleHomePage';
 import { SignupPage } from '../pages/SignupPage';
 import { UnauthorizedPage } from '../pages/UnauthorizedPage';
 import { WithdrawPage } from '../pages/WithdrawPage';
 import { ProtectedRoute, PublicOnlyRoute, RoleRoute } from './RouteGuards';
-import { ADMIN_HOSPITALS_PATH, ADMIN_USERS_PATH, DOCTOR_PROFILE_PATH, DOCTOR_SCHEDULES_PATH, HOSPITALS_PATH, LOGIN_PATH, PATIENT_PROFILE_PATH, PATIENT_RESERVATIONS_PATH, ROLE_HOME_PATH, SIGNUP_PATH, UNAUTHORIZED_PATH, WITHDRAW_PATH } from './routePaths';
+import { ADMIN_HOSPITALS_PATH, ADMIN_RESERVATIONS_PATH, ADMIN_USERS_PATH, DOCTOR_PROFILE_PATH, DOCTOR_RESERVATIONS_PATH, DOCTOR_SCHEDULES_PATH, HOSPITALS_PATH, LOGIN_PATH, PATIENT_PROFILE_PATH, PATIENT_RESERVATIONS_PATH, ROLE_HOME_PATH, SIGNUP_PATH, UNAUTHORIZED_PATH, WITHDRAW_PATH } from './routePaths';
 
 function HomeRedirect() {
   const { user } = useAuth();
@@ -54,10 +56,12 @@ export function AppRouter() {
             <Route path={ROLE_HOME_PATH.DOCTOR} element={<RoleHomePage />} />
             <Route path={DOCTOR_PROFILE_PATH} element={<DoctorProfilePage />} />
             <Route path={DOCTOR_SCHEDULES_PATH} element={<DoctorSchedulesPage />} />
+            <Route path={DOCTOR_RESERVATIONS_PATH} element={<DoctorReservationsPage />} />
           </Route>
           <Route element={<RoleRoute allowedRole="ADMIN" />}>
             <Route path={ROLE_HOME_PATH.ADMIN} element={<RoleHomePage />} />
             <Route path={ADMIN_HOSPITALS_PATH} element={<AdminHospitalsPage />} />
+            <Route path={ADMIN_RESERVATIONS_PATH} element={<AdminReservationsPage />} />
             <Route path={ADMIN_USERS_PATH} element={<AdminUsersPage />} />
             <Route path="/admin/doctors/:doctorId" element={<AdminDoctorDetailPage />} />
           </Route>
