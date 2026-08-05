@@ -37,7 +37,7 @@ public class QuestionnaireController {
     }
 
     // 예약 문진 조회
-    @GetMapping("/{reservationId}")
+    @GetMapping("/{reservationId}/questionnaire")
     public ApiResponse<QuestionnaireDetailResponse> getQuestionnaire(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long reservationId
