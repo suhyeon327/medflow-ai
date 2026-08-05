@@ -1,7 +1,11 @@
 package com.medflow.user.repository;
 
 import com.medflow.user.entity.User;
+import com.medflow.user.entity.UserRole;
+import com.medflow.user.entity.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 
@@ -16,4 +20,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // ID로 회원 조회
     Optional<User> findById(Long id);
+
+    Page<User> findAllByRole(UserRole role, Pageable pageable);
+
+    Page<User> findAllByStatus(UserStatus status, Pageable pageable);
+
+    Page<User> findAllByRoleAndStatus(UserRole role, UserStatus status, Pageable pageable);
 }

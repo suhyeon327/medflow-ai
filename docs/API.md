@@ -96,10 +96,12 @@ Controller: `com.medflow.user.controller.UserController`
 
 | Method | Path | 요청 | 응답 DTO | 인증 | Role |
 |---|---|---|---|---|---|
-| GET | `/api/v1/user/{id}` | Path `id: Long` | `AdminUserResponse` | 필요 | ADMIN |
-| GET | `/api/v1/user/` | 없음 | `List<AdminUserResponse>` | 필요 | ADMIN |
+| GET | `/api/v1/admin/users/{userId}` | Path `userId: Long` | `AdminUserResponse` | 필요 | ADMIN |
+| GET | `/api/v1/admin/users` | Query `role?: UserRole`, `status?: UserStatus`, Pageable | `AdminUserPageResponse` | 필요 | ADMIN |
 
 `AdminUserResponse`: `userId`, `email`, `role`, `status`, `createdAt`, `updatedAt`, `deletedAt`.
+
+`AdminUserPageResponse`: `content`, `page`, `size`, `totalElements`, `totalPages`. 기본 크기는 20이며 `createdAt` 내림차순으로 조회한다.
 
 주요 예외: 404 `AUTH_003`(사용자 없음), 403 `AUTH_006`(권한 없음).
 

@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { AppLayout } from '../layouts/AppLayout';
+import { AdminUsersPage } from '../pages/AdminUsersPage';
 import { PublicLayout } from '../layouts/PublicLayout';
 import { DoctorDetailPage } from '../pages/DoctorDetailPage';
 import { HospitalDetailPage } from '../pages/HospitalDetailPage';
@@ -13,7 +14,7 @@ import { SignupPage } from '../pages/SignupPage';
 import { UnauthorizedPage } from '../pages/UnauthorizedPage';
 import { WithdrawPage } from '../pages/WithdrawPage';
 import { ProtectedRoute, PublicOnlyRoute, RoleRoute } from './RouteGuards';
-import { HOSPITALS_PATH, LOGIN_PATH, PATIENT_RESERVATIONS_PATH, ROLE_HOME_PATH, SIGNUP_PATH, UNAUTHORIZED_PATH, WITHDRAW_PATH } from './routePaths';
+import { ADMIN_USERS_PATH, HOSPITALS_PATH, LOGIN_PATH, PATIENT_RESERVATIONS_PATH, ROLE_HOME_PATH, SIGNUP_PATH, UNAUTHORIZED_PATH, WITHDRAW_PATH } from './routePaths';
 
 function HomeRedirect() {
   const { user } = useAuth();
@@ -48,6 +49,7 @@ export function AppRouter() {
           </Route>
           <Route element={<RoleRoute allowedRole="ADMIN" />}>
             <Route path={ROLE_HOME_PATH.ADMIN} element={<RoleHomePage />} />
+            <Route path={ADMIN_USERS_PATH} element={<AdminUsersPage />} />
           </Route>
         </Route>
       </Route>
