@@ -1,93 +1,127 @@
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { ApiError } from '../api/apiError';
 import { signup } from '../api/authApi';
-import { getApiErrorMessage } from '../api/apiError';
+import { DoctorInfoStep } from '../features/auth/signup/DoctorInfoStep';
+import { PatientInfoStep } from '../features/auth/signup/PatientInfoStep';
+import { SignupAccountStep } from '../features/auth/signup/SignupAccountStep';
+import { SignupCompleteStep } from '../features/auth/signup/SignupCompleteStep';
+import { SignupRoleStep } from '../features/auth/signup/SignupRoleStep';
 import { LOGIN_PATH } from '../routes/routePaths';
-import type { SignupRequest } from '../types/auth';
+import type { DoctorSignupForm, PatientSignupForm, SignupAccountForm, SignupRequest, SignupResponse, SignupRole } from '../types/auth';
 
-interface SignupForm extends SignupRequest { passwordConfirm: string; }
-const INITIAL_FORM: SignupForm = {
-  email: '', password: '', passwordConfirm: '', role: 'PATIENT',
-};
+type SignupStep = 'role' | 'account' | 'profile' | 'complete';
+
+const INITIAL_ACCOUNT: SignupAccountForm = { email: '', password: '', passwordConfirm: '' };
+const INITIAL_PATIENT: PatientSignupForm = { name: '', birth: '', gender: 'MALE', phone: '' };
+const INITIAL_DOCTOR: DoctorSignupForm = { hospitalId: null, name: '', licenseNumber: '', specialty: '', introduction: '', contact: '' };
+
+function getSignupErrorMessage(error: unknown): string {
+  if (!(error instanceof ApiError)) return '회원가입을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+
+  switch (error.code) {
+    case 'AUTH_001': return '이미 가입된 이메일입니다. 다른 이메일을 입력해 주세요.';
+    case 'HOSPITAL_002': return '선택한 병원을 찾을 수 없습니다. 병원을 다시 선택해 주세요.';
+    case 'DOCTOR_001':
+    case 'DOCTOR_004': return '이미 등록되었거나 인증 신청된 면허번호입니다.';
+    case 'AUTH_008': return '가입할 수 없는 회원 유형입니다.';
+    case 'AUTH_009': return '선택한 회원 유형에 맞는 추가 정보를 확인해 주세요.';
+    default: return error.message;
+  }
+}
 
 export function SignupPage() {
-  const [form, setForm] = useState(INITIAL_FORM);
-  const [validationError, setValidationError] = useState('');
-  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState<SignupStep>('role');
+  const [selectedRole, setSelectedRole] = useState<SignupRole | null>(null);
+  const [accountForm, setAccountForm] = useState(INITIAL_ACCOUNT);
+  const [patientForm, setPatientForm] = useState(INITIAL_PATIENT);
+  const [doctorForm, setDoctorForm] = useState(INITIAL_DOCTOR);
+  const [signupResult, setSignupResult] = useState<SignupResponse | null>(null);
 
   const signupMutation = useMutation({
     mutationFn: signup,
-    onSuccess: () => navigate(LOGIN_PATH, {
-      replace: true,
-      state: { signupCompleted: true },
-    }),
+    onSuccess: (result) => {
+      setSignupResult(result);
+      setCurrentStep('complete');
+    },
   });
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setValidationError('');
+  const selectRole = (role: SignupRole) => {
+    signupMutation.reset();
+    setSelectedRole(role);
+    setCurrentStep('account');
+  };
 
-    if (form.password !== form.passwordConfirm) {
-      setValidationError('비밀번호가 일치하지 않습니다.');
-      return;
+  const submitSignup = () => {
+    if (!selectedRole) return;
+
+    let payload: SignupRequest;
+    if (selectedRole === 'PATIENT') {
+      payload = {
+        email: accountForm.email.trim(),
+        password: accountForm.password,
+        role: 'PATIENT',
+        patient: { ...patientForm, name: patientForm.name.trim(), phone: patientForm.phone.trim() },
+      };
+    } else {
+      if (!doctorForm.hospitalId) return;
+      payload = {
+        email: accountForm.email.trim(),
+        password: accountForm.password,
+        role: 'DOCTOR',
+        doctor: {
+          hospitalId: doctorForm.hospitalId,
+          name: doctorForm.name.trim(),
+          licenseNumber: doctorForm.licenseNumber.trim(),
+          specialty: doctorForm.specialty.trim(),
+          introduction: doctorForm.introduction.trim(),
+          contact: doctorForm.contact.trim(),
+        },
+      };
     }
 
-    signupMutation.mutate({ email: form.email, password: form.password, role: form.role });
+    signupMutation.mutate(payload);
   };
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12">
-      <section className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
-        <div className="mb-8">
-          <p className="text-sm font-semibold text-blue-700">MedFlow AI</p>
-          <h1 className="mt-2 text-2xl font-bold">회원가입</h1>
-          <p className="mt-2 text-sm text-slate-600">환자 또는 의사 계정을 생성합니다.</p>
-        </div>
+      <section className={`w-full rounded-xl border border-slate-200 bg-white p-8 shadow-sm ${currentStep === 'role' ? 'max-w-2xl' : 'max-w-lg'}`}>
+        <p className="mb-7 text-sm font-bold text-blue-700">MedFlow AI</p>
 
-        <form className="space-y-5" onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="email" className="mb-2 block text-sm font-medium">이메일</label>
-            <input id="email" type="email" autoComplete="email" required maxLength={100}
-              value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-              className="w-full rounded-md border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100" />
-          </div>
+        {currentStep === 'role' && <SignupRoleStep onSelect={selectRole} />}
+        {currentStep === 'account' && selectedRole && (
+          <SignupAccountStep
+            role={selectedRole}
+            form={accountForm}
+            onChange={setAccountForm}
+            onPrevious={() => setCurrentStep('role')}
+            onNext={() => { signupMutation.reset(); setCurrentStep('profile'); }}
+          />
+        )}
+        {currentStep === 'profile' && selectedRole === 'PATIENT' && (
+          <PatientInfoStep
+            form={patientForm}
+            onChange={setPatientForm}
+            onPrevious={() => setCurrentStep('account')}
+            onSubmit={submitSignup}
+            isPending={signupMutation.isPending}
+            errorMessage={signupMutation.isError ? getSignupErrorMessage(signupMutation.error) : ''}
+          />
+        )}
+        {currentStep === 'profile' && selectedRole === 'DOCTOR' && (
+          <DoctorInfoStep
+            form={doctorForm}
+            onChange={setDoctorForm}
+            onPrevious={() => setCurrentStep('account')}
+            onSubmit={submitSignup}
+            isPending={signupMutation.isPending}
+            errorMessage={signupMutation.isError ? getSignupErrorMessage(signupMutation.error) : ''}
+          />
+        )}
+        {currentStep === 'complete' && signupResult && <SignupCompleteStep result={signupResult} />}
 
-          <div>
-            <label htmlFor="password" className="mb-2 block text-sm font-medium">비밀번호</label>
-            <input id="password" type="password" autoComplete="new-password" required minLength={8} maxLength={20}
-              value={form.password} onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
-              className="w-full rounded-md border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100" />
-          </div>
-
-          <div>
-            <label htmlFor="passwordConfirm" className="mb-2 block text-sm font-medium">비밀번호 확인</label>
-            <input id="passwordConfirm" type="password" autoComplete="new-password" required minLength={8} maxLength={20}
-              value={form.passwordConfirm} onChange={(event) => setForm((current) => ({ ...current, passwordConfirm: event.target.value }))}
-              className="w-full rounded-md border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100" />
-          </div>
-
-          <fieldset>
-            <legend className="mb-2 text-sm font-medium">회원 유형</legend>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 text-sm"><input type="radio" name="role" value="PATIENT" checked={form.role === 'PATIENT'} onChange={() => setForm((current) => ({ ...current, role: 'PATIENT' }))} /> 환자</label>
-              <label className="flex items-center gap-2 text-sm"><input type="radio" name="role" value="DOCTOR" checked={form.role === 'DOCTOR'} onChange={() => setForm((current) => ({ ...current, role: 'DOCTOR' }))} /> 의사</label>
-            </div>
-          </fieldset>
-
-          {(validationError || signupMutation.isError) && (
-            <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-              {validationError || getApiErrorMessage(signupMutation.error)}
-            </p>
-          )}
-
-          <button type="submit" disabled={signupMutation.isPending}
-            className="w-full rounded-md bg-blue-600 px-4 py-2.5 font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
-            {signupMutation.isPending ? '가입 중...' : '회원가입'}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-slate-600">이미 계정이 있나요? <Link to={LOGIN_PATH} className="font-semibold text-blue-700">로그인</Link></p>
+        {currentStep !== 'complete' && <p className="mt-7 text-center text-sm text-slate-600">이미 계정이 있나요? <Link to={LOGIN_PATH} className="font-semibold text-blue-700">로그인</Link></p>}
       </section>
     </main>
   );

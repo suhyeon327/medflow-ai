@@ -102,7 +102,7 @@ com.medflow
 
 ### 인증과 사용자
 
-- 이메일 중복 검사 회원가입(`PATIENT`, `DOCTOR`; `ADMIN` 거부)
+- 이메일 중복 검사 및 역할별 프로필 통합 회원가입(`PATIENT`, `DOCTOR`; `ADMIN` 거부)
 - BCrypt 비밀번호 인증
 - Access Token 60분, Refresh Token 14일 발급
 - 사용자별 Refresh Token 저장/갱신, 재발급 시 rotation

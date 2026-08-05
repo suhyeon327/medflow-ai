@@ -1,6 +1,9 @@
 package com.medflow.auth.controller;
 
-import com.medflow.auth.dto.*;
+import com.medflow.auth.dto.request.*;
+import com.medflow.auth.dto.response.JwtToken;
+import com.medflow.auth.dto.response.SignupResponse;
+import com.medflow.auth.dto.response.WithdrawResponse;
 import com.medflow.auth.security.CustomUserDetails;
 import com.medflow.auth.service.AuthService;
 import com.medflow.common.response.ApiResponse;

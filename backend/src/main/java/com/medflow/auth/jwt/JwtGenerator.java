@@ -1,6 +1,6 @@
 package com.medflow.auth.jwt;
 
-import com.medflow.auth.dto.JwtToken;
+import com.medflow.auth.dto.response.JwtToken;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -51,10 +51,6 @@ public class JwtGenerator {
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
-        return JwtToken.builder()
-                .grantType("Bearer")
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
+        return JwtToken.from("Bearer", accessToken, refreshToken);
     }
 }

@@ -17,6 +17,7 @@ public enum ErrorCode {
     AUTH_FORBIDDEN(HttpStatus.FORBIDDEN, "AUTH_006", "접근 권한이 없습니다."),
     AUTH_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "AUTH_007", "인증이 필요합니다."),
     INVALID_SIGNUP_ROLE(HttpStatus.CONFLICT, "AUTH_008", "회원가입 가능한 회원 유형이 아닙니다."),
+    INVALID_SIGNUP_PROFILE(HttpStatus.BAD_REQUEST, "AUTH_009", "회원 유형에 맞는 추가 정보를 입력해주세요."),
 
     // Patient
     PATIENT_NOT_FOUND(HttpStatus.NOT_FOUND, "PATIENT_001", "환자를 찾을 수 없습니다."),

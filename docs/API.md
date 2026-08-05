@@ -71,8 +71,10 @@ Controller: `com.medflow.auth.controller.AuthController`
 
 DTO 필드:
 
-- `SignupRequest`: `email`, `password`, `role`
-- `SignupResponse`: `id`, `email`, `role`
+- `SignupRequest`: `email`, `password`, `role`, `patient?`, `doctor?`
+- `PatientSignupRequest`: `name`, `birth`, `gender`, `phone`
+- `DoctorSignupRequest`: `hospitalId`, `name`, `licenseNumber`, `specialty`, `introduction?`, `contact?`
+- `SignupResponse`: `id`, `email`, `role`, `profileId`, `profileStatus?`
 - `LoginRequest`: `email`, `password`
 - `JwtToken`: `grantType`, `accessToken`, `refreshToken`
 - `ReissueRequest`/`LogoutRequest`: `refreshToken`
@@ -83,12 +85,15 @@ DTO 필드:
 
 - 409 `AUTH_001`: 이메일 중복
 - 409 `AUTH_008`: ADMIN 역할 회원가입 요청
+- 400 `AUTH_009`: 역할별 추가 정보가 누락되었거나 다른 역할 정보가 함께 전달됨
 - 401 `AUTH_002`: 회원 탈퇴 비밀번호 불일치
 - 401 `AUTH_005`: 로그인 실패 또는 Refresh Token 무효/만료
 - 404 `AUTH_003`: 사용자 없음
 - 401 `AUTH_004`: JWT에 권한 claim 없음
 
 `/reissue`는 `SecurityConfig`의 공개 matcher에 포함되어 Access Token 없이 Refresh Token으로 호출한다. 회원 탈퇴는 로그인 사용자의 ID와 요청 본문의 비밀번호를 함께 검증한다.
+
+회원가입은 하나의 트랜잭션에서 User와 역할별 Patient 또는 Doctor 프로필을 함께 저장한다. Doctor는 `PENDING` 상태로 생성된다. 기존 `/api/v1/patient/create`, `/api/v1/doctors/apply`는 프로필이 없는 기존 계정과의 호환을 위해 유지한다.
 
 ## 3. 사용자 관리 API
 

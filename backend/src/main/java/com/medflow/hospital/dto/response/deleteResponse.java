@@ -1,8 +1,6 @@
 package com.medflow.hospital.dto.response;
 
-import com.medflow.auth.dto.WithdrawResponse;
 import com.medflow.hospital.entity.Hospital;
-import com.medflow.user.entity.User;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
