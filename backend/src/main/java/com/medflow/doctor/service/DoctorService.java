@@ -10,6 +10,7 @@ import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorSchedule;
 import com.medflow.doctor.entity.DoctorStatus;
 import com.medflow.doctor.repository.DoctorRepository;
+import com.medflow.doctor.repository.DoctorScheduleRepository;
 import com.medflow.hospital.entity.Hospital;
 import com.medflow.hospital.repository.HospitalRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ import java.util.List;
 public class DoctorService {
 
     private final DoctorRepository doctorRepository;
+    private final DoctorScheduleRepository doctorScheduleRepository;
     private final HospitalRepository hospitalRepository;
 
     @Transactional(readOnly = true)
@@ -78,9 +80,13 @@ public class DoctorService {
                 break;
             }
 
-            if (!doctorRepository.existsSchedule(doctor.getId(), request.date(), start)) {
+            if (!doctorScheduleRepository.existsByDoctorIdAndDateAndStartTime(
+                    doctor.getId(),
+                    request.date(),
+                    start
+            )) {
                 DoctorSchedule schedule = DoctorSchedule.create(doctor, request.date(), start, next);
-                responses.add(DoctorScheduleResponse.from(doctorRepository.saveSchedule(schedule)));
+                responses.add(DoctorScheduleResponse.from(doctorScheduleRepository.save(schedule)));
             }
 
             start = next;
@@ -93,7 +99,11 @@ public class DoctorService {
     public List<DoctorScheduleResponse> getDoctorSchedules(Long userId, LocalDate date) {
         Doctor doctor = getDoctorByUserId(userId);
 
-        return doctorRepository.findSchedules(doctor.getId(), date)
+        List<DoctorSchedule> schedules = date == null
+                ? doctorScheduleRepository.findByDoctorId(doctor.getId())
+                : doctorScheduleRepository.findByDoctorIdAndDate(doctor.getId(), date);
+
+        return schedules
                 .stream()
                 .map(DoctorScheduleResponse::from)
                 .toList();

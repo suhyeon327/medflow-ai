@@ -4,8 +4,6 @@ import com.medflow.common.exception.BusinessException;
 import com.medflow.common.exception.ErrorCode;
 import com.medflow.doctor.entity.DoctorSchedule;
 import com.medflow.doctor.entity.DoctorScheduleStatus;
-import com.medflow.doctor.entity.Doctor;
-import com.medflow.doctor.repository.DoctorRepository;
 import com.medflow.doctor.repository.DoctorScheduleRepository;
 import com.medflow.patient.entity.Patient;
 import com.medflow.patient.repository.PatientRepository;

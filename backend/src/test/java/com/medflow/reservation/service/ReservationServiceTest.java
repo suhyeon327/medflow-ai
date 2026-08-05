@@ -4,8 +4,8 @@ package com.medflow.reservation.service;
 import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorSchedule;
 import com.medflow.doctor.entity.DoctorScheduleStatus;
-import com.medflow.doctor.repository.DoctorScheduleRepository;
 import com.medflow.doctor.repository.DoctorRepository;
+import com.medflow.doctor.repository.DoctorScheduleRepository;
 import com.medflow.hospital.entity.Hospital;
 import com.medflow.patient.entity.Gender;
 import com.medflow.patient.entity.Patient;
@@ -49,13 +49,13 @@ class ReservationServiceTest {
     private ReservationRepository reservationRepository;
 
     @Mock
-    private DoctorScheduleRepository doctorScheduleRepository;
-
-    @Mock
     private PatientRepository patientRepository;
 
     @Mock
     private DoctorRepository doctorRepository;
+
+    @Mock
+    private DoctorScheduleRepository doctorScheduleRepository;
 
     @Mock
     private PatientReservationSearchRepository patientReservationSearchRepository;
