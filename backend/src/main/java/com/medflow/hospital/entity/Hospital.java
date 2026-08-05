@@ -11,7 +11,7 @@ import java.time.LocalDate;
 
 @Entity
 @Getter
-@Table(name = "hospital")
+@Table(name = "hospitals")
 @NoArgsConstructor
 public class Hospital extends BaseEntity {
 

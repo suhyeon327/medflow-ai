@@ -2,11 +2,11 @@ package com.medflow.hospital.controller;
 
 import com.medflow.common.response.ApiResponse;
 import com.medflow.hospital.dto.response.AdminHospitalResponse;
-import com.medflow.hospital.dto.request.HospitalCreateRequest;
+import com.medflow.hospital.dto.request.AdminHospitalCreateRequest;
 import com.medflow.hospital.dto.response.HospitalDetailResponse;
-import com.medflow.hospital.dto.request.HospitalUpdateRequest;
-import com.medflow.hospital.dto.response.deleteResponse;
-import com.medflow.hospital.service.HospitalService;
+import com.medflow.hospital.dto.request.AdminHospitalUpdateRequest;
+import com.medflow.hospital.dto.response.AdminHospitalDeleteResponse;
+import com.medflow.hospital.service.AdminHospitalService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,48 +20,44 @@ import java.util.List;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminHospitalController {
 
-    private final HospitalService hospitalService;
+    private final AdminHospitalService adminHospitalService;
 
     // 병원 등록
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/")
+    @PostMapping
     public ApiResponse<HospitalDetailResponse> createHospital(
-            @Valid @RequestBody HospitalCreateRequest request
+            @Valid @RequestBody AdminHospitalCreateRequest request
             ) {
         return ApiResponse.success(
-                hospitalService.createHospital(request)
+                adminHospitalService.createHospital(request)
         );
     }
 
     // 병원 관리 목록 조회
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/")
     public ApiResponse<List<AdminHospitalResponse>> getHospitals() {
         return ApiResponse.success(
-                hospitalService.getHospitals()
+                adminHospitalService.getHospitals()
         );
     }
 
     // 병원 정보 수정
-    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{hospitalId}")
     public ApiResponse<AdminHospitalResponse> updateHospital(
             @PathVariable Long hospitalId,
-            @Valid @RequestBody HospitalUpdateRequest request
+            @Valid @RequestBody AdminHospitalUpdateRequest request
     ) {
         return ApiResponse.success(
-                hospitalService.updateHospital(hospitalId, request)
+                adminHospitalService.updateHospital(hospitalId, request)
         );
     }
 
     // 병원 삭제
-    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{hospitalId}")
-    public ApiResponse<deleteResponse> deleteHospital(
+    public ApiResponse<AdminHospitalDeleteResponse> deleteHospital(
             @PathVariable Long hospitalId
     ) {
         return ApiResponse.success(
-                hospitalService.deleteHospital(hospitalId)
+                adminHospitalService.deleteHospital(hospitalId)
         );
     }
 }

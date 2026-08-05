@@ -32,7 +32,7 @@ class HospitalServiceImplTest {
     private DoctorRepository doctorRepository;
 
     @InjectMocks
-    private HospitalServiceImpl hospitalService;
+    private HospitalService hospitalService;
 
     @Test
     void getAvailableHospitals_searchesNameRegionAndAddressByKeyword() {

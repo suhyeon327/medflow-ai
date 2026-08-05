@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Builder
-public class deleteResponse {
+public class AdminHospitalDeleteResponse {
 
     @NotNull
     private Long hospitalId;
@@ -19,8 +19,8 @@ public class deleteResponse {
 
     private String message;
 
-    public static deleteResponse from(Hospital hospital) {
-        return deleteResponse.builder()
+    public static AdminHospitalDeleteResponse from(Hospital hospital) {
+        return AdminHospitalDeleteResponse.builder()
                 .hospitalId(hospital.getId())
                 .deleteAt(hospital.getDeletedAt())
                 .message("병원 삭제가 완료되었습니다.")
