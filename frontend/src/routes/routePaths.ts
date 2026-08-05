@@ -5,6 +5,7 @@ export const SIGNUP_PATH = '/signup';
 export const UNAUTHORIZED_PATH = '/unauthorized';
 export const WITHDRAW_PATH = '/account/withdraw';
 export const PATIENT_RESERVATIONS_PATH = '/patient/reservations';
+export const PATIENT_PROFILE_PATH = '/patient/profile';
 export const ADMIN_USERS_PATH = '/admin/users';
 export const HOSPITALS_PATH = '/hospitals';
 export const HOSPITAL_DETAIL_PATH = (hospitalId: number) => `/hospitals/${hospitalId}`;

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { ADMIN_USERS_PATH, HOSPITALS_PATH, LOGIN_PATH, PATIENT_RESERVATIONS_PATH, WITHDRAW_PATH } from '../routes/routePaths';
+import { ADMIN_USERS_PATH, HOSPITALS_PATH, LOGIN_PATH, PATIENT_PROFILE_PATH, PATIENT_RESERVATIONS_PATH, WITHDRAW_PATH } from '../routes/routePaths';
 
 const ROLE_LABEL = { PATIENT: '환자', DOCTOR: '의사', ADMIN: '관리자' } as const;
 
@@ -35,6 +35,7 @@ export function AppLayout() {
             )}
             {user?.role === 'PATIENT' && (
               <>
+                <Link to={PATIENT_PROFILE_PATH} className="rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">내 프로필</Link>
                 <Link to={PATIENT_RESERVATIONS_PATH} className="rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">내 예약</Link>
                 <Link to={WITHDRAW_PATH} className="rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">회원 탈퇴</Link>
               </>
