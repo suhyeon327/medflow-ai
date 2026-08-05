@@ -4,7 +4,6 @@ import com.medflow.common.response.ApiResponse;
 import com.medflow.doctor.dto.response.*;
 import com.medflow.doctor.entity.DoctorStatus;
 import com.medflow.doctor.service.DoctorAdminService;
-import com.medflow.patient.dto.AdminPatientResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

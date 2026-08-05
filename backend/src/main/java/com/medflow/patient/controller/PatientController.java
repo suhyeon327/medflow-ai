@@ -2,7 +2,6 @@ package com.medflow.patient.controller;
 
 import com.medflow.auth.security.CustomUserDetails;
 import com.medflow.common.response.ApiResponse;
-import com.medflow.patient.dto.AdminPatientResponse;
 import com.medflow.patient.dto.PatientRequest;
 import com.medflow.patient.dto.PatientResponse;
 import com.medflow.patient.service.PatientService;
@@ -11,29 +10,15 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/api/v1/patient")
+@PreAuthorize("hasRole('PATIENT')")
+@RequestMapping("/api/v1/patients")
 @RequiredArgsConstructor
 public class PatientController {
 
     private final PatientService patientService;
 
-    // 환자 생성
-    @PostMapping("/create")
-    public ApiResponse<PatientResponse> createPatient(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody PatientRequest request
-            ) {
-        return ApiResponse.success(
-                patientService.createPatient(
-                        userDetails.getUserId(),
-                        request)
-        );
-    }
-
-    // 환자(나) 프로필 조회
+    // 환자 프로필 조회
     @GetMapping("/profile")
     public ApiResponse<PatientResponse> getPatientProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -46,24 +31,16 @@ public class PatientController {
     }
 
     // 환자 정보 수정
-    @PutMapping("/update")
-    public ApiResponse<PatientResponse> updatePatient(
+    @PutMapping("/profile")
+    public ApiResponse<PatientResponse> updatePatientProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody PatientRequest request
     ) {
         return ApiResponse.success(
-                patientService.updatePatient(
+                patientService.updatePatientProfile(
                         userDetails.getUserId(),
                         request
                 )
         );
-    }
-
-    // 전체 환자 조회
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/")
-    public ApiResponse<List<AdminPatientResponse>> getPatients() {
-        return ApiResponse.success(
-                patientService.getPatients());
     }
 }
