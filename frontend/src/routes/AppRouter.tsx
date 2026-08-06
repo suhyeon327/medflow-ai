@@ -8,6 +8,7 @@ import { DoctorDetailPage } from '../pages/DoctorDetailPage';
 import { DoctorProfilePage } from '../pages/DoctorProfilePage';
 import { DoctorSchedulesPage } from '../pages/DoctorSchedulesPage';
 import { DoctorReservationsPage } from '../pages/DoctorReservationsPage';
+import { DoctorQuestionnairesPage } from '../pages/DoctorQuestionnairesPage';
 import { AdminDoctorDetailPage } from '../pages/AdminDoctorDetailPage';
 import { HospitalDetailPage } from '../pages/HospitalDetailPage';
 import { HospitalListPage } from '../pages/HospitalListPage';
@@ -15,6 +16,7 @@ import { LoginPage } from '../pages/LoginPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { PatientReservationsPage } from '../pages/PatientReservationsPage';
 import { PatientProfilePage } from '../pages/PatientProfilePage';
+import { PatientQuestionnairePage } from '../pages/PatientQuestionnairePage';
 import { AdminReservationsPage } from '../pages/AdminReservationsPage';
 import { RoleHomePage } from '../pages/RoleHomePage';
 import { SignupPage } from '../pages/SignupPage';
@@ -49,6 +51,7 @@ export function AppRouter() {
           <Route element={<RoleRoute allowedRole="PATIENT" />}>
             <Route path={ROLE_HOME_PATH.PATIENT} element={<RoleHomePage />} />
             <Route path={PATIENT_RESERVATIONS_PATH} element={<PatientReservationsPage />} />
+            <Route path="/patient/reservations/:reservationId/questionnaire" element={<PatientQuestionnairePage />} />
             <Route path={PATIENT_PROFILE_PATH} element={<PatientProfilePage />} />
             <Route path={WITHDRAW_PATH} element={<WithdrawPage />} />
           </Route>
@@ -57,6 +60,7 @@ export function AppRouter() {
             <Route path={DOCTOR_PROFILE_PATH} element={<DoctorProfilePage />} />
             <Route path={DOCTOR_SCHEDULES_PATH} element={<DoctorSchedulesPage />} />
             <Route path={DOCTOR_RESERVATIONS_PATH} element={<DoctorReservationsPage />} />
+            <Route path="/doctor/questionnaires/:questionnaireId" element={<DoctorQuestionnairesPage />} />
           </Route>
           <Route element={<RoleRoute allowedRole="ADMIN" />}>
             <Route path={ROLE_HOME_PATH.ADMIN} element={<RoleHomePage />} />

@@ -303,7 +303,7 @@ Controller: `com.medflow.reservation.controller.DoctorReservationController`
 
 DTO:
 
-- `DoctorReservationResponse`: `reservationId`, `patientName`, `reservationDate`, `startTime`, `endTime`, `reservationStatus`
+- `DoctorReservationResponse`: `reservationId`, `patientName`, `reservationDate`, `startTime`, `endTime`, `reservationStatus`, `questionnaireId` (문진이 없으면 `null`)
 - `ReservationStatusUpdateRequest`: `status` (`APPROVED`, `REJECTED`, `COMPLETED`만 허용)
 - `ReservationStatusResponse`: `reservationId`, `status`
 

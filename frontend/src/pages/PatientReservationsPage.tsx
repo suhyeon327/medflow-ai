@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { getApiErrorMessage } from '../api/apiError';
 import { QueryError } from '../components/QueryError';
 import { useCancelReservationMutation, usePatientReservationsQuery } from '../features/reservations/reservationQueries';
-import { DOCTOR_DETAIL_PATH, HOSPITALS_PATH } from '../routes/routePaths';
+import { DOCTOR_DETAIL_PATH, HOSPITALS_PATH, PATIENT_QUESTIONNAIRE_PATH } from '../routes/routePaths';
 import type { ReservationFilters, ReservationPeriod, ReservationStatus } from '../types/reservation';
 
 const STATUS_LABEL: Record<ReservationStatus, string> = {
@@ -84,6 +84,7 @@ export function PatientReservationsPage() {
                       <p className="mt-2 text-sm text-slate-700">{reservation.doctorName} 의사</p>
                       <p className="mt-1 text-sm text-slate-600">{formatDate(reservation.reservationDate)} · {reservation.startTime.slice(0, 5)} ~ {reservation.endTime.slice(0, 5)}</p>
                       <Link to={DOCTOR_DETAIL_PATH(reservation.doctorId)} className="mt-3 inline-block text-sm font-semibold text-blue-700">의사 정보 보기</Link>
+                      {reservation.reservationStatus !== 'CANCELLED' && reservation.reservationStatus !== 'COMPLETED' && <Link to={PATIENT_QUESTIONNAIRE_PATH(reservation.reservationId)} className="ml-4 mt-3 inline-block text-sm font-semibold text-emerald-700">문진 작성·조회</Link>}
                     </div>
                     {cancellable && (
                       <button type="button" disabled={cancelMutation.isPending} onClick={() => handleCancel(reservation.reservationId, reservation.doctorId)} className="self-start rounded-md border border-red-300 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60">
