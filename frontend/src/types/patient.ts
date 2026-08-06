@@ -1,4 +1,4 @@
-export type Gender = 'MALE' | 'FEMALE';
+export type Gender = "MALE" | "FEMALE";
 
 export interface PatientProfile {
   id: number;
@@ -8,4 +8,4 @@ export interface PatientProfile {
   phone: string;
 }
 
-export type PatientProfileUpdateRequest = Omit<PatientProfile, 'id'>;
+export type PatientProfileUpdateRequest = Omit<PatientProfile, "id">;

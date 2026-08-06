@@ -1,5 +1,9 @@
-export type QuestionnaireAnalysisStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
-export type QuestionnairePriority = 'NORMAL' | 'CAUTION' | 'HIGH_PRIORITY';
+export type QuestionnaireAnalysisStatus =
+  | "PENDING"
+  | "PROCESSING"
+  | "COMPLETED"
+  | "FAILED";
+export type QuestionnairePriority = "NORMAL" | "CAUTION" | "HIGH_PRIORITY";
 
 export interface QuestionnaireFormData {
   chiefComplaint: string;
@@ -14,7 +18,9 @@ export interface QuestionnaireFormData {
   additionalNote: string;
 }
 
-export interface QuestionnaireCreateRequest extends QuestionnaireFormData { reservationId: number; }
+export interface QuestionnaireCreateRequest extends QuestionnaireFormData {
+  reservationId: number;
+}
 export type QuestionnaireUpdateRequest = QuestionnaireFormData;
 
 export interface QuestionnaireDetail extends QuestionnaireFormData {

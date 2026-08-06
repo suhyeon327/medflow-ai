@@ -13,7 +13,7 @@ export interface HospitalDetail {
   tel: string;
 }
 
-export type HospitalStatus = 'ACTIVE' | 'CLOSED';
+export type HospitalStatus = "ACTIVE" | "CLOSED";
 
 export interface AdminHospital extends HospitalDetail {
   status: HospitalStatus;

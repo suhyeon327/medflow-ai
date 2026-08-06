@@ -1,6 +1,6 @@
-import type { TokenResponse } from '../types/auth';
+import type { TokenResponse } from "../types/auth";
 
-const TOKEN_STORAGE_KEY = 'medflow.auth.tokens';
+const TOKEN_STORAGE_KEY = "medflow.auth.tokens";
 
 export const tokenStorage = {
   get(): TokenResponse | null {

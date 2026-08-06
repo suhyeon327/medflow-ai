@@ -1,5 +1,10 @@
-export type ReservationStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED' | 'CANCELLED';
-export type ReservationPeriod = 'UPCOMING' | 'TODAY' | 'PAST';
+export type ReservationStatus =
+  | "PENDING"
+  | "APPROVED"
+  | "REJECTED"
+  | "COMPLETED"
+  | "CANCELLED";
+export type ReservationPeriod = "UPCOMING" | "TODAY" | "PAST";
 
 export interface DoctorSchedule {
   scheduleId: number;
@@ -8,9 +13,17 @@ export interface DoctorSchedule {
   endTime: string;
 }
 
-export interface ReservationCreateRequest { scheduleId: number; }
-export interface ReservationCreateResponse { reservationId: number; status: ReservationStatus; }
-export interface ReservationCancelResponse { reservationId: number; status: ReservationStatus; }
+export interface ReservationCreateRequest {
+  scheduleId: number;
+}
+export interface ReservationCreateResponse {
+  reservationId: number;
+  status: ReservationStatus;
+}
+export interface ReservationCancelResponse {
+  reservationId: number;
+  status: ReservationStatus;
+}
 
 export interface PatientReservation {
   reservationId: number;
@@ -70,7 +83,7 @@ export interface DoctorReservationFilters {
 export interface DoctorReservationPatient {
   patientId: number;
   patientName: string;
-  gender: 'MALE' | 'FEMALE';
+  gender: "MALE" | "FEMALE";
   birthDate: string;
   phoneNumber: string;
   reservationId: number;
@@ -85,7 +98,10 @@ export interface ReservationStatusResponse {
   status: ReservationStatus;
 }
 
-export type DoctorReservationStatusUpdate = 'APPROVED' | 'REJECTED' | 'COMPLETED';
+export type DoctorReservationStatusUpdate =
+  | "APPROVED"
+  | "REJECTED"
+  | "COMPLETED";
 
 export interface AdminReservation extends DoctorReservation {
   hospitalId: number;

@@ -1,4 +1,4 @@
-export type DoctorStatus = 'PENDING' | 'ACTIVE' | 'REJECTED';
+export type DoctorStatus = "PENDING" | "ACTIVE" | "REJECTED";
 
 export interface PublicDoctor {
   doctorId: number;

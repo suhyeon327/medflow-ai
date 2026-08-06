@@ -1,17 +1,33 @@
-import { useQuery } from '@tanstack/react-query';
-import { getHospital, getHospitalDoctors, getHospitals } from '../../api/hospitalApi';
+import { useQuery } from "@tanstack/react-query";
+import {
+  getHospital,
+  getHospitalDoctors,
+  getHospitals,
+} from "../../api/hospitalApi";
 
 export const hospitalKeys = {
-  all: ['hospitals'] as const,
-  list: (keyword: string) => ['hospitals', 'list', keyword] as const,
-  detail: (hospitalId: number) => ['hospitals', hospitalId] as const,
-  doctors: (hospitalId: number) => ['hospitals', hospitalId, 'doctors'] as const,
+  all: ["hospitals"] as const,
+  list: (keyword: string) => ["hospitals", "list", keyword] as const,
+  detail: (hospitalId: number) => ["hospitals", hospitalId] as const,
+  doctors: (hospitalId: number) =>
+    ["hospitals", hospitalId, "doctors"] as const,
 };
 
 export function useHospitalsQuery(keyword: string) {
   return useQuery({
     queryKey: hospitalKeys.list(keyword),
-    queryFn: () => getHospitals(keyword || undefined),
+    queryFn: async () => {
+      const hospitals = await getHospitals(keyword || undefined);
+      return Promise.all(
+        hospitals.map(async (hospital) => {
+          const [detail, doctors] = await Promise.all([
+            getHospital(hospital.id),
+            getHospitalDoctors(hospital.id),
+          ]);
+          return { ...detail, doctors };
+        }),
+      );
+    },
   });
 }
 

@@ -1,6 +1,6 @@
-import type { UserRole } from './auth';
+import type { UserRole } from "./auth";
 
-export type UserStatus = 'ACTIVE' | 'LOCKED' | 'WITHDRAWN';
+export type UserStatus = "ACTIVE" | "LOCKED" | "WITHDRAWN";
 
 export interface AdminUser {
   userId: number;

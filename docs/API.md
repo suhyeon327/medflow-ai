@@ -304,10 +304,10 @@ Controller: `com.medflow.reservation.controller.DoctorReservationController`
 DTO:
 
 - `DoctorReservationResponse`: `reservationId`, `patientName`, `reservationDate`, `startTime`, `endTime`, `reservationStatus`, `questionnaireId` (문진이 없으면 `null`)
-- `ReservationStatusUpdateRequest`: `status` (`APPROVED`, `REJECTED`, `COMPLETED`만 허용)
+- `ReservationStatusUpdateRequest`: `status` (`COMPLETED`만 허용)
 - `ReservationStatusResponse`: `reservationId`, `status`
 
-상태 전이: `PENDING → APPROVED`, `PENDING → REJECTED`, `APPROVED → COMPLETED`. 그 외 전이는 `RESERVATION_003`을 반환한다.
+예약은 생성 즉시 `APPROVED` 상태가 되며, 의사의 승인·거절 기능은 제공하지 않는다. 상태 전이는 `APPROVED → COMPLETED`만 허용하며 그 외 요청은 `RESERVATION_003`을 반환한다.
 
 - `APPROVED → COMPLETED` 수동 변경은 `Asia/Seoul` 기준 예약 종료 시각 이후에만 허용한다.
 - 종료 전 완료 요청은 `RESERVATION_006`을 반환한다.

@@ -1,7 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getPatientProfile, updatePatientProfile } from '../../api/patientApi';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getPatientProfile, updatePatientProfile } from "../../api/patientApi";
 
-export const patientProfileKey = ['patient', 'profile'] as const;
+export const patientProfileKey = ["patient", "profile"] as const;
 
 export function usePatientProfileQuery() {
   return useQuery({ queryKey: patientProfileKey, queryFn: getPatientProfile });
@@ -12,6 +12,7 @@ export function useUpdatePatientProfileMutation() {
 
   return useMutation({
     mutationFn: updatePatientProfile,
-    onSuccess: (profile) => queryClient.setQueryData(patientProfileKey, profile),
+    onSuccess: (profile) =>
+      queryClient.setQueryData(patientProfileKey, profile),
   });
 }

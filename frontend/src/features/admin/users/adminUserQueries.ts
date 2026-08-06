@@ -1,11 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
-import { getAdminUser, getAdminUsers } from '../../../api/adminUserApi';
-import type { AdminUserFilters } from '../../../types/adminUser';
+import { useQuery } from "@tanstack/react-query";
+import { getAdminUser, getAdminUsers } from "../../../api/adminUserApi";
+import type { AdminUserFilters } from "../../../types/adminUser";
 
 export const adminUserKeys = {
-  all: ['admin', 'users'] as const,
-  list: (filters: AdminUserFilters) => ['admin', 'users', 'list', filters] as const,
-  detail: (userId: number) => ['admin', 'users', userId] as const,
+  all: ["admin", "users"] as const,
+  list: (filters: AdminUserFilters) =>
+    ["admin", "users", "list", filters] as const,
+  detail: (userId: number) => ["admin", "users", userId] as const,
 };
 
 export function useAdminUsersQuery(filters: AdminUserFilters) {

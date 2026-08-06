@@ -1,9 +1,9 @@
-import { useAuth } from '../auth/AuthContext';
+import { useAuth } from "../auth/AuthContext";
 
 const ROLE_DESCRIPTION = {
-  PATIENT: '환자 전용 서비스의 공통 인증 기반이 준비되었습니다.',
-  DOCTOR: '의사 전용 서비스의 공통 인증 기반이 준비되었습니다.',
-  ADMIN: '관리자 전용 서비스의 공통 인증 기반이 준비되었습니다.',
+  PATIENT: "환자 전용 서비스의 공통 인증 기반이 준비되었습니다.",
+  DOCTOR: "의사 전용 서비스의 공통 인증 기반이 준비되었습니다.",
+  ADMIN: "관리자 전용 서비스의 공통 인증 기반이 준비되었습니다.",
 } as const;
 
 export function RoleHomePage() {
