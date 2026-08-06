@@ -40,7 +40,7 @@ public class  Reservation extends BaseEntity {
     ){
         this.patient = patient;
         this.doctorSchedule = doctorSchedule;
-        this.status = ReservationStatus.PENDING;
+        this.status = ReservationStatus.APPROVED;
     }
 
     // 예약 생성
@@ -66,26 +66,6 @@ public class  Reservation extends BaseEntity {
         }
 
         this.status = ReservationStatus.CANCELLED;
-    }
-
-    // 예약 승인
-    public void approve() {
-
-        if (this.status != ReservationStatus.PENDING) {
-            throw new BusinessException(ErrorCode.INVALID_STATUS_CHANGE);
-        }
-
-        this.status = ReservationStatus.APPROVED;
-    }
-
-    // 예약 거절
-    public void reject() {
-
-        if (this.status != ReservationStatus.PENDING) {
-            throw new BusinessException(ErrorCode.INVALID_STATUS_CHANGE);
-        }
-
-        this.status = ReservationStatus.REJECTED;
     }
 
     // 진료 완료

@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 public record ReservationStatusUpdateRequest(
 
         @NotNull
-        @Schema(allowableValues = {"APPROVED", "REJECTED", "COMPLETED"})
+        @Schema(allowableValues = {"COMPLETED"})
         ReservationStatus status
 ) {
 }

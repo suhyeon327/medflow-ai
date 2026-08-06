@@ -59,7 +59,7 @@ class ReservationCompletionServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = ReservationStatus.class, names = {"PENDING", "REJECTED", "CANCELLED", "COMPLETED"})
+    @EnumSource(value = ReservationStatus.class, names = {"CANCELLED", "COMPLETED"})
     void completeEndedReservations_doesNotChangeNonApprovedReservation(ReservationStatus status) {
         Reservation reservation = reservation(LocalDate.of(2026, 8, 5), LocalTime.of(9, 30), status);
         ReservationCompletionService service = serviceWithTargets(List.of());

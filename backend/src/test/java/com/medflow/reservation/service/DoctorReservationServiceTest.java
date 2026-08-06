@@ -4,7 +4,6 @@ import com.medflow.common.exception.BusinessException;
 import com.medflow.common.exception.ErrorCode;
 import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorSchedule;
-import com.medflow.doctor.entity.DoctorScheduleStatus;
 import com.medflow.doctor.repository.DoctorRepository;
 import com.medflow.patient.entity.Gender;
 import com.medflow.patient.entity.Patient;
@@ -18,6 +17,8 @@ import com.medflow.reservation.repository.DoctorReservationSearchRepository;
 import com.medflow.reservation.repository.ReservationRepository;
 import com.medflow.user.entity.User;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -58,7 +59,6 @@ class DoctorReservationServiceTest {
         LocalDate date = LocalDate.of(2026, 8, 6);
         PageRequest pageable = PageRequest.of(0, 10);
         Reservation reservation = reservation(100L);
-        reservation.approve();
         Questionnaire questionnaire = questionnaire(200L, reservation);
 
         when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
@@ -92,30 +92,8 @@ class DoctorReservationServiceTest {
     }
 
     @Test
-    void updateReservationStatus_approvesPendingReservation() {
-        Reservation reservation = ownedReservation(1L, 10L, 100L);
-
-        ReservationStatusResponse response = service.updateReservationStatus(1L, 100L, ReservationStatus.APPROVED);
-
-        assertThat(response.status()).isEqualTo(ReservationStatus.APPROVED);
-        assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.APPROVED);
-    }
-
-    @Test
-    void updateReservationStatus_rejectsPendingReservationAndReleasesSchedule() {
-        Reservation reservation = ownedReservation(1L, 10L, 100L);
-        reservation.getDoctorSchedule().reserve();
-
-        ReservationStatusResponse response = service.updateReservationStatus(1L, 100L, ReservationStatus.REJECTED);
-
-        assertThat(response.status()).isEqualTo(ReservationStatus.REJECTED);
-        assertThat(reservation.getDoctorSchedule().getStatus()).isEqualTo(DoctorScheduleStatus.AVAILABLE);
-    }
-
-    @Test
     void updateReservationStatus_completesApprovedReservation() {
         Reservation reservation = ownedReservation(1L, 10L, 100L);
-        reservation.approve();
         setCurrentTime("2026-08-06T01:00:00Z");
 
         ReservationStatusResponse response = service.updateReservationStatus(1L, 100L, ReservationStatus.COMPLETED);
@@ -126,7 +104,6 @@ class DoctorReservationServiceTest {
     @Test
     void updateReservationStatus_rejectsCompletionBeforeEndTime() {
         Reservation reservation = ownedReservation(1L, 10L, 100L);
-        reservation.approve();
         setCurrentTime("2026-08-05T23:30:00Z");
 
         assertThatThrownBy(() -> service.updateReservationStatus(1L, 100L, ReservationStatus.COMPLETED))
@@ -136,11 +113,12 @@ class DoctorReservationServiceTest {
         assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.APPROVED);
     }
 
-    @Test
-    void updateReservationStatus_rejectsUnsupportedTargetStatus() {
+    @ParameterizedTest
+    @EnumSource(value = ReservationStatus.class, names = {"APPROVED", "CANCELLED"})
+    void updateReservationStatus_rejectsUnsupportedTargetStatus(ReservationStatus status) {
         ownedReservation(1L, 10L, 100L);
 
-        assertThatThrownBy(() -> service.updateReservationStatus(1L, 100L, ReservationStatus.CANCELLED))
+        assertThatThrownBy(() -> service.updateReservationStatus(1L, 100L, status))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.INVALID_STATUS_CHANGE);
@@ -160,7 +138,6 @@ class DoctorReservationServiceTest {
     @Test
     void updateReservationStatus_rejectsDuplicateCompletionAfterSchedulerCompletion() {
         Reservation reservation = ownedReservation(1L, 10L, 100L);
-        reservation.approve();
         Clock fixedClock = Clock.fixed(Instant.parse("2026-08-06T01:00:00Z"), ZoneId.of("Asia/Seoul"));
         when(reservationRepository.findCompletionTargets(
                 ReservationStatus.APPROVED,

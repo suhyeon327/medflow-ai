@@ -96,15 +96,11 @@ public class DoctorReservationService {
     ) {
         Reservation reservation = findDoctorReservation(userId, reservationId, true);
 
-        switch (status) {
-            case APPROVED -> reservation.approve();
-            case REJECTED -> {
-                reservation.reject();
-                reservation.getDoctorSchedule().release();
-            }
-            case COMPLETED -> reservation.complete(LocalDateTime.now(clock));
-            default -> throw new BusinessException(ErrorCode.INVALID_STATUS_CHANGE);
+        if (status != ReservationStatus.COMPLETED) {
+            throw new BusinessException(ErrorCode.INVALID_STATUS_CHANGE);
         }
+
+        reservation.complete(LocalDateTime.now(clock));
 
         return ReservationStatusResponse.from(reservation);
     }

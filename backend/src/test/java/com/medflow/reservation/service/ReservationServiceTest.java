@@ -98,7 +98,7 @@ class ReservationServiceTest {
 
         // then - 검증
         assertThat(response.status())
-                .isEqualTo(ReservationStatus.PENDING);
+                .isEqualTo(ReservationStatus.APPROVED);
 
         assertThat(schedule.getStatus())
                 .isEqualTo(DoctorScheduleStatus.RESERVED);
@@ -501,91 +501,5 @@ class ReservationServiceTest {
         ReflectionTestUtils.setField(reservation, "id", reservationId);
 
         return reservation;
-    }
-
-    @Test
-    void approveReservation_success() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        Long reservationId = 100L;
-        Doctor doctor = mock(Doctor.class);
-        Patient patient = createPatient(1L);
-        DoctorSchedule schedule = createAvailableSchedule(1L);
-        schedule.reserve();
-        Reservation reservation = createReservation(patient, schedule, reservationId);
-
-        when(doctor.getId()).thenReturn(doctorId);
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findDoctorReservationForUpdate(reservationId, doctorId))
-                .thenReturn(Optional.of(reservation));
-
-        ReservationStatusResponse response = doctorReservationService.updateReservationStatus(userId, reservationId, ReservationStatus.APPROVED);
-
-        assertThat(response.status()).isEqualTo(ReservationStatus.APPROVED);
-        assertThat(schedule.getStatus()).isEqualTo(DoctorScheduleStatus.RESERVED);
-    }
-
-    @Test
-    void rejectReservation_success_releasesSchedule() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        Long reservationId = 100L;
-        Doctor doctor = mock(Doctor.class);
-        Patient patient = createPatient(1L);
-        DoctorSchedule schedule = createAvailableSchedule(1L);
-        schedule.reserve();
-        Reservation reservation = createReservation(patient, schedule, reservationId);
-
-        when(doctor.getId()).thenReturn(doctorId);
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findDoctorReservationForUpdate(reservationId, doctorId))
-                .thenReturn(Optional.of(reservation));
-
-        ReservationStatusResponse response = doctorReservationService.updateReservationStatus(userId, reservationId, ReservationStatus.REJECTED);
-
-        assertThat(response.status()).isEqualTo(ReservationStatus.REJECTED);
-        assertThat(schedule.getStatus()).isEqualTo(DoctorScheduleStatus.AVAILABLE);
-    }
-
-    @Test
-    void approveReservation_fail_when_reservation_belongs_to_another_doctor() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        Long reservationId = 100L;
-        Doctor doctor = mock(Doctor.class);
-
-        when(doctor.getId()).thenReturn(doctorId);
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findDoctorReservationForUpdate(reservationId, doctorId))
-                .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> doctorReservationService.updateReservationStatus(userId, reservationId, ReservationStatus.APPROVED))
-                .isInstanceOf(BusinessException.class);
-    }
-
-    @Test
-    void rejectReservation_fail_when_already_processed() {
-
-        Long userId = 1L;
-        Long doctorId = 10L;
-        Long reservationId = 100L;
-        Doctor doctor = mock(Doctor.class);
-        Patient patient = createPatient(1L);
-        DoctorSchedule schedule = createAvailableSchedule(1L);
-        schedule.reserve();
-        Reservation reservation = createReservation(patient, schedule, reservationId);
-        reservation.approve();
-
-        when(doctor.getId()).thenReturn(doctorId);
-        when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
-        when(reservationRepository.findDoctorReservationForUpdate(reservationId, doctorId))
-                .thenReturn(Optional.of(reservation));
-
-        assertThatThrownBy(() -> doctorReservationService.updateReservationStatus(userId, reservationId, ReservationStatus.REJECTED))
-                .isInstanceOf(BusinessException.class);
-        assertThat(schedule.getStatus()).isEqualTo(DoctorScheduleStatus.RESERVED);
     }
 }
