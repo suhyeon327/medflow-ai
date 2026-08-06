@@ -8,6 +8,8 @@ import com.medflow.doctor.entity.DoctorScheduleStatus;
 import com.medflow.doctor.repository.DoctorRepository;
 import com.medflow.patient.entity.Gender;
 import com.medflow.patient.entity.Patient;
+import com.medflow.questionnaire.entity.Questionnaire;
+import com.medflow.questionnaire.repository.QuestionnaireRepository;
 import com.medflow.reservation.dto.response.DoctorReservationPageResponse;
 import com.medflow.reservation.dto.response.ReservationStatusResponse;
 import com.medflow.reservation.entity.Reservation;
@@ -26,6 +28,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -44,6 +47,7 @@ class DoctorReservationServiceTest {
     @Mock ReservationRepository reservationRepository;
     @Mock DoctorRepository doctorRepository;
     @Mock DoctorReservationSearchRepository searchRepository;
+    @Mock QuestionnaireRepository questionnaireRepository;
     @Mock Clock clock;
     @InjectMocks DoctorReservationService service;
 
@@ -55,10 +59,13 @@ class DoctorReservationServiceTest {
         PageRequest pageable = PageRequest.of(0, 10);
         Reservation reservation = reservation(100L);
         reservation.approve();
+        Questionnaire questionnaire = questionnaire(200L, reservation);
 
         when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(doctor));
         when(searchRepository.search(10L, date, ReservationStatus.APPROVED, pageable))
                 .thenReturn(new PageImpl<>(List.of(reservation), pageable, 1));
+        when(questionnaireRepository.findAllByReservationIdIn(List.of(100L)))
+                .thenReturn(List.of(questionnaire));
 
         DoctorReservationPageResponse response = service.getDoctorReservations(
                 userId, date, ReservationStatus.APPROVED, pageable
@@ -66,6 +73,22 @@ class DoctorReservationServiceTest {
 
         assertThat(response.content()).hasSize(1);
         assertThat(response.content().getFirst().reservationStatus()).isEqualTo(ReservationStatus.APPROVED);
+        assertThat(response.content().getFirst().questionnaireId()).isEqualTo(200L);
+    }
+
+    @Test
+    void getDoctorReservations_returnsNullQuestionnaireId_whenQuestionnaireDoesNotExist() {
+        Doctor doctor = doctor(10L);
+        PageRequest pageable = PageRequest.of(0, 10);
+        Reservation reservation = reservation(100L);
+        when(doctorRepository.findByUserId(1L)).thenReturn(Optional.of(doctor));
+        when(searchRepository.search(10L, null, null, pageable))
+                .thenReturn(new PageImpl<>(List.of(reservation), pageable, 1));
+        when(questionnaireRepository.findAllByReservationIdIn(List.of(100L))).thenReturn(List.of());
+
+        DoctorReservationPageResponse response = service.getDoctorReservations(1L, null, null, pageable);
+
+        assertThat(response.content().getFirst().questionnaireId()).isNull();
     }
 
     @Test
@@ -181,5 +204,23 @@ class DoctorReservationServiceTest {
     private void setCurrentTime(String instant) {
         when(clock.instant()).thenReturn(Instant.parse(instant));
         when(clock.getZone()).thenReturn(ZoneId.of("Asia/Seoul"));
+    }
+
+    private Questionnaire questionnaire(Long id, Reservation reservation) {
+        Questionnaire questionnaire = Questionnaire.create(
+                reservation,
+                "기침",
+                LocalDateTime.of(2026, 8, 5, 9, 0),
+                "기침 증상",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+        ReflectionTestUtils.setField(questionnaire, "id", id);
+        return questionnaire;
     }
 }

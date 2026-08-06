@@ -12,17 +12,19 @@ public record DoctorReservationResponse(
         LocalDate reservationDate,
         LocalTime startTime,
         LocalTime endTime,
-        ReservationStatus reservationStatus
+        ReservationStatus reservationStatus,
+        Long questionnaireId
 ) {
 
-    public static DoctorReservationResponse from(Reservation reservation) {
+    public static DoctorReservationResponse from(Reservation reservation, Long questionnaireId) {
         return new DoctorReservationResponse(
                 reservation.getId(),
                 reservation.getPatient().getName(),
                 reservation.getDoctorSchedule().getDate(),
                 reservation.getDoctorSchedule().getStartTime(),
                 reservation.getDoctorSchedule().getEndTime(),
-                reservation.getStatus()
+                reservation.getStatus(),
+                questionnaireId
         );
     }
 }

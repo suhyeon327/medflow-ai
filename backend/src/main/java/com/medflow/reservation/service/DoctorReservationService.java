@@ -6,6 +6,7 @@ import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.repository.DoctorRepository;
 import com.medflow.questionnaire.repository.QuestionnaireRepository;
 import com.medflow.questionnaire.repository.QuestionnaireAnalysisRepository;
+import com.medflow.questionnaire.entity.Questionnaire;
 import com.medflow.reservation.dto.response.DoctorReservationResponse;
 import com.medflow.reservation.dto.response.DoctorReservationPatientResponse;
 import com.medflow.reservation.dto.response.DoctorReservationPageResponse;
@@ -23,6 +24,9 @@ import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -47,11 +51,28 @@ public class DoctorReservationService {
         Doctor doctor = doctorRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
 
-        Page<DoctorReservationResponse> reservationPage = doctorReservationSearchRepository
-                .search(doctor.getId(), date, status, pageable)
-                .map(DoctorReservationResponse::from);
+        Page<Reservation> reservationPage = doctorReservationSearchRepository
+                .search(doctor.getId(), date, status, pageable);
 
-        return DoctorReservationPageResponse.from(reservationPage);
+        List<Long> reservationIds = reservationPage.getContent().stream()
+                .map(Reservation::getId)
+                .toList();
+        Map<Long, Long> questionnaireIdByReservationId = reservationIds.isEmpty()
+                ? Map.of()
+                : questionnaireRepository.findAllByReservationIdIn(reservationIds).stream()
+                .collect(Collectors.toMap(
+                        questionnaire -> questionnaire.getReservation().getId(),
+                        Questionnaire::getId
+                ));
+
+        Page<DoctorReservationResponse> responsePage = reservationPage.map(reservation -> {
+            return DoctorReservationResponse.from(
+                    reservation,
+                    questionnaireIdByReservationId.get(reservation.getId())
+            );
+        });
+
+        return DoctorReservationPageResponse.from(responsePage);
     }
 
     // 환자 정보 조회
