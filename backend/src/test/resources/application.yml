@@ -1,23 +1,13 @@
 spring:
-  profiles:
-    active: test
   datasource:
     url: jdbc:mysql://localhost:3306/medflow_test
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
   jpa:
-    database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
       ddl-auto: create-drop
-    properties:
-      hibernate:
-        format_sql: true
     open-in-view: false
-
-gemini:
-  api-key: ${GEMINI_API_KEY}
-  model: ${GEMINI_MODEL:gemini-2.5-flash}
 
 ai:
   provider: fake

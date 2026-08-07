@@ -1,24 +1,20 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/medflow
+    url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+
   jpa:
     hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        format_sql: true
+      ddl-auto: ${DDL_AUTO}
     open-in-view: false
-  profiles:
-    active: dev
 
 gemini:
   api-key: ${GEMINI_API_KEY}
-  model: ${GEMINI_MODEL:gemini-3.6-flash}
+  model: ${GEMINI_MODEL}
 
 ai:
-  provider: ${AI_PROVIDER:gemini}
+  provider: ${AI_PROVIDER}
 
 springdoc:
   swagger-ui:
@@ -30,7 +26,3 @@ springdoc:
 
 jwt:
   secret: ${JWT_SECRET}
-
-logging:
-  level:
-    org.hibernate.SQL: debug
