@@ -5,14 +5,6 @@ spring:
     url: jdbc:mysql://localhost:3306/medflow_test
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
-gemini:
-  api-key: ${GEMINI_API_KEY}
-  model: ${GEMINI_MODEL:gemini-2.5-flash}
-
-ai:
-  provider: fake
 
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
@@ -22,6 +14,13 @@ ai:
       hibernate:
         format_sql: true
     open-in-view: false
+
+gemini:
+  api-key: ${GEMINI_API_KEY}
+  model: ${GEMINI_MODEL:gemini-2.5-flash}
+
+ai:
+  provider: fake
 
 jwt:
   secret: ${JWT_SECRET}

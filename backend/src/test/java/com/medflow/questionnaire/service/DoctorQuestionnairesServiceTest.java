@@ -73,7 +73,8 @@ class DoctorQuestionnairesServiceTest {
 
     @Test
     void getQuestionnaireAnalysis_fails_whenQuestionnaireDoesNotExist() {
-        when(doctorRepository.findByUserId(100L)).thenReturn(Optional.of(doctor(1L)));
+        Doctor doctor = mock(Doctor.class);
+        when(doctorRepository.findByUserId(100L)).thenReturn(Optional.of(doctor));
         when(questionnaireRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertError(ErrorCode.QUESTIONNAIRE_NOT_FOUND,
@@ -130,6 +131,7 @@ class DoctorQuestionnairesServiceTest {
         when(doctorRepository.findByUserId(userId)).thenReturn(Optional.of(data.doctor()));
         when(questionnaireRepository.findById(20L)).thenReturn(Optional.of(data.questionnaire()));
         when(questionnaireAnalysisRepository.findByQuestionnaireId(20L)).thenReturn(Optional.of(data.analysis()));
+        when(data.reservation().getId()).thenReturn(10L);
     }
 
     private TestData testData(Long assignedDoctorId) {
@@ -137,7 +139,6 @@ class DoctorQuestionnairesServiceTest {
         DoctorSchedule schedule = mock(DoctorSchedule.class);
         when(schedule.getDoctor()).thenReturn(doctor);
         Reservation reservation = mock(Reservation.class);
-        when(reservation.getId()).thenReturn(10L);
         when(reservation.getDoctorSchedule()).thenReturn(schedule);
         Questionnaire questionnaire = Questionnaire.create(
                 reservation, "기침", LocalDateTime.of(2026, 7, 28, 9, 0),
@@ -146,7 +147,7 @@ class DoctorQuestionnairesServiceTest {
         ReflectionTestUtils.setField(questionnaire, "id", 20L);
         QuestionnaireAnalysis analysis = QuestionnaireAnalysis.pending(questionnaire);
         ReflectionTestUtils.setField(analysis, "id", 30L);
-        return new TestData(doctor, questionnaire, analysis);
+        return new TestData(doctor, reservation, questionnaire, analysis);
     }
 
     private Doctor doctor(Long id) {
@@ -164,6 +165,7 @@ class DoctorQuestionnairesServiceTest {
 
     private record TestData(
             Doctor doctor,
+            Reservation reservation,
             Questionnaire questionnaire,
             QuestionnaireAnalysis analysis
     ) {
