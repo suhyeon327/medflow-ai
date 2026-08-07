@@ -43,7 +43,7 @@ export function AppLayout() {
             to={HOSPITALS_PATH}
             className="text-2xl font-extrabold tracking-tight text-blue-600"
           >
-            ✚ MedFlow AI
+            ✚ Medflow
           </Link>
           <div className="flex items-center gap-2">
             {user?.role !== "PATIENT" && (
@@ -111,7 +111,7 @@ function AdminLayout({
             to={ROLE_HOME_PATH.ADMIN}
             className="px-3 py-5 text-2xl font-extrabold text-blue-600"
           >
-            ✚ MedFlow AI
+            ✚ Medflow
           </Link>
           <nav className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-5 lg:grid-cols-1">
             {links.map((item) => (
@@ -169,7 +169,7 @@ function DoctorLayout({
             to={ROLE_HOME_PATH.DOCTOR}
             className="px-3 py-4 text-xl font-bold text-blue-700"
           >
-            ✚ MedFlow AI
+            ✚ Medflow
           </Link>
           <nav className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5 lg:grid-cols-1">
             {links.map((item) => (

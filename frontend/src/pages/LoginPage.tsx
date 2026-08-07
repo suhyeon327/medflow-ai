@@ -52,7 +52,7 @@ export function LoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12">
       <section className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
         <div className="mb-8">
-          <p className="text-sm font-semibold text-blue-700">MedFlow AI</p>
+          <p className="text-sm font-semibold text-blue-700">Medflow</p>
           <h1 className="mt-2 text-2xl font-bold">로그인</h1>
         </div>
 

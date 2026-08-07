@@ -13,7 +13,7 @@ export function RoleHomePage() {
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
       <p className="text-sm font-semibold text-blue-700">{user.role}</p>
-      <h1 className="mt-2 text-2xl font-bold">MedFlow AI에 로그인했습니다.</h1>
+      <h1 className="mt-2 text-2xl font-bold">Medflow에 로그인했습니다.</h1>
       <p className="mt-3 text-slate-600">{ROLE_DESCRIPTION[user.role]}</p>
     </section>
   );

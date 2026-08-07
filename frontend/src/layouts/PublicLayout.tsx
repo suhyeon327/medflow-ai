@@ -33,7 +33,7 @@ export function PublicLayout() {
             to={HOSPITALS_PATH}
             className="text-2xl font-extrabold tracking-tight text-blue-600"
           >
-            ✚ MedFlow AI
+            ✚ Medflow
           </Link>
           <nav className="flex items-center gap-2" aria-label="주요 메뉴">
             {user?.role === "PATIENT" ? (

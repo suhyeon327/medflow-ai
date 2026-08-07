@@ -123,7 +123,7 @@ export function SignupPage() {
       <section
         className={`w-full rounded-xl border border-slate-200 bg-white p-8 shadow-sm ${currentStep === "role" ? "max-w-2xl" : "max-w-lg"}`}
       >
-        <p className="mb-7 text-sm font-bold text-blue-700">MedFlow AI</p>
+        <p className="mb-7 text-sm font-bold text-blue-700">Medflow</p>
 
         {currentStep === "role" && <SignupRoleStep onSelect={selectRole} />}
         {currentStep === "account" && selectedRole && (
