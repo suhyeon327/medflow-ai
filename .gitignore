@@ -1,0 +1,3 @@
+.env       → 무시
+.env.*     → .env.production 등도 무시
+!.env.example → example 파일은 예외적으로 Git에 포함
