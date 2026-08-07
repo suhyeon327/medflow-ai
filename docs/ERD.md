@@ -241,7 +241,7 @@ Department 연관관계는 코드가 주석 처리되어 있어 현재 Entity �
 | `endTime` | `LocalTime` | nullable 미지정 |
 | `status` | `DoctorScheduleStatus` | STRING enum; nullable 미지정 |
 
-의사/날짜/시작시각 중복은 Service의 `existsByDoctorIdAndDateAndStartTime`으로 검사하지만 테이블 unique constraint는 없다.
+`doctor_id`, `date`, `start_time` 조합에 `uk_doctor_schedule_doctor_date_start` unique constraint가 있다. 시간 구간 겹침은 Service와 Repository 조회로 별도 검증한다.
 
 ### Reservation
 
@@ -355,6 +355,7 @@ Service는 `findByUser(user)`로 사용자당 한 Refresh Token을 갱신하지�
 - `hospital.name`
 - `doctor.user_id`
 - `doctor.license_number`
+- `doctor_schedule(doctor_id, date, start_time)` (`uk_doctor_schedule_doctor_date_start`)
 - `questionnaires.reservation_id` (`uk_questionnaire_reservation`)
 - `questionnaire_analyses.questionnaire_id` (`uk_questionnaire_analysis_questionnaire`)
 - `refresh_token.token` (`uk_refresh_token_token`)

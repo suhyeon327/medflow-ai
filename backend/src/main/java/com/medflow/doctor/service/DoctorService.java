@@ -14,6 +14,7 @@ import com.medflow.doctor.repository.DoctorScheduleRepository;
 import com.medflow.hospital.entity.Hospital;
 import com.medflow.hospital.repository.HospitalRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,10 +65,18 @@ public class DoctorService {
             Long userId,
             DoctorScheduleCreateRequest request
     ) {
+        validateScheduleTimeRange(request);
+
         Doctor doctor = getDoctorByUserId(userId);
 
         if (doctor.getStatus() != DoctorStatus.ACTIVE) {
             throw new BusinessException(ErrorCode.DOCTOR_NOT_APPROVED);
+        }
+
+        if (doctorScheduleRepository.existsOverlappingSchedule(
+                doctor.getId(), request.date(), request.startTime(), request.endTime()
+        )) {
+            throw new BusinessException(ErrorCode.SCHEDULE_NOT_AVAILABLE);
         }
 
         List<DoctorScheduleResponse> responses = new ArrayList<>();
@@ -80,19 +89,25 @@ public class DoctorService {
                 break;
             }
 
-            if (!doctorScheduleRepository.existsByDoctorIdAndDateAndStartTime(
-                    doctor.getId(),
-                    request.date(),
-                    start
-            )) {
-                DoctorSchedule schedule = DoctorSchedule.create(doctor, request.date(), start, next);
-                responses.add(DoctorScheduleResponse.from(doctorScheduleRepository.save(schedule)));
+            DoctorSchedule schedule = DoctorSchedule.create(doctor, request.date(), start, next);
+            try {
+                responses.add(DoctorScheduleResponse.from(doctorScheduleRepository.saveAndFlush(schedule)));
+            } catch (DataIntegrityViolationException e) {
+                throw new BusinessException(ErrorCode.SCHEDULE_NOT_AVAILABLE);
             }
 
             start = next;
         }
 
         return responses;
+    }
+
+    private void validateScheduleTimeRange(DoctorScheduleCreateRequest request) {
+        if (request.startTime() == null
+                || request.endTime() == null
+                || !request.endTime().isAfter(request.startTime())) {
+            throw new BusinessException(ErrorCode.INVALID_SCHEDULE_TIME_RANGE);
+        }
     }
 
     @Transactional(readOnly = true)

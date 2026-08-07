@@ -9,6 +9,8 @@ import com.medflow.patient.entity.Gender;
 import com.medflow.patient.entity.Patient;
 import com.medflow.questionnaire.entity.Questionnaire;
 import com.medflow.questionnaire.repository.QuestionnaireRepository;
+import com.medflow.questionnaire.repository.QuestionnaireAnalysisRepository;
+import com.medflow.reservation.dto.response.DoctorReservationPatientResponse;
 import com.medflow.reservation.dto.response.DoctorReservationPageResponse;
 import com.medflow.reservation.dto.response.ReservationStatusResponse;
 import com.medflow.reservation.entity.Reservation;
@@ -49,6 +51,7 @@ class DoctorReservationServiceTest {
     @Mock DoctorRepository doctorRepository;
     @Mock DoctorReservationSearchRepository searchRepository;
     @Mock QuestionnaireRepository questionnaireRepository;
+    @Mock QuestionnaireAnalysisRepository questionnaireAnalysisRepository;
     @Mock Clock clock;
     @InjectMocks DoctorReservationService service;
 
@@ -92,6 +95,44 @@ class DoctorReservationServiceTest {
     }
 
     @Test
+    void getDoctorReservations_failsWhenDoctorDoesNotExist() {
+        PageRequest pageable = PageRequest.of(0, 10);
+        when(doctorRepository.findByUserId(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.getDoctorReservations(999L, null, null, pageable))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.DOCTOR_NOT_FOUND);
+    }
+
+    @Test
+    void getReservationPatient_returnsPatientOnlyForOwnedReservation() {
+        Doctor doctor = doctor(10L);
+        Reservation reservation = reservation(100L);
+        ReflectionTestUtils.setField(reservation.getPatient(), "id", 20L);
+        when(doctorRepository.findByUserId(1L)).thenReturn(Optional.of(doctor));
+        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(100L, 10L))
+                .thenReturn(Optional.of(reservation));
+
+        DoctorReservationPatientResponse response = service.getReservationPatient(1L, 100L);
+
+        assertThat(response.patientId()).isEqualTo(20L);
+        assertThat(response.patientName()).isEqualTo("환자");
+        assertThat(response.reservationId()).isEqualTo(100L);
+        verify(reservationRepository).findByIdAndDoctorScheduleDoctorId(100L, 10L);
+    }
+
+    @Test
+    void getReservationPatient_failsWhenDoctorDoesNotExist() {
+        when(doctorRepository.findByUserId(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.getReservationPatient(999L, 100L))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.DOCTOR_NOT_FOUND);
+    }
+
+    @Test
     void updateReservationStatus_completesApprovedReservation() {
         Reservation reservation = ownedReservation(1L, 10L, 100L);
         setCurrentTime("2026-08-06T01:00:00Z");
@@ -131,7 +172,9 @@ class DoctorReservationServiceTest {
         when(reservationRepository.findDoctorReservationForUpdate(100L, 10L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.updateReservationStatus(1L, 100L, ReservationStatus.APPROVED))
-                .isInstanceOf(BusinessException.class);
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.RESERVATION_NOT_FOUND);
         verify(reservationRepository).findDoctorReservationForUpdate(100L, 10L);
     }
 

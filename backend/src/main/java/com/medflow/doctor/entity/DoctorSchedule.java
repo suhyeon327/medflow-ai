@@ -13,7 +13,13 @@ import java.time.LocalTime;
 
 @Getter
 @Entity
-@Table(name = "doctor_schedule")
+@Table(
+        name = "doctor_schedule",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_doctor_schedule_doctor_date_start",
+                columnNames = {"doctor_id", "date", "start_time"}
+        )
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class DoctorSchedule {
 
