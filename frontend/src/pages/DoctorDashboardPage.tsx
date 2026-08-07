@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { QueryError } from "../components/QueryError";
 import { useDoctorProfileQuery } from "../features/doctors/doctorQueries";
 import { useDoctorReservationsQuery } from "../features/reservations/reservationQueries";

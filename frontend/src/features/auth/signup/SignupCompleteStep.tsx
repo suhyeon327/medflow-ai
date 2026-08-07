@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { LOGIN_PATH } from "../../../routes/routePaths";
 import type { SignupResponse } from "../../../types/auth";
 

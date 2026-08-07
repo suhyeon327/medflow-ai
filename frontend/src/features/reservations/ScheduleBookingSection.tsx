@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { getApiErrorMessage } from "../../api/apiError";
 import { useAuth } from "../../auth/AuthContext";
 import { LOGIN_PATH, PATIENT_RESERVATIONS_PATH } from "../../routes/routePaths";

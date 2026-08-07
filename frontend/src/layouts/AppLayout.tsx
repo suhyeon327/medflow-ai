@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate } from "react-router";
 import { useAuth } from "../auth/AuthContext";
 import { useDoctorProfileQuery } from "../features/doctors/doctorQueries";
 import {

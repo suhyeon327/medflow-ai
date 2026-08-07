@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { QueryError } from "../components/QueryError";
 import { useAdminDoctorsQuery } from "../features/doctors/doctorQueries";
 import { ADMIN_DOCTOR_DETAIL_PATH } from "../routes/routePaths";

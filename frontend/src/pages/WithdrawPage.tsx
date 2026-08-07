@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import { getApiErrorMessage } from "../api/apiError";
 import { useAuth } from "../auth/AuthContext";
 import { LOGIN_PATH, ROLE_HOME_PATH } from "../routes/routePaths";

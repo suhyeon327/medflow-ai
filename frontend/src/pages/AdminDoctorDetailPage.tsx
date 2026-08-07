@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { getApiErrorMessage } from "../api/apiError";
 import { QueryError } from "../components/QueryError";
 import {

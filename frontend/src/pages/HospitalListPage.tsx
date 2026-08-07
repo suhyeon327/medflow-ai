@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { QueryError } from "../components/QueryError";
 import { useHospitalsQuery } from "../features/hospitals/hospitalQueries";
 import { HOSPITAL_DETAIL_PATH } from "../routes/routePaths";

@@ -1,4 +1,4 @@
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router";
 import { QueryError } from "../components/QueryError";
 import { QuestionnaireAnalysisPanel } from "../components/QuestionnaireAnalysisPanel";
 import { useDoctorQuestionnaireAnalysisQuery } from "../features/questionnaires/questionnaireQueries";

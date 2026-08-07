@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { QueryError } from "../components/QueryError";
 import { useAdminHospitalsQuery } from "../features/admin/hospitals/adminHospitalQueries";
 import { useAdminUsersQuery } from "../features/admin/users/adminUserQueries";

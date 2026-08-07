@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router";
 import { ApiError, getApiErrorMessage } from "../api/apiError";
 import { QueryError } from "../components/QueryError";
 import { QuestionnaireAnalysisPanel } from "../components/QuestionnaireAnalysisPanel";

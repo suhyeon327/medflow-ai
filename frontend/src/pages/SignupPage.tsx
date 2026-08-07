@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { ApiError } from "../api/apiError";
 import { signup } from "../api/authApi";
 import { DoctorInfoStep } from "../features/auth/signup/DoctorInfoStep";
