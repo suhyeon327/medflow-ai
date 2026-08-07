@@ -1,5 +1,7 @@
 package com.medflow.patient.service;
 
+import com.medflow.common.exception.ErrorCode;
+import com.medflow.common.exception.PatientNotFoundException;
 import com.medflow.patient.dto.PatientRequest;
 import com.medflow.patient.dto.PatientResponse;
 import com.medflow.patient.entity.Gender;
@@ -17,6 +19,8 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +38,7 @@ class PatientServiceImplTest {
 
     @Test
     void 환자_프로필을_조회한다() {
+        // given
         Long userId = 1L;
         Patient patient = Patient.create(
                 User.create("patient@example.com", "password", UserRole.PATIENT),
@@ -44,8 +49,10 @@ class PatientServiceImplTest {
         );
         when(patientRepository.findByUserId(userId)).thenReturn(Optional.of(patient));
 
+        // when
         PatientResponse response = patientService.getPatientProfile(userId);
 
+        // then
         assertThat(response.name()).isEqualTo("홍길동");
         assertThat(response.birth()).isEqualTo(LocalDate.of(1999, 5, 20));
         assertThat(response.gender()).isEqualTo(Gender.MALE);
@@ -54,6 +61,7 @@ class PatientServiceImplTest {
 
     @Test
     void 환자_프로필을_수정한다() {
+        // given
         Long userId = 1L;
         Patient patient = Patient.create(
                 User.create("patient@example.com", "password", UserRole.PATIENT),
@@ -70,11 +78,43 @@ class PatientServiceImplTest {
         );
         when(patientRepository.findByUserId(userId)).thenReturn(Optional.of(patient));
 
+        // when
         PatientResponse response = patientService.updatePatientProfile(userId, request);
 
+        // then
         assertThat(response.name()).isEqualTo("김환자");
         assertThat(response.birth()).isEqualTo(LocalDate.of(2000, 1, 1));
         assertThat(response.gender()).isEqualTo(Gender.FEMALE);
         assertThat(response.phone()).isEqualTo("01087654321");
+        verify(patientRepository).findByUserId(userId);
+    }
+
+    @Test
+    void 존재하지_않는_환자_프로필_조회는_실패한다() {
+        // given
+        Long userId = 999L;
+        when(patientRepository.findByUserId(userId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> patientService.getPatientProfile(userId))
+                .isInstanceOf(PatientNotFoundException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.PATIENT_NOT_FOUND);
+    }
+
+    @Test
+    void 존재하지_않는_환자_프로필_수정은_실패한다() {
+        // given
+        Long userId = 999L;
+        PatientRequest request = new PatientRequest(
+                "김환자", LocalDate.of(2000, 1, 1), Gender.FEMALE, "01087654321"
+        );
+        when(patientRepository.findByUserId(userId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> patientService.updatePatientProfile(userId, request))
+                .isInstanceOf(PatientNotFoundException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.PATIENT_NOT_FOUND);
     }
 }
