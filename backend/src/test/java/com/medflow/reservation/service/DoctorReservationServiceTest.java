@@ -136,6 +136,23 @@ class DoctorReservationServiceTest {
     }
 
     @Test
+    void getReservationPatient_rejectsAnotherDoctorsReservation() {
+        // given
+        Doctor doctor = doctor(10L);
+        when(doctorRepository.findByUserId(1L)).thenReturn(Optional.of(doctor));
+        when(reservationRepository.findByIdAndDoctorScheduleDoctorId(100L, 10L))
+                .thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> service.getReservationPatient(1L, 100L))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.RESERVATION_NOT_FOUND);
+
+        verify(reservationRepository).findByIdAndDoctorScheduleDoctorId(100L, 10L);
+    }
+
+    @Test
     void updateReservationStatus_rejectsDuplicateCompletionAfterSchedulerCompletion() {
         Reservation reservation = ownedReservation(1L, 10L, 100L);
         Clock fixedClock = Clock.fixed(Instant.parse("2026-08-06T01:00:00Z"), ZoneId.of("Asia/Seoul"));

@@ -56,7 +56,7 @@ public class SecurityConfig {
                                 "/api/v1/hospitals",
                                 "/api/v1/hospitals/{hospitalId}",
                                 "/api/v1/hospitals/{hospitalId}/doctors",
-                                "/api/v1/doctors/{doctorId}",
+                                "/api/v1/doctors/{doctorId:\\d+}",
                                 "/api/v1/doctors/{doctorId}/available-schedules"
                         ).permitAll()
                         .anyRequest().authenticated()   // 인증(로그인) 해야 접속 가능

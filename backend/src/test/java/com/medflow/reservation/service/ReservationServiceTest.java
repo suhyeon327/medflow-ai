@@ -19,6 +19,7 @@ import com.medflow.reservation.repository.ReservationRepository;
 import com.medflow.reservation.repository.ReservationSearchRepository;
 
 import com.medflow.common.exception.BusinessException;
+import com.medflow.common.exception.ErrorCode;
 
 import com.medflow.user.entity.User;
 import org.junit.jupiter.api.Test;
@@ -130,7 +131,9 @@ class ReservationServiceTest {
                         request
                 )
         )
-                .isInstanceOf(BusinessException.class);
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.SCHEDULE_NOT_AVAILABLE);
 
         verify(reservationRepository, never())
                 .save(any());
@@ -157,7 +160,9 @@ class ReservationServiceTest {
                         request
                 )
         )
-                .isInstanceOf(BusinessException.class);
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.SCHEDULE_NOT_FOUND);
     }
 
     // 존재하지 않는 환자
@@ -416,7 +421,37 @@ class ReservationServiceTest {
         // when & then
         assertThatThrownBy(() ->
                 reservationService.cancelReservation(userId, reservationId)
-        ).isInstanceOf(BusinessException.class);
+        )
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.RESERVATION_NOT_FOUND);
+    }
+
+    // 다른 환자의 예약 접근 차단
+    @Test
+    void cancelReservation_fail_when_reservation_belongs_to_another_patient() {
+
+        // given
+        Long userId = 2L;
+        Long patientId = 2L;
+        Long anotherPatientsReservationId = 1L;
+        Patient patient = createPatient(patientId);
+
+        when(patientRepository.findByUserId(userId))
+                .thenReturn(Optional.of(patient));
+        when(reservationRepository.findByIdAndPatientId(anotherPatientsReservationId, patientId))
+                .thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() ->
+                reservationService.cancelReservation(userId, anotherPatientsReservationId)
+        )
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.RESERVATION_NOT_FOUND);
+
+        verify(reservationRepository)
+                .findByIdAndPatientId(anotherPatientsReservationId, patientId);
     }
 
     // 존재하지 않는 환자
@@ -433,7 +468,10 @@ class ReservationServiceTest {
         // when & then
         assertThatThrownBy(() ->
                 reservationService.cancelReservation(userId, reservationId)
-        ).isInstanceOf(BusinessException.class);
+        )
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.PATIENT_NOT_FOUND);
 
         verify(reservationRepository, never())
                 .findByIdAndPatientId(any(), any());
@@ -463,7 +501,10 @@ class ReservationServiceTest {
         // when & then
         assertThatThrownBy(() ->
                 reservationService.cancelReservation(userId, reservationId)
-        ).isInstanceOf(BusinessException.class);
+        )
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.COMPLETED_RESERVATION);
     }
 
     // 이미 취소된 예약
@@ -491,7 +532,10 @@ class ReservationServiceTest {
         // when & then
         assertThatThrownBy(() ->
                 reservationService.cancelReservation(userId, reservationId)
-        ).isInstanceOf(BusinessException.class);
+        )
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.RESERVATION_ALREADY_CANCELLED);
     }
 
     private Reservation createReservation(Patient patient, DoctorSchedule schedule, Long reservationId) {
