@@ -83,9 +83,10 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // React 개발 서버 주소
-        configuration.setAllowedOrigins(
-                List.of("http://localhost:5173")
-        );
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:5173",
+                "http://localhost"
+        ));
 
         configuration.setAllowedMethods(
                 List.of(

@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+
+gemini:
+  api-key: ${GEMINI_API_KEY:test-key}
+  model: ${GEMINI_MODEL:test-model}
+
+ai:
+  provider: ${AI_PROVIDER:fake}
+
+jwt:
+  secret: ${JWT_SECRET}
