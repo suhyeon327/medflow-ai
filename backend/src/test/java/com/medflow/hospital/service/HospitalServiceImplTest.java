@@ -1,6 +1,7 @@
 package com.medflow.hospital.service;
 
 import com.medflow.common.exception.BusinessException;
+import com.medflow.common.exception.ErrorCode;
 import com.medflow.doctor.entity.DoctorStatus;
 import com.medflow.doctor.repository.DoctorRepository;
 import com.medflow.hospital.entity.Hospital;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -55,6 +57,39 @@ class HospitalServiceImplTest {
     }
 
     @Test
+    void getAvailableHospitals_returnsMappedActiveHospitals() {
+        Hospital hospital = Hospital.create(
+                "메드플로우 병원", "서울시 강남구", "서울", "02-1234-5678", HospitalStatus.ACTIVE
+        );
+        ReflectionTestUtils.setField(hospital, "id", 1L);
+        when(hospitalRepository.findAllByStatus(HospitalStatus.ACTIVE)).thenReturn(List.of(hospital));
+
+        var responses = hospitalService.getAvailableHospitals(null);
+
+        assertThat(responses).singleElement().satisfies(response -> {
+            assertThat(response.getId()).isEqualTo(1L);
+            assertThat(response.getName()).isEqualTo("메드플로우 병원");
+            assertThat(response.getRegion()).isEqualTo("서울");
+        });
+    }
+
+    @Test
+    void getDetailHospital_returnsActiveHospital() {
+        Hospital hospital = Hospital.create(
+                "메드플로우 병원", "서울시 강남구", "서울", "02-1234-5678", HospitalStatus.ACTIVE
+        );
+        ReflectionTestUtils.setField(hospital, "id", 1L);
+        when(hospitalRepository.findByIdAndStatus(1L, HospitalStatus.ACTIVE))
+                .thenReturn(Optional.of(hospital));
+
+        var response = hospitalService.getDetailHospital(1L);
+
+        assertThat(response.getId()).isEqualTo(1L);
+        assertThat(response.getName()).isEqualTo("메드플로우 병원");
+        assertThat(response.getTel()).isEqualTo("02-1234-5678");
+    }
+
+    @Test
     void getAvailableDoctors_returnsOnlyActiveApprovedDoctors() {
         Long hospitalId = 1L;
         Hospital hospital = mock(Hospital.class);
@@ -79,7 +114,9 @@ class HospitalServiceImplTest {
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> hospitalService.getAvailableDoctors(hospitalId))
-                .isInstanceOf(BusinessException.class);
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.HOSPITAL_NOT_FOUND);
     }
 
     @Test
@@ -89,6 +126,8 @@ class HospitalServiceImplTest {
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> hospitalService.getDetailHospital(hospitalId))
-                .isInstanceOf(BusinessException.class);
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.HOSPITAL_NOT_FOUND);
     }
 }
