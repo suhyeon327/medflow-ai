@@ -2,7 +2,10 @@ package com.medflow.auth.service;
 
 import com.medflow.auth.dto.request.WithdrawRequest;
 import com.medflow.auth.dto.request.LoginRequest;
+import com.medflow.auth.dto.request.LogoutRequest;
+import com.medflow.auth.dto.request.ReissueRequest;
 import com.medflow.auth.dto.request.SignupRequest;
+import com.medflow.auth.dto.response.JwtToken;
 import com.medflow.auth.dto.response.SignupResponse;
 import com.medflow.auth.dto.request.PatientSignupRequest;
 import com.medflow.auth.dto.request.DoctorSignupRequest;
@@ -12,6 +15,7 @@ import com.medflow.common.exception.InvalidPasswordException;
 import com.medflow.common.exception.InvalidCredentialsException;
 import com.medflow.common.exception.BusinessException;
 import com.medflow.common.exception.EmailAlreadyExistsException;
+import com.medflow.common.exception.AuthForbiddenException;
 import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorStatus;
 import com.medflow.doctor.repository.DoctorRepository;
@@ -20,6 +24,7 @@ import com.medflow.hospital.repository.HospitalRepository;
 import com.medflow.patient.entity.Patient;
 import com.medflow.patient.repository.PatientRepository;
 import com.medflow.token.repository.RefreshTokenRepository;
+import com.medflow.token.entity.RefreshToken;
 import com.medflow.user.entity.User;
 import com.medflow.user.entity.UserRole;
 import com.medflow.user.entity.UserStatus;
@@ -33,10 +38,17 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.mockito.ArgumentCaptor;
 
 import java.util.Optional;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -45,6 +57,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -145,7 +158,9 @@ class AuthServiceTest {
         when(request.role()).thenReturn(UserRole.ADMIN);
 
         assertThatThrownBy(() -> authService.signup(request))
-                .isInstanceOf(BusinessException.class);
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(com.medflow.common.exception.ErrorCode.INVALID_SIGNUP_ROLE);
     }
 
     @Test
@@ -247,6 +262,186 @@ class AuthServiceTest {
     }
 
     @Test
+    void login_success_issuesTokensAndSavesRefreshToken() {
+        LoginRequest request = new LoginRequest("patient@example.com", "password123!");
+        Authentication authentication = mock(Authentication.class);
+        User user = User.create("patient@example.com", "encoded-password", UserRole.PATIENT);
+        JwtToken token = new JwtToken("Bearer", "access-token", "refresh-token");
+        Date expiration = futureDate();
+
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(authentication);
+        when(authentication.getName()).thenReturn("patient@example.com");
+        when(jwtGenerator.createToken(authentication)).thenReturn(token);
+        when(userRepository.findByEmail("patient@example.com")).thenReturn(Optional.of(user));
+        when(jwtProvider.getExpiration("refresh-token")).thenReturn(expiration);
+        when(refreshTokenRepository.findByUser(user)).thenReturn(Optional.empty());
+
+        JwtToken response = authService.login(request);
+
+        assertThat(response).isEqualTo(token);
+        verify(jwtGenerator).createToken(authentication);
+        verify(refreshTokenRepository).save(org.mockito.ArgumentMatchers.argThat(refreshToken ->
+                refreshToken.getUser() == user
+                        && refreshToken.getToken().equals("refresh-token")
+                        && refreshToken.getExpiresAt().equals(toLocalDateTime(expiration))
+        ));
+    }
+
+    @Test
+    void login_success_renewsExistingRefreshToken() {
+        LoginRequest request = new LoginRequest("patient@example.com", "password123!");
+        Authentication authentication = mock(Authentication.class);
+        User user = User.create("patient@example.com", "encoded-password", UserRole.PATIENT);
+        RefreshToken storedToken = RefreshToken.create(user, "old-refresh-token", LocalDateTime.now().plusDays(1));
+        JwtToken token = new JwtToken("Bearer", "access-token", "new-refresh-token");
+        Date expiration = futureDate();
+
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(authentication);
+        when(authentication.getName()).thenReturn("patient@example.com");
+        when(jwtGenerator.createToken(authentication)).thenReturn(token);
+        when(userRepository.findByEmail("patient@example.com")).thenReturn(Optional.of(user));
+        when(jwtProvider.getExpiration("new-refresh-token")).thenReturn(expiration);
+        when(refreshTokenRepository.findByUser(user)).thenReturn(Optional.of(storedToken));
+
+        authService.login(request);
+
+        assertThat(storedToken.getToken()).isEqualTo("new-refresh-token");
+        assertThat(storedToken.getExpiresAt()).isEqualTo(toLocalDateTime(expiration));
+        verify(refreshTokenRepository, never()).save(any());
+    }
+
+    @Test
+    void login_withWrongPassword_throwsInvalidCredentialsException() {
+        LoginRequest request = new LoginRequest("patient@example.com", "wrong-password");
+        when(authenticationManager.authenticate(any()))
+                .thenThrow(new BadCredentialsException("비밀번호 불일치"));
+
+        assertThatThrownBy(() -> authService.login(request))
+                .isInstanceOf(InvalidCredentialsException.class);
+
+        verifyNoInteractions(jwtGenerator);
+        verify(refreshTokenRepository, never()).save(any());
+    }
+
+    @Test
+    void reissue_withValidRefreshToken_issuesAndRenewsTokens() {
+        User user = User.create("patient@example.com", "encoded-password", UserRole.PATIENT);
+        RefreshToken storedToken = RefreshToken.create(user, "valid-refresh-token", LocalDateTime.now().plusDays(1));
+        JwtToken issuedToken = new JwtToken("Bearer", "new-access-token", "new-refresh-token");
+        Date expiration = futureDate();
+
+        when(refreshTokenRepository.findByToken("valid-refresh-token")).thenReturn(Optional.of(storedToken));
+        when(jwtProvider.validateToken("valid-refresh-token")).thenReturn(true);
+        when(jwtGenerator.createToken(any(Authentication.class))).thenReturn(issuedToken);
+        when(jwtProvider.getExpiration("new-refresh-token")).thenReturn(expiration);
+
+        JwtToken response = authService.reissue(new ReissueRequest("valid-refresh-token"));
+
+        assertThat(response).isEqualTo(issuedToken);
+        assertThat(storedToken.getToken()).isEqualTo("new-refresh-token");
+        assertThat(storedToken.getExpiresAt()).isEqualTo(toLocalDateTime(expiration));
+        verify(jwtGenerator).createToken(org.mockito.ArgumentMatchers.argThat(authentication ->
+                authentication.getAuthorities().stream()
+                        .anyMatch(authority -> authority.getAuthority().equals("ROLE_PATIENT"))
+        ));
+    }
+
+    @Test
+    void reissue_withUnknownRefreshToken_throwsInvalidCredentialsException() {
+        when(refreshTokenRepository.findByToken("unknown-token")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.reissue(new ReissueRequest("unknown-token")))
+                .isInstanceOf(InvalidCredentialsException.class);
+
+        verifyNoInteractions(jwtGenerator);
+    }
+
+    @Test
+    void reissue_withInvalidJwt_deletesStoredTokenAndFails() {
+        User user = User.create("patient@example.com", "encoded-password", UserRole.PATIENT);
+        RefreshToken storedToken = RefreshToken.create(user, "invalid-token", LocalDateTime.now().plusDays(1));
+        when(refreshTokenRepository.findByToken("invalid-token")).thenReturn(Optional.of(storedToken));
+        when(jwtProvider.validateToken("invalid-token")).thenReturn(false);
+
+        assertThatThrownBy(() -> authService.reissue(new ReissueRequest("invalid-token")))
+                .isInstanceOf(InvalidCredentialsException.class);
+
+        verify(refreshTokenRepository).delete(storedToken);
+        verifyNoInteractions(jwtGenerator);
+    }
+
+    @Test
+    void reissue_withExpiredStoredToken_deletesStoredTokenAndFails() {
+        User user = User.create("patient@example.com", "encoded-password", UserRole.PATIENT);
+        RefreshToken storedToken = RefreshToken.create(user, "expired-token", LocalDateTime.now().minusSeconds(1));
+        when(refreshTokenRepository.findByToken("expired-token")).thenReturn(Optional.of(storedToken));
+        when(jwtProvider.validateToken("expired-token")).thenReturn(true);
+
+        assertThatThrownBy(() -> authService.reissue(new ReissueRequest("expired-token")))
+                .isInstanceOf(InvalidCredentialsException.class);
+
+        verify(refreshTokenRepository).delete(storedToken);
+    }
+
+    @Test
+    void logout_deletesStoredRefreshToken() {
+        User user = User.create("patient@example.com", "encoded-password", UserRole.PATIENT);
+        ReflectionTestUtils.setField(user, "id", 1L);
+        RefreshToken storedToken = RefreshToken.create(user, "refresh-token", LocalDateTime.now().plusDays(1));
+        when(refreshTokenRepository.findByToken("refresh-token")).thenReturn(Optional.of(storedToken));
+
+        authService.logout(1L, new LogoutRequest("refresh-token"));
+
+        verify(refreshTokenRepository).delete(storedToken);
+    }
+
+    @Test
+    void logout_withAnotherUsersRefreshToken_throwsForbidden() {
+        User tokenOwner = User.create("owner@example.com", "encoded-password", UserRole.PATIENT);
+        ReflectionTestUtils.setField(tokenOwner, "id", 2L);
+        RefreshToken storedToken = RefreshToken.create(
+                tokenOwner, "another-users-token", LocalDateTime.now().plusDays(1)
+        );
+        when(refreshTokenRepository.findByToken("another-users-token")).thenReturn(Optional.of(storedToken));
+
+        assertThatThrownBy(() -> authService.logout(1L, new LogoutRequest("another-users-token")))
+                .isInstanceOf(AuthForbiddenException.class)
+                .extracting("errorCode")
+                .isEqualTo(com.medflow.common.exception.ErrorCode.AUTH_FORBIDDEN);
+
+        verify(refreshTokenRepository, never()).delete(any());
+    }
+
+    @Test
+    void logout_withUnknownRefreshToken_keepsExistingPolicy() {
+        when(refreshTokenRepository.findByToken("unknown-token")).thenReturn(Optional.empty());
+
+        authService.logout(1L, new LogoutRequest("unknown-token"));
+
+        verify(refreshTokenRepository, never()).delete(any());
+    }
+
+    @Test
+    void reissue_afterLogout_failsBecauseRefreshTokenWasDeleted() {
+        LogoutRequest logoutRequest = new LogoutRequest("refresh-token");
+        ReissueRequest reissueRequest = new ReissueRequest("refresh-token");
+        User user = User.create("patient@example.com", "encoded-password", UserRole.PATIENT);
+        ReflectionTestUtils.setField(user, "id", 1L);
+        RefreshToken storedToken = RefreshToken.create(user, "refresh-token", LocalDateTime.now().plusDays(1));
+        when(refreshTokenRepository.findByToken("refresh-token"))
+                .thenReturn(Optional.of(storedToken))
+                .thenReturn(Optional.empty());
+
+        authService.logout(1L, logoutRequest);
+
+        assertThatThrownBy(() -> authService.reissue(reissueRequest))
+                .isInstanceOf(InvalidCredentialsException.class);
+        verify(refreshTokenRepository).delete(storedToken);
+    }
+
+    @Test
     void withdraw_withMatchingPassword_withdrawsUser() {
         Long userId = 1L;
         String rawPassword = "password123!";
@@ -338,5 +533,15 @@ class AuthServiceTest {
         when(doctorRequest.contact()).thenReturn("02-1234-5678");
 
         return request;
+    }
+
+    private Date futureDate() {
+        return Date.from(LocalDateTime.now().plusDays(14)
+                .atZone(ZoneId.systemDefault())
+                .toInstant());
+    }
+
+    private LocalDateTime toLocalDateTime(Date date) {
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
 }

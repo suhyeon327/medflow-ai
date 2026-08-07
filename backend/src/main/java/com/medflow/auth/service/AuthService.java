@@ -224,11 +224,16 @@ public class AuthService {
     }
 
     // 로그아웃
-    public void logout(LogoutRequest request) {
+    public void logout(Long userId, LogoutRequest request) {
 
         // 서버에 저장된 Refresh Token을 삭제해서 이후 재발급을 막음
         refreshTokenRepository.findByToken(request.refreshToken())
-                .ifPresent(refreshTokenRepository::delete);
+                .ifPresent(refreshToken -> {
+                    if (!userId.equals(refreshToken.getUser().getId())) {
+                        throw new AuthForbiddenException();
+                    }
+                    refreshTokenRepository.delete(refreshToken);
+                });
     }
 
     // Refresh Token 저장 또는 갱신

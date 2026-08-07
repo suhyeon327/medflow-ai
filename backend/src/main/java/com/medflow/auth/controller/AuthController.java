@@ -52,9 +52,10 @@ public class AuthController {
     // 로그아웃
     @PostMapping("/logout")
     public ApiResponse<Void> logout(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody @Valid LogoutRequest request
     ) {
-        authService.logout(request);
+        authService.logout(userDetails.getUserId(), request);
         return ApiResponse.success(null);
     }
 
