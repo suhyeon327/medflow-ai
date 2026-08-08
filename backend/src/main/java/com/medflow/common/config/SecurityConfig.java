@@ -85,7 +85,8 @@ public class SecurityConfig {
         // React 개발 서버 주소
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:5173",
-                "http://localhost"
+                "http://localhost",
+                "http://43.201.8.53"
         ));
 
         configuration.setAllowedMethods(
