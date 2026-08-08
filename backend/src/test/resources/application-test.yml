@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: ${DB_URL}
+    url: jdbc:mysql://localhost:3306/medflow_test
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
@@ -9,12 +9,8 @@ spring:
       ddl-auto: create-drop
     open-in-view: false
 
-gemini:
-  api-key: ${GEMINI_API_KEY:test-key}
-  model: ${GEMINI_MODEL:test-model}
-
 ai:
-  provider: ${AI_PROVIDER:fake}
+  provider: fake
 
 jwt:
   secret: ${JWT_SECRET}
