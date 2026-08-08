@@ -9,8 +9,6 @@ services:
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
-      ADMIN_EMAIL: ${ADMIN_EMAIL}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
 
     ports:
       - "3306:3306"
@@ -27,6 +25,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+
 
   redis:
     image: redis:7
@@ -45,6 +44,7 @@ services:
       timeout: 5s
       retries: 5
 
+
   backend:
     build:
       context: ./backend
@@ -54,11 +54,12 @@ services:
     restart: unless-stopped
 
     environment:
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: prod
 
       DB_URL: ${DB_URL}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
+      DDL_AUTO: ${DDL_AUTO:-update}
 
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -69,6 +70,10 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       GEMINI_MODEL: ${GEMINI_MODEL}
 
+      ADMIN_BOOTSTRAP_ENABLED: ${ADMIN_BOOTSTRAP_ENABLED:-false}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+
     ports:
       - "8080:8080"
 
@@ -77,6 +82,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
 
   frontend:
     build:
@@ -93,6 +99,7 @@ services:
 
     depends_on:
       - backend
+
 
 volumes:
   mysql-data:
