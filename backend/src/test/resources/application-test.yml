@@ -14,3 +14,6 @@ ai:
 
 jwt:
   secret: ${JWT_SECRET}
+
+admin:
+  bootstrap-enabled: false
