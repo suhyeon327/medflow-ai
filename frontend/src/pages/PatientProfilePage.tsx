@@ -63,11 +63,7 @@ export function PatientProfilePage() {
 
   return (
     <section className="mx-auto max-w-2xl rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
-      <p className="text-sm font-semibold text-blue-700">환자 정보</p>
       <h1 className="mt-2 text-2xl font-bold">내 프로필</h1>
-      <p className="mt-2 text-sm text-slate-600">
-        진료 예약에 사용되는 본인 정보를 확인하고 수정할 수 있습니다.
-      </p>
 
       <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
         <div>
