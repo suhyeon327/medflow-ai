@@ -38,7 +38,7 @@ jobs:
       SPRING_PROFILES_ACTIVE: test
       DB_USERNAME: medflow
       DB_PASSWORD: testpassword
-      JWT_SECRET: medflow-ci-test-secret-key-2026-medflow-ci-test-secret-key
+      JWT_SECRET: jjto1Jd7OgWB/MoqM7cCaQdoOV71HhUWsJUhhQpEl1c=
 
     steps:
       - name: Checkout repository
