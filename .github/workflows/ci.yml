@@ -89,3 +89,27 @@ jobs:
 
       - name: Build frontend
         run: npm run build
+
+  deploy:
+    name: Deploy to EC2
+
+    needs:
+      - backend
+      - frontend
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/medflow-ai
+            git pull origin main
+            docker compose up -d --build
+            docker compose ps
