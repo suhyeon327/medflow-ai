@@ -29,4 +29,10 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
             DoctorStatus status,
             UserStatus userStatus
     );
+
+    List<Doctor> findAllByHospitalIdInAndStatusAndUserStatus(
+            List<Long> hospitalIds,
+            DoctorStatus status,
+            UserStatus userStatus
+    );
 }

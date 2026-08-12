@@ -3,6 +3,7 @@ package com.medflow.hospital.service;
 import com.medflow.common.exception.BusinessException;
 import com.medflow.common.exception.ErrorCode;
 import com.medflow.common.exception.HospitalAlreadyExistsException;
+import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorStatus;
 import com.medflow.doctor.dto.response.DoctorResponse;
 import com.medflow.doctor.repository.DoctorRepository;
@@ -21,6 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,13 +36,39 @@ public class HospitalService {
     // 사용자 병원 목록 조회
     @Transactional(readOnly = true)
     public List<HospitalListResponse> getAvailableHospitals(String keyword) {
+
         List<Hospital> hospitals = keyword == null || keyword.isBlank()
                 ? hospitalRepository.findAllByStatus(HospitalStatus.ACTIVE)
-                : hospitalRepository.searchByStatusAndKeyword(HospitalStatus.ACTIVE, keyword.trim());
+                : hospitalRepository.searchByStatusAndKeyword(
+                HospitalStatus.ACTIVE,
+                keyword.trim()
+        );
 
-        return hospitals
-                .stream()
-                .map(HospitalListResponse::from)
+        List<Long> hospitalIds = hospitals.stream()
+                .map(Hospital::getId)
+                .toList();
+
+        List<Doctor> doctors = hospitalIds.isEmpty()
+                ? List.of()
+                : doctorRepository.findAllByHospitalIdInAndStatusAndUserStatus(
+                hospitalIds,
+                DoctorStatus.ACTIVE,
+                UserStatus.ACTIVE
+        );
+
+        Map<Long, List<Doctor>> doctorsByHospitalId = doctors.stream()
+                .collect(Collectors.groupingBy(
+                        doctor -> doctor.getHospital().getId()
+                ));
+
+        return hospitals.stream()
+                .map(hospital -> HospitalListResponse.of(
+                        hospital,
+                        doctorsByHospitalId.getOrDefault(
+                                hospital.getId(),
+                                List.of()
+                        )
+                ))
                 .toList();
     }
 

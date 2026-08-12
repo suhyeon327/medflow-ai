@@ -16,18 +16,7 @@ export const hospitalKeys = {
 export function useHospitalsQuery(keyword: string) {
   return useQuery({
     queryKey: hospitalKeys.list(keyword),
-    queryFn: async () => {
-      const hospitals = await getHospitals(keyword || undefined);
-      return Promise.all(
-        hospitals.map(async (hospital) => {
-          const [detail, doctors] = await Promise.all([
-            getHospital(hospital.id),
-            getHospitalDoctors(hospital.id),
-          ]);
-          return { ...detail, doctors };
-        }),
-      );
-    },
+    queryFn: () => getHospitals(keyword || undefined),
   });
 }
 

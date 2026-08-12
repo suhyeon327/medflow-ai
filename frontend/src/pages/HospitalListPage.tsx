@@ -9,10 +9,10 @@ export function HospitalListPage() {
   const [submittedKeyword, setSubmittedKeyword] = useState("");
   const hospitalsQuery = useHospitalsQuery(submittedKeyword);
   const doctorCount =
-    hospitalsQuery.data?.reduce(
-      (count, hospital) => count + hospital.doctors.length,
-      0,
-    ) ?? 0;
+  hospitalsQuery.data?.reduce(
+    (count, hospital) => count + hospital.doctorCount,
+    0,
+  ) ?? 0;
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -94,13 +94,7 @@ export function HospitalListPage() {
         {hospitalsQuery.data && hospitalsQuery.data.length > 0 && (
           <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {hospitalsQuery.data.map((hospital) => {
-              const specialties = [
-                ...new Set(
-                  hospital.doctors
-                    .map((doctor) => doctor.specialty)
-                    .filter(Boolean),
-                ),
-              ];
+              const specialties = hospital.specialties;
               return (
                 <li
                   key={hospital.id}

@@ -3,6 +3,9 @@ export interface HospitalListItem {
   name: string;
   region: string;
   address: string;
+  tel: string;
+  doctorCount: number;
+  specialties: string[];
 }
 
 export interface HospitalDetail {
