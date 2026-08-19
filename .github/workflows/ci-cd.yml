@@ -1,4 +1,4 @@
-name: MedFlow
+name: MedFlow CI/CD
 
 on:
   push:
@@ -38,7 +38,7 @@ jobs:
       SPRING_PROFILES_ACTIVE: test
       DB_USERNAME: medflow
       DB_PASSWORD: testpassword
-      JWT_SECRET: jjto1Jd7OgWB/MoqM7cCaQdoOV71HhUWsJUhhQpEl1c=
+      JWT_SECRET: ${{ secrets.CI_JWT_SECRET }}
 
     steps:
       - name: Checkout repository
