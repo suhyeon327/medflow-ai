@@ -5,16 +5,20 @@ import type {
   AdminHospitalDeleteResponse,
   AdminHospitalUpdateRequest,
   HospitalDetail,
-  HospitalListItem,
+  HospitalPage,
 } from "../types/hospital";
 import { apiClient } from "./apiClient";
 
-export function getHospitals(keyword?: string): Promise<HospitalListItem[]> {
-  return apiClient<HospitalListItem[]>(
+export function getHospitals(
+  keyword?: string,
+  page = 0,
+  size = 20,
+): Promise<HospitalPage> {
+  return apiClient<HospitalPage>(
     {
       url: "/api/v1/hospitals",
       method: "GET",
-      params: keyword ? { keyword } : undefined,
+      params: { keyword: keyword || undefined, page, size },
     },
     false,
   );

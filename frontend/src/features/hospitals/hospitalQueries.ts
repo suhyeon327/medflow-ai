@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
   getHospital,
   getHospitalDoctors,
@@ -7,16 +7,28 @@ import {
 
 export const hospitalKeys = {
   all: ["hospitals"] as const,
-  list: (keyword: string) => ["hospitals", "list", keyword] as const,
+  list: (keyword: string, page: number, size: number) =>
+    ["hospitals", "list", keyword, page, size] as const,
+  options: ["hospitals", "options"] as const,
   detail: (hospitalId: number) => ["hospitals", hospitalId] as const,
   doctors: (hospitalId: number) =>
     ["hospitals", hospitalId, "doctors"] as const,
 };
 
-export function useHospitalsQuery(keyword: string) {
+export function useHospitalsQuery(keyword: string, page = 0, size = 20) {
   return useQuery({
-    queryKey: hospitalKeys.list(keyword),
-    queryFn: () => getHospitals(keyword || undefined),
+    queryKey: hospitalKeys.list(keyword, page, size),
+    queryFn: () => getHospitals(keyword || undefined, page, size),
+  });
+}
+
+export function useHospitalOptionsQuery() {
+  return useInfiniteQuery({
+    queryKey: hospitalKeys.options,
+    queryFn: ({ pageParam }) => getHospitals(undefined, pageParam, 20),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.last ? undefined : lastPage.page + 1,
   });
 }
 

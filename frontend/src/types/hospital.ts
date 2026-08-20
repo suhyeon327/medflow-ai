@@ -8,6 +8,16 @@ export interface HospitalListItem {
   specialties: string[];
 }
 
+export interface HospitalPage {
+  content: HospitalListItem[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+}
+
 export interface HospitalDetail {
   id: number;
   name: string;

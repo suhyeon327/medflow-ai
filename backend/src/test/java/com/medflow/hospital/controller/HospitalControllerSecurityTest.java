@@ -5,6 +5,7 @@ import com.medflow.auth.security.CustomUserDetails;
 import com.medflow.common.config.SecurityConfig;
 import com.medflow.common.exception.GlobalExceptionHandler;
 import com.medflow.common.security.CustomAuthenticationEntryPoint;
+import com.medflow.hospital.dto.response.HospitalPageResponse;
 import com.medflow.hospital.service.AdminHospitalService;
 import com.medflow.hospital.service.HospitalService;
 import com.medflow.user.entity.User;
@@ -18,9 +19,12 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -47,14 +51,53 @@ class HospitalControllerSecurityTest {
     @MockitoBean JwtProvider jwtProvider;
 
     @Test
-    void hospitalList_isPublicAndPassesKeyword() throws Exception {
-        when(hospitalService.getAvailableHospitals("서울")).thenReturn(List.of());
+    void hospitalList_isPublicAndReturnsPaginationResponse() throws Exception {
+        HospitalPageResponse response = new HospitalPageResponse(
+                List.of(), 1, 20, 21, 2, false, true
+        );
+        when(hospitalService.getAvailableHospitals(eq("서울"), any(Pageable.class)))
+                .thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/hospitals").param("keyword", "서울"))
+        mockMvc.perform(get("/api/v1/hospitals")
+                        .param("keyword", "서울")
+                        .param("page", "1")
+                        .param("size", "20"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.content").isArray())
+                .andExpect(jsonPath("$.data.page").value(1))
+                .andExpect(jsonPath("$.data.size").value(20))
+                .andExpect(jsonPath("$.data.totalElements").value(21))
+                .andExpect(jsonPath("$.data.totalPages").value(2))
+                .andExpect(jsonPath("$.data.first").value(false))
+                .andExpect(jsonPath("$.data.last").value(true));
 
-        verify(hospitalService).getAvailableHospitals("서울");
+        verify(hospitalService).getAvailableHospitals(
+                eq("서울"),
+                any(Pageable.class)
+        );
+    }
+
+    @Test
+    void hospitalList_usesDefaultPageSizeTwenty() throws Exception {
+        when(hospitalService.getAvailableHospitals(eq(null), any(Pageable.class)))
+                .thenAnswer(invocation -> {
+                    Pageable pageable = invocation.getArgument(1);
+                    return new HospitalPageResponse(
+                            List.of(),
+                            pageable.getPageNumber(),
+                            pageable.getPageSize(),
+                            0,
+                            0,
+                            true,
+                            true
+                    );
+                });
+
+        mockMvc.perform(get("/api/v1/hospitals"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.page").value(0))
+                .andExpect(jsonPath("$.data.size").value(20));
     }
 
     @Test

@@ -1,5 +1,5 @@
 import type { FormEvent } from "react";
-import { useHospitalsQuery } from "../../hospitals/hospitalQueries";
+import { useHospitalOptionsQuery } from "../../hospitals/hospitalQueries";
 import type { DoctorSignupForm } from "../../../types/auth";
 
 interface Props {
@@ -19,7 +19,9 @@ export function DoctorInfoStep({
   isPending,
   errorMessage,
 }: Props) {
-  const hospitalsQuery = useHospitalsQuery("");
+  const hospitalsQuery = useHospitalOptionsQuery();
+  const hospitals =
+    hospitalsQuery.data?.pages.flatMap((page) => page.content) ?? [];
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (form.hospitalId) onSubmit();
@@ -60,7 +62,7 @@ export function DoctorInfoStep({
           className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5"
         >
           <option value="">병원을 선택해 주세요</option>
-          {hospitalsQuery.data?.map((hospital) => (
+          {hospitals.map((hospital) => (
             <option key={hospital.id} value={hospital.id}>
               {hospital.name} · {hospital.region}
             </option>
@@ -75,6 +77,18 @@ export function DoctorInfoStep({
           <span className="mt-1 block text-xs text-red-600">
             병원 목록을 불러오지 못했습니다.
           </span>
+        )}
+        {hospitalsQuery.hasNextPage && (
+          <button
+            type="button"
+            onClick={() => hospitalsQuery.fetchNextPage()}
+            disabled={hospitalsQuery.isFetchingNextPage}
+            className="mt-2 text-xs font-semibold text-blue-600 disabled:opacity-60"
+          >
+            {hospitalsQuery.isFetchingNextPage
+              ? "병원 목록을 불러오는 중..."
+              : "병원 더 보기"}
+          </button>
         )}
       </label>
       <label className="block text-sm font-medium">

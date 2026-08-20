@@ -4,6 +4,7 @@ import com.medflow.hospital.entity.Hospital;
 import com.medflow.hospital.entity.HospitalStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -32,7 +33,10 @@ class HospitalRepositoryTest {
 
     @Test
     void findAllByStatus_returnsOnlyActiveHospitals() {
-        var hospitals = hospitalRepository.findAllByStatus(HospitalStatus.ACTIVE);
+        var hospitals = hospitalRepository.findAllByStatus(
+                HospitalStatus.ACTIVE,
+                PageRequest.of(0, 20)
+        ).getContent();
 
         assertThat(hospitals).containsExactlyInAnyOrder(seoulHospital, busanHospital);
         assertThat(hospitals).doesNotContain(closedHospital);
@@ -40,24 +44,87 @@ class HospitalRepositoryTest {
 
     @Test
     void searchByStatusAndKeyword_searchesHospitalName() {
-        var hospitals = hospitalRepository.searchByStatusAndKeyword(HospitalStatus.ACTIVE, "강남 메드");
+        var hospitals = hospitalRepository.searchByStatusAndKeyword(
+                HospitalStatus.ACTIVE,
+                "강남 메드",
+                PageRequest.of(0, 20)
+        ).getContent();
 
         assertThat(hospitals).containsExactly(seoulHospital);
     }
 
     @Test
     void searchByStatusAndKeyword_searchesRegionCaseInsensitively() {
-        var hospitals = hospitalRepository.searchByStatusAndKeyword(HospitalStatus.ACTIVE, "부산");
+        var hospitals = hospitalRepository.searchByStatusAndKeyword(
+                HospitalStatus.ACTIVE,
+                "부산",
+                PageRequest.of(0, 20)
+        ).getContent();
 
         assertThat(hospitals).containsExactly(busanHospital);
     }
 
     @Test
     void searchByStatusAndKeyword_searchesAddressAndExcludesClosedHospital() {
-        var hospitals = hospitalRepository.searchByStatusAndKeyword(HospitalStatus.ACTIVE, "서울시");
+        var hospitals = hospitalRepository.searchByStatusAndKeyword(
+                HospitalStatus.ACTIVE,
+                "서울시",
+                PageRequest.of(0, 20)
+        ).getContent();
 
         assertThat(hospitals).containsExactly(seoulHospital);
         assertThat(hospitals).doesNotContain(closedHospital);
+    }
+
+    @Test
+    void findAllByStatus_limitsContentToPageSize() {
+        for (int index = 0; index < 20; index++) {
+            save("추가 병원 " + index, "서울시 주소 " + index, "서울", HospitalStatus.ACTIVE);
+        }
+
+        var page = hospitalRepository.findAllByStatus(
+                HospitalStatus.ACTIVE,
+                PageRequest.of(0, 20)
+        );
+
+        assertThat(page.getContent()).hasSize(20);
+        assertThat(page.getTotalElements()).isEqualTo(22);
+    }
+
+    @Test
+    void findAllByStatus_returnsSecondPage() {
+        var page = hospitalRepository.findAllByStatus(
+                HospitalStatus.ACTIVE,
+                PageRequest.of(1, 1)
+        );
+
+        assertThat(page.getNumber()).isEqualTo(1);
+        assertThat(page.getContent()).hasSize(1);
+        assertThat(page.getTotalElements()).isEqualTo(2);
+    }
+
+    @Test
+    void searchByStatusAndKeyword_appliesPagination() {
+        var page = hospitalRepository.searchByStatusAndKeyword(
+                HospitalStatus.ACTIVE,
+                "병원",
+                PageRequest.of(1, 1)
+        );
+
+        assertThat(page.getNumber()).isEqualTo(1);
+        assertThat(page.getContent()).containsExactly(busanHospital);
+        assertThat(page.getTotalElements()).isEqualTo(2);
+    }
+
+    @Test
+    void findAllByStatus_returnsEmptyPageWhenPageExceedsRange() {
+        var page = hospitalRepository.findAllByStatus(
+                HospitalStatus.ACTIVE,
+                PageRequest.of(10, 20)
+        );
+
+        assertThat(page.getContent()).isEmpty();
+        assertThat(page.getTotalElements()).isEqualTo(2);
     }
 
     @Test

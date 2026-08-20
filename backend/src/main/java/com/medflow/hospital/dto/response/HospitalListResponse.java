@@ -20,7 +20,7 @@ public class HospitalListResponse {
     private int doctorCount;
     private List<String> specialties;
 
-    public static HospitalListResponse of(
+    public static HospitalListResponse from(
             Hospital hospital,
             List<Doctor> doctors
     ) {

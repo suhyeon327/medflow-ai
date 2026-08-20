@@ -1,13 +1,9 @@
 package com.medflow.hospital.entity;
 
 import com.medflow.common.entity.BaseEntity;
-import com.medflow.patient.entity.Gender;
-import com.medflow.user.entity.UserStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
 
 @Entity
 @Getter

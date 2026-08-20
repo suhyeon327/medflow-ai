@@ -4,19 +4,28 @@ import { QueryError } from "../components/QueryError";
 import { useHospitalsQuery } from "../features/hospitals/hospitalQueries";
 import { HOSPITAL_DETAIL_PATH } from "../routes/routePaths";
 
+const PAGE_SIZE = 20;
+
 export function HospitalListPage() {
   const [keyword, setKeyword] = useState("");
   const [submittedKeyword, setSubmittedKeyword] = useState("");
-  const hospitalsQuery = useHospitalsQuery(submittedKeyword);
+  const [page, setPage] = useState(0);
+  const hospitalsQuery = useHospitalsQuery(
+    submittedKeyword,
+    page,
+    PAGE_SIZE,
+  );
+  const hospitals = hospitalsQuery.data?.content ?? [];
   const doctorCount =
-  hospitalsQuery.data?.reduce(
-    (count, hospital) => count + hospital.doctorCount,
-    0,
-  ) ?? 0;
+    hospitals.reduce(
+      (count, hospital) => count + hospital.doctorCount,
+      0,
+    );
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmittedKeyword(keyword.trim());
+    setPage(0);
   };
 
   return (
@@ -60,7 +69,7 @@ export function HospitalListPage() {
           <Summary
             icon="▦"
             label="등록 병원"
-            value={`${hospitalsQuery.data?.length ?? 0}+`}
+            value={`${hospitalsQuery.data?.totalElements ?? 0}+`}
           />
           <Summary icon="♙" label="전문 의료진" value={`${doctorCount}+`} />
           <Summary icon="▣" label="간편 예약" value="24시간" />
@@ -84,16 +93,16 @@ export function HospitalListPage() {
             onRetry={() => hospitalsQuery.refetch()}
           />
         )}
-        {hospitalsQuery.isSuccess && hospitalsQuery.data.length === 0 && (
+        {hospitalsQuery.isSuccess && hospitals.length === 0 && (
           <p className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-slate-600">
             {submittedKeyword
               ? "검색 결과가 없습니다."
               : "조회 가능한 병원이 없습니다."}
           </p>
         )}
-        {hospitalsQuery.data && hospitalsQuery.data.length > 0 && (
+        {hospitals.length > 0 && (
           <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {hospitalsQuery.data.map((hospital) => {
+            {hospitals.map((hospital) => {
               const specialties = hospital.specialties;
               return (
                 <li
@@ -136,6 +145,33 @@ export function HospitalListPage() {
               );
             })}
           </ul>
+        )}
+        {hospitalsQuery.data && hospitalsQuery.data.totalPages > 1 && (
+          <nav
+            className="mt-8 flex items-center justify-center gap-3"
+            aria-label="병원 페이지"
+          >
+            <button
+              type="button"
+              disabled={hospitalsQuery.data.first || hospitalsQuery.isFetching}
+              onClick={() => setPage((current) => current - 1)}
+              className="rounded-md border border-slate-300 px-3 py-2 text-sm disabled:opacity-40"
+            >
+              이전
+            </button>
+            <span className="text-sm text-slate-600">
+              {hospitalsQuery.data.page + 1} / {hospitalsQuery.data.totalPages} · 총{" "}
+              {hospitalsQuery.data.totalElements}개
+            </span>
+            <button
+              type="button"
+              disabled={hospitalsQuery.data.last || hospitalsQuery.isFetching}
+              onClick={() => setPage((current) => current + 1)}
+              className="rounded-md border border-slate-300 px-3 py-2 text-sm disabled:opacity-40"
+            >
+              다음
+            </button>
+          </nav>
         )}
       </div>
     </section>

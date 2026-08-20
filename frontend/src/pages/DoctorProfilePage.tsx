@@ -6,7 +6,7 @@ import {
   useDoctorProfileQuery,
   useUpdateDoctorProfileMutation,
 } from "../features/doctors/doctorQueries";
-import { useHospitalsQuery } from "../features/hospitals/hospitalQueries";
+import { useHospitalOptionsQuery } from "../features/hospitals/hospitalQueries";
 import type { DoctorProfileUpdateRequest } from "../types/doctor";
 
 const EMPTY_FORM: DoctorProfileUpdateRequest = {
@@ -25,9 +25,11 @@ const STATUS_LABEL = {
 
 export function DoctorProfilePage() {
   const profileQuery = useDoctorProfileQuery();
-  const hospitalsQuery = useHospitalsQuery("");
+  const hospitalsQuery = useHospitalOptionsQuery();
   const updateMutation = useUpdateDoctorProfileMutation();
   const [form, setForm] = useState(EMPTY_FORM);
+  const hospitals =
+    hospitalsQuery.data?.pages.flatMap((page) => page.content) ?? [];
 
   useEffect(() => {
     if (!profileQuery.data) return;
@@ -92,12 +94,32 @@ export function DoctorProfilePage() {
             className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2.5"
           >
             <option value="">병원 선택</option>
-            {hospitalsQuery.data?.map((hospital) => (
+            {profileQuery.data &&
+              !hospitals.some(
+                (hospital) => hospital.id === profileQuery.data.hospitalId,
+              ) && (
+                <option value={profileQuery.data.hospitalId}>
+                  {profileQuery.data.hospitalName}
+                </option>
+              )}
+            {hospitals.map((hospital) => (
               <option key={hospital.id} value={hospital.id}>
                 {hospital.name} · {hospital.region}
               </option>
             ))}
           </select>
+          {hospitalsQuery.hasNextPage && (
+            <button
+              type="button"
+              onClick={() => hospitalsQuery.fetchNextPage()}
+              disabled={hospitalsQuery.isFetchingNextPage}
+              className="mt-2 text-xs font-semibold text-blue-600 disabled:opacity-60"
+            >
+              {hospitalsQuery.isFetchingNextPage
+                ? "병원 목록을 불러오는 중..."
+                : "병원 더 보기"}
+            </button>
+          )}
         </label>
         {hospitalsQuery.isError && (
           <p className="text-sm text-red-700">
