@@ -8,6 +8,7 @@ import com.medflow.common.exception.ErrorCode;
 import com.medflow.common.exception.GlobalExceptionHandler;
 import com.medflow.common.security.CustomAuthenticationEntryPoint;
 import com.medflow.hospital.dto.response.HospitalPageResponse;
+import com.medflow.hospital.dto.response.HospitalSummaryResponse;
 import com.medflow.hospital.service.AdminHospitalService;
 import com.medflow.hospital.service.HospitalService;
 import com.medflow.user.entity.User;
@@ -111,6 +112,19 @@ class HospitalControllerSecurityTest {
     }
 
     @Test
+    void hospitalSummary_isPublicAndReturnsActiveHospitalAndDoctorCounts() throws Exception {
+        when(hospitalService.getSummary()).thenReturn(new HospitalSummaryResponse(3L, 12L));
+
+        mockMvc.perform(get("/api/v1/hospitals/summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.hospitalCount").value(3))
+                .andExpect(jsonPath("$.data.doctorCount").value(12));
+
+        verify(hospitalService).getSummary();
+    }
+
+    @Test
     void adminCanAccessHospitalManagementApi() throws Exception {
         when(adminHospitalService.getHospitals()).thenReturn(List.of());
 
@@ -131,7 +145,7 @@ class HospitalControllerSecurityTest {
 
     @Test
     void unauthenticatedUserCannotAccessAdminHospitalApi() throws Exception {
-        mockMvc.perform(delete("/api/v1/admin/hospitals{hospitalId}", 1L))
+        mockMvc.perform(delete("/api/v1/admin/hospitals/{hospitalId}", 1L))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error.code").value("AUTH_007"));
     }
@@ -154,7 +168,7 @@ class HospitalControllerSecurityTest {
 
     @Test
     void updateHospital_rejectsMissingStatus() throws Exception {
-        mockMvc.perform(put("/api/v1/admin/hospitals{hospitalId}", 1L)
+        mockMvc.perform(put("/api/v1/admin/hospitals/{hospitalId}", 1L)
                         .with(user(userDetails(1L, UserRole.ADMIN)))
                         .contentType("application/json")
                         .content("""

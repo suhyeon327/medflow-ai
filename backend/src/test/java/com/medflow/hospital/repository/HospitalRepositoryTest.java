@@ -91,6 +91,12 @@ class HospitalRepositoryTest {
         assertThat(hospitalRepository.existsByName("없는 병원")).isFalse();
     }
 
+    @Test
+    void countByStatus_countsOnlyHospitalsWithRequestedStatus() {
+        assertThat(hospitalRepository.countByStatus(HospitalStatus.ACTIVE)).isEqualTo(2L);
+        assertThat(hospitalRepository.countByStatus(HospitalStatus.CLOSED)).isEqualTo(1L);
+    }
+
     private Hospital save(String name, String address, String region, HospitalStatus status) {
         return hospitalRepository.saveAndFlush(
                 new Hospital(name, address, region, "02-1234-5678", status)

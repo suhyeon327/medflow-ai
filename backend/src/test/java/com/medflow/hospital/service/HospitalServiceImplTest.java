@@ -189,6 +189,20 @@ class HospitalServiceImplTest {
                 .isEqualTo(ErrorCode.HOSPITAL_NOT_FOUND);
     }
 
+    @Test
+    void getSummary_returnsActiveHospitalAndDoctorCounts() {
+        when(hospitalRepository.countByStatus(HospitalStatus.ACTIVE)).thenReturn(3L);
+        when(doctorRepository.countByStatusAndUserStatus(DoctorStatus.ACTIVE, UserStatus.ACTIVE))
+                .thenReturn(12L);
+
+        var response = hospitalService.getSummary();
+
+        assertThat(response.hospitalCount()).isEqualTo(3L);
+        assertThat(response.doctorCount()).isEqualTo(12L);
+        verify(hospitalRepository).countByStatus(HospitalStatus.ACTIVE);
+        verify(doctorRepository).countByStatusAndUserStatus(DoctorStatus.ACTIVE, UserStatus.ACTIVE);
+    }
+
     private Hospital hospital(Long id, String name) {
         Hospital hospital = Hospital.create(name, "서울시 강남구", "서울", "02-1234-5678");
         ReflectionTestUtils.setField(hospital, "id", id);
