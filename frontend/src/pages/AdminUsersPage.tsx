@@ -14,7 +14,7 @@ const STATUS_LABEL: Record<UserStatus, string> = {
   LOCKED: "잠김",
   WITHDRAWN: "탈퇴",
 };
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 15;
 
 function formatDate(value: string | null): string {
   if (!value) return "-";

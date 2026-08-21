@@ -6,73 +6,107 @@ import type {
   AdminHospitalUpdateRequest,
   HospitalDetail,
   HospitalPage,
+  HospitalSummary,
 } from "../types/hospital";
 import { apiClient } from "./apiClient";
 
+// 병원 목록 조회
 export function getHospitals(
   keyword?: string,
-  page = 0,
-  size = 20,
+  page = 0
 ): Promise<HospitalPage> {
   return apiClient<HospitalPage>(
     {
       url: "/api/v1/hospitals",
       method: "GET",
-      params: { keyword: keyword || undefined, page, size },
+      params: { keyword: keyword || undefined, page }
     },
-    false,
+    false
   );
 }
 
-export function getHospital(hospitalId: number): Promise<HospitalDetail> {
+// 병원 상세 정보 조회
+export function getHospital(
+  hospitalId: number
+): Promise<HospitalDetail> {
   return apiClient<HospitalDetail>(
-    { url: `/api/v1/hospitals/${hospitalId}`, method: "GET" },
-    false,
+    { 
+      url: `/api/v1/hospitals/${hospitalId}`, 
+      method: "GET"
+    },
+    false
   );
 }
 
+// 병원별 의사 목록 조회
 export function getHospitalDoctors(
-  hospitalId: number,
+  hospitalId: number
 ): Promise<PublicDoctor[]> {
   return apiClient<PublicDoctor[]>(
-    { url: `/api/v1/hospitals/${hospitalId}/doctors`, method: "GET" },
-    false,
+    { 
+      url: `/api/v1/hospitals/${hospitalId}/doctors`, 
+      method: "GET"
+    },
+    false
   );
 }
 
-export function getAdminHospitals(): Promise<AdminHospital[]> {
-  return apiClient<AdminHospital[]>({
-    url: "/api/v1/admin/hospitals/",
-    method: "GET",
-  });
+// 전체 병원 및 의료진 통계 조회
+export async function getHospitalSummary() : Promise<HospitalSummary> {
+  return apiClient<HospitalSummary>(
+    {
+      url: "/api/v1/hospitals/summary",
+      method: "GET"
+    },
+    false
+  );
 }
 
+// 병원 등록
 export function createAdminHospital(
-  request: AdminHospitalCreateRequest,
+  request: AdminHospitalCreateRequest
 ): Promise<HospitalDetail> {
-  return apiClient<HospitalDetail>({
-    url: "/api/v1/admin/hospitals",
-    method: "POST",
-    data: request,
-  });
+  return apiClient<HospitalDetail>(
+    {
+      url: "/api/v1/admin/hospitals",
+      method: "POST",
+      data: request
+    }
+  );
 }
 
+// 병원 관리 목록 조회
+export function getAdminHospitals(): Promise<AdminHospital[]> {
+  return apiClient<AdminHospital[]>(
+    {
+      url: "/api/v1/admin/hospitals",
+      method: "GET"
+    }
+  );
+}
+
+// 병원 정보 수정
 export function updateAdminHospital(
   hospitalId: number,
-  request: AdminHospitalUpdateRequest,
+  request: AdminHospitalUpdateRequest
 ): Promise<AdminHospital> {
-  return apiClient<AdminHospital>({
-    url: `/api/v1/admin/hospitals/${hospitalId}`,
-    method: "PUT",
-    data: request,
-  });
+  return apiClient<AdminHospital>(
+    {
+      url: `/api/v1/admin/hospitals${hospitalId}`,
+      method: "PUT",
+      data: request
+    }
+  );
 }
 
+// 병원 삭제
 export function deleteAdminHospital(
   hospitalId: number,
 ): Promise<AdminHospitalDeleteResponse> {
-  return apiClient<AdminHospitalDeleteResponse>({
-    url: `/api/v1/admin/hospitals/${hospitalId}`,
-    method: "DELETE",
-  });
+  return apiClient<AdminHospitalDeleteResponse>(
+    {
+      url: `/api/v1/admin/hospitals${hospitalId}`,
+      method: "DELETE"
+    }
+  );
 }

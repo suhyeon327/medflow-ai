@@ -17,27 +17,40 @@ if (!API_BASE_URL)
 const axiosClient = axios.create({
   baseURL: API_BASE_URL,
   headers: { Accept: "application/json", "Content-Type": "application/json" },
-  timeout: 10_000,
+  timeout: 10_000   // 서버가 10초 안에 응답하지 않으면 요청 실패
 });
 
 let reissuePromise: Promise<TokenResponse> | null = null;
 
-function unwrapResponse<T>(response: AxiosResponse<ApiResponse<T>>): T {
+// Axios 응답에서 실제 MedFlow 데이터만 꺼내는 함수
+function unwrapResponse<T>(
+  response: AxiosResponse<ApiResponse<T>>
+): T {
   if (!response.data.success)
-    throw toApiError(response.status, response.data.error);
+    throw toApiError(
+      response.status, 
+      response.data.error
+    );
   return response.data.data as T;
 }
 
+// 에러를 ApiError 형태로 통일하는 함수
 function normalizeError(error: unknown): ApiError {
-  if (error instanceof ApiError) return error;
+  
+  if (error instanceof ApiError) 
+    return error;
 
   if (axios.isAxiosError<ApiResponse<unknown>>(error)) {
     if (!error.response) {
       return new ApiError(
-        "서버에 연결할 수 없습니다. 네트워크 상태를 확인해 주세요.",
+        "서버에 연결할 수 없습니다. 네트워크 상태를 확인해 주세요."
       );
     }
-    return toApiError(error.response.status, error.response.data?.error);
+
+    return toApiError(
+      error.response.status, 
+      error.response.data?.error
+    );
   }
 
   return new ApiError(
@@ -45,22 +58,28 @@ function normalizeError(error: unknown): ApiError {
   );
 }
 
+// Refresh Token을 이용해서 새로운 토큰을 발급받는 함수
 export function reissueTokens(): Promise<TokenResponse> {
+
   const refreshToken = tokenStorage.get()?.refreshToken;
+
   if (!refreshToken)
-    return Promise.reject(new ApiError("로그인이 필요합니다.", 401));
+    return Promise.reject(
+      new ApiError("로그인이 필요합니다.", 401)
+    );
 
   if (!reissuePromise) {
-    reissuePromise = axiosClient
-      .post<ApiResponse<TokenResponse>>("/api/v1/auth/reissue", {
-        refreshToken,
-      })
-      .then(unwrapResponse)
-      .then((tokens) => {
-        tokenStorage.set(tokens);
+    reissuePromise = axiosClient   // 재발급 요청의 Promise를 reissuePromise에 저장
+      .post<ApiResponse<TokenResponse>>(   // 백엔드의 토큰 재발급 API를 POST 방식으로 호출
+        "/api/v1/auth/reissue", 
+        {refreshToken}
+      )
+      .then(unwrapResponse)   // 서버 응답을 unwrapResponse()에 넘기기
+      .then((tokens) => {   // 재발급받은 토큰을 저장
+        tokenStorage.set(tokens);   // 기존 토큰을 교체
         return tokens;
       })
-      .catch((error: unknown) => {
+      .catch((error: unknown) => {   // 재발급 에러 처리
         throw normalizeError(error);
       })
       .finally(() => {
@@ -75,6 +94,7 @@ export async function apiClient<T>(
   config: AxiosRequestConfig,
   authenticated = true,
 ): Promise<T> {
+  
   const accessToken = authenticated ? tokenStorage.get()?.accessToken : null;
 
   try {
@@ -83,9 +103,11 @@ export async function apiClient<T>(
       headers: {
         ...config.headers,
         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-      },
+      }
     });
+
     return unwrapResponse(response);
+
   } catch (error) {
     const axiosError = error as AxiosError<ApiResponse<unknown>>;
     const shouldReissue =
@@ -93,8 +115,11 @@ export async function apiClient<T>(
       axios.isAxiosError(error) &&
       axiosError.response?.status === 401;
 
-    if (!shouldReissue) throw normalizeError(error);
+    // 재발급이 필요하지 않으면 에러
+    if (!shouldReissue) 
+      throw normalizeError(error);
 
+    // 토큰 재발급 시도
     try {
       const tokens = await reissueTokens();
       const retriedResponse = await axiosClient.request<ApiResponse<T>>({
@@ -102,9 +127,11 @@ export async function apiClient<T>(
         headers: {
           ...config.headers,
           Authorization: `Bearer ${tokens.accessToken}`,
-        },
+        }
       });
+
       return unwrapResponse(retriedResponse);
+
     } catch (reissueError) {
       window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
       throw normalizeError(reissueError);

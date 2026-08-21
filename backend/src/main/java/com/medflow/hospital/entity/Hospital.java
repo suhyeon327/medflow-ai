@@ -15,7 +15,7 @@ public class Hospital extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name", nullable = false, unique = true, length = 100)
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
     @Column(name = "address", nullable = false, length = 255)
@@ -49,10 +49,15 @@ public class Hospital extends BaseEntity {
             String name,
             String address,
             String region,
-            String tel,
-            HospitalStatus status
+            String tel
     ) {
-        return new Hospital(name, address, region, tel, status);
+        return new Hospital(
+                name,
+                address,
+                region,
+                tel,
+                HospitalStatus.ACTIVE
+        );
     }
 
     public void update(
@@ -72,5 +77,6 @@ public class Hospital extends BaseEntity {
     // 병원 삭제
     public void delete() {
         this.status = HospitalStatus.CLOSED;
+        this.softDelete();
     }
 }

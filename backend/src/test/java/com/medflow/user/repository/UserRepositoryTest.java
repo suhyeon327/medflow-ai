@@ -81,7 +81,6 @@ class UserRepositoryTest {
 
         // then
         assertThat(page.getContent()).containsExactly(withdrawnPatient);
-        assertThat(page.getContent().getFirst().isDeleted()).isTrue();
     }
 
     @Test

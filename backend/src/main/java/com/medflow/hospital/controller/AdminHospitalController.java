@@ -3,7 +3,6 @@ package com.medflow.hospital.controller;
 import com.medflow.common.response.ApiResponse;
 import com.medflow.hospital.dto.response.AdminHospitalResponse;
 import com.medflow.hospital.dto.request.AdminHospitalCreateRequest;
-import com.medflow.hospital.dto.response.HospitalDetailResponse;
 import com.medflow.hospital.dto.request.AdminHospitalUpdateRequest;
 import com.medflow.hospital.dto.response.AdminHospitalDeleteResponse;
 import com.medflow.hospital.service.AdminHospitalService;
@@ -24,7 +23,7 @@ public class AdminHospitalController {
 
     // 병원 등록
     @PostMapping
-    public ApiResponse<HospitalDetailResponse> createHospital(
+    public ApiResponse<AdminHospitalResponse> createHospital(
             @Valid @RequestBody AdminHospitalCreateRequest request
             ) {
         return ApiResponse.success(
@@ -33,7 +32,7 @@ public class AdminHospitalController {
     }
 
     // 병원 관리 목록 조회
-    @GetMapping("/")
+    @GetMapping
     public ApiResponse<List<AdminHospitalResponse>> getHospitals() {
         return ApiResponse.success(
                 adminHospitalService.getHospitals()

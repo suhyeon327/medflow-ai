@@ -11,7 +11,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Getter
-@MappedSuperclass   // 이 클래스는 다른 Entity가 상속해서 쓰는 클래스
+@MappedSuperclass   // 부모 클래스의 필드 매핑 정보를 자식 Entity가 상속받도록 함
 @EntityListeners(AuditingEntityListener.class)   // JPA 엔티티의 변경 이벤트를 감지하여 자동으로 특정 작업을 수행
 public abstract class BaseEntity {
 
@@ -31,9 +31,5 @@ public abstract class BaseEntity {
         if (deletedAt == null) {
             this.deletedAt = LocalDateTime.now();
         }
-    }
-
-    public boolean isDeleted() {
-        return deletedAt != null;
     }
 }

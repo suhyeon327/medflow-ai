@@ -1,22 +1,19 @@
 package com.medflow.hospital.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
-@Getter
-@NoArgsConstructor
-public class AdminHospitalCreateRequest {
+public record AdminHospitalCreateRequest(
 
     @NotBlank(message = "이름은 필수입니다.")
-    private String name;
+    String name,
 
     @NotBlank(message = "주소는 필수입니다.")
-    private String address;
+    String address,
 
     @NotBlank(message = "지역은 필수입니다.")
-    private String region;
+    String region,
 
     @NotBlank
-    private String tel;
+    String tel
+) {
 }

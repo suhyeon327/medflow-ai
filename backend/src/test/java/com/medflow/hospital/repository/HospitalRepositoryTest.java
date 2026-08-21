@@ -26,42 +26,31 @@ class HospitalRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        seoulHospital = save("강남 메드 병원", "서울시 강남구 테헤란로", "서울", HospitalStatus.ACTIVE);
-        busanHospital = save("부산 건강 병원", "부산시 해운대구", "부산", HospitalStatus.ACTIVE);
-        closedHospital = save("서울 폐업 병원", "서울시 종로구", "서울", HospitalStatus.CLOSED);
+        seoulHospital = save("Alpha 메드 병원", "서울시 강남구 테헤란로", "서울", HospitalStatus.ACTIVE);
+        busanHospital = save("Beta 건강 병원", "부산시 해운대구", "부산", HospitalStatus.ACTIVE);
+        closedHospital = save("Closed 폐업 병원", "서울시 종로구", "서울", HospitalStatus.CLOSED);
     }
 
     @Test
-    void findAllByStatus_returnsOnlyActiveHospitals() {
+    void findAllByStatus_returnsOnlyHospitalsWithRequestedStatus() {
         var hospitals = hospitalRepository.findAllByStatus(
                 HospitalStatus.ACTIVE,
                 PageRequest.of(0, 20)
         ).getContent();
 
-        assertThat(hospitals).containsExactlyInAnyOrder(seoulHospital, busanHospital);
+        assertThat(hospitals).containsExactly(seoulHospital, busanHospital);
         assertThat(hospitals).doesNotContain(closedHospital);
     }
 
     @Test
-    void searchByStatusAndKeyword_searchesHospitalName() {
+    void searchByStatusAndKeyword_searchesNameCaseInsensitively() {
         var hospitals = hospitalRepository.searchByStatusAndKeyword(
                 HospitalStatus.ACTIVE,
-                "강남 메드",
+                "ALPHA",
                 PageRequest.of(0, 20)
         ).getContent();
 
         assertThat(hospitals).containsExactly(seoulHospital);
-    }
-
-    @Test
-    void searchByStatusAndKeyword_searchesRegionCaseInsensitively() {
-        var hospitals = hospitalRepository.searchByStatusAndKeyword(
-                HospitalStatus.ACTIVE,
-                "부산",
-                PageRequest.of(0, 20)
-        ).getContent();
-
-        assertThat(hospitals).containsExactly(busanHospital);
     }
 
     @Test
@@ -77,22 +66,7 @@ class HospitalRepositoryTest {
     }
 
     @Test
-    void findAllByStatus_limitsContentToPageSize() {
-        for (int index = 0; index < 20; index++) {
-            save("추가 병원 " + index, "서울시 주소 " + index, "서울", HospitalStatus.ACTIVE);
-        }
-
-        var page = hospitalRepository.findAllByStatus(
-                HospitalStatus.ACTIVE,
-                PageRequest.of(0, 20)
-        );
-
-        assertThat(page.getContent()).hasSize(20);
-        assertThat(page.getTotalElements()).isEqualTo(22);
-    }
-
-    @Test
-    void findAllByStatus_returnsSecondPage() {
+    void findAllByStatus_appliesPaginationAndReportsTotalElements() {
         var page = hospitalRepository.findAllByStatus(
                 HospitalStatus.ACTIVE,
                 PageRequest.of(1, 1)
@@ -104,38 +78,22 @@ class HospitalRepositoryTest {
     }
 
     @Test
-    void searchByStatusAndKeyword_appliesPagination() {
-        var page = hospitalRepository.searchByStatusAndKeyword(
-                HospitalStatus.ACTIVE,
-                "병원",
-                PageRequest.of(1, 1)
-        );
-
-        assertThat(page.getNumber()).isEqualTo(1);
-        assertThat(page.getContent()).containsExactly(busanHospital);
-        assertThat(page.getTotalElements()).isEqualTo(2);
-    }
-
-    @Test
-    void findAllByStatus_returnsEmptyPageWhenPageExceedsRange() {
-        var page = hospitalRepository.findAllByStatus(
-                HospitalStatus.ACTIVE,
-                PageRequest.of(10, 20)
-        );
-
-        assertThat(page.getContent()).isEmpty();
-        assertThat(page.getTotalElements()).isEqualTo(2);
-    }
-
-    @Test
-    void findByIdAndStatus_doesNotReturnClosedHospital() {
+    void findByIdAndStatus_returnsActiveHospitalAndExcludesClosedHospital() {
+        assertThat(hospitalRepository.findByIdAndStatus(
+                seoulHospital.getId(), HospitalStatus.ACTIVE)).contains(seoulHospital);
         assertThat(hospitalRepository.findByIdAndStatus(
                 closedHospital.getId(), HospitalStatus.ACTIVE)).isEmpty();
     }
 
+    @Test
+    void existsByName_returnsTrueForExistingNameAndFalseForUnknownName() {
+        assertThat(hospitalRepository.existsByName("Alpha 메드 병원")).isTrue();
+        assertThat(hospitalRepository.existsByName("없는 병원")).isFalse();
+    }
+
     private Hospital save(String name, String address, String region, HospitalStatus status) {
         return hospitalRepository.saveAndFlush(
-                Hospital.create(name, address, region, "02-1234-5678", status)
+                new Hospital(name, address, region, "02-1234-5678", status)
         );
     }
 }

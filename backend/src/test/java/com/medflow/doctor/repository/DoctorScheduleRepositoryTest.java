@@ -3,7 +3,6 @@ package com.medflow.doctor.repository;
 import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorSchedule;
 import com.medflow.hospital.entity.Hospital;
-import com.medflow.hospital.entity.HospitalStatus;
 import com.medflow.user.entity.User;
 import com.medflow.user.entity.UserRole;
 import jakarta.persistence.EntityManager;
@@ -39,7 +38,7 @@ class DoctorScheduleRepositoryTest {
     @BeforeEach
     void setUp() {
         Hospital hospital = Hospital.create(
-                "스케줄 테스트 병원", "서울시 강남구", "서울", "02-1234-5678", HospitalStatus.ACTIVE
+                "스케줄 테스트 병원", "서울시 강남구", "서울", "02-1234-5678"
         );
         entityManager.persist(hospital);
 

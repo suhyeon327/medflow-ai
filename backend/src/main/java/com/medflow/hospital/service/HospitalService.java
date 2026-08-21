@@ -9,6 +9,7 @@ import com.medflow.doctor.repository.DoctorRepository;
 import com.medflow.hospital.dto.response.HospitalDetailResponse;
 import com.medflow.hospital.dto.response.HospitalListResponse;
 import com.medflow.hospital.dto.response.HospitalPageResponse;
+import com.medflow.hospital.dto.response.HospitalSummaryResponse;
 import com.medflow.hospital.entity.Hospital;
 import com.medflow.hospital.entity.HospitalStatus;
 import com.medflow.hospital.repository.HospitalRepository;
@@ -87,18 +88,36 @@ public class HospitalService {
         return HospitalDetailResponse.from(hospital);
     }
 
-    // 병원별 공개 의사 목록 조회
+    // 병원별 의사 목록 조회
     @Transactional(readOnly = true)
     public List<DoctorResponse> getAvailableDoctors(Long hospitalId) {
+
         hospitalRepository.findByIdAndStatus(hospitalId, HospitalStatus.ACTIVE)
                 .orElseThrow(() -> new BusinessException(ErrorCode.HOSPITAL_NOT_FOUND));
 
-        return doctorRepository.findAllByHospitalIdAndStatusAndUserStatus(
-                        hospitalId,
-                        DoctorStatus.ACTIVE,
-                        UserStatus.ACTIVE
-                ).stream()
+        List<Doctor> doctors = doctorRepository.findAllByHospitalIdAndStatusAndUserStatus(
+                hospitalId,
+                DoctorStatus.ACTIVE,
+                UserStatus.ACTIVE
+        );
+
+        return doctors.stream()
                 .map(DoctorResponse::from)
                 .toList();
+    }
+
+    // 전체 병원 및 의료진 통계 조회
+    public HospitalSummaryResponse getSummary() {
+
+        long hospitalCount = hospitalRepository.countByStatus(HospitalStatus.ACTIVE);
+        long doctorCount = doctorRepository.countByStatusAndUserStatus(
+                DoctorStatus.ACTIVE,
+                UserStatus.ACTIVE
+        );
+
+        return new HospitalSummaryResponse(
+                hospitalCount,
+                doctorCount
+        );
     }
 }

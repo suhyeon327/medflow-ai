@@ -2,23 +2,19 @@ package com.medflow.hospital.dto.response;
 
 import com.medflow.doctor.entity.Doctor;
 import com.medflow.hospital.entity.Hospital;
-import lombok.Builder;
-import lombok.Getter;
 
 import java.util.List;
 import java.util.Objects;
 
-@Getter
-@Builder
-public class HospitalListResponse {
-
-    private Long id;
-    private String name;
-    private String region;
-    private String address;
-    private String tel;
-    private int doctorCount;
-    private List<String> specialties;
+public record HospitalListResponse(
+        Long id,
+        String name,
+        String region,
+        String address,
+        String tel,
+        int doctorCount,
+        List<String> specialties
+) {
 
     public static HospitalListResponse from(
             Hospital hospital,
@@ -31,14 +27,14 @@ public class HospitalListResponse {
                 .distinct()
                 .toList();
 
-        return HospitalListResponse.builder()
-                .id(hospital.getId())
-                .name(hospital.getName())
-                .region(hospital.getRegion())
-                .address(hospital.getAddress())
-                .tel(hospital.getTel())
-                .doctorCount(doctors.size())
-                .specialties(specialties)
-                .build();
+        return new HospitalListResponse(
+                hospital.getId(),
+                hospital.getName(),
+                hospital.getRegion(),
+                hospital.getAddress(),
+                hospital.getTel(),
+                doctors.size(),
+                specialties
+        );
     }
 }

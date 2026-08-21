@@ -19,6 +19,7 @@ export function HospitalDetailPage() {
     ),
   ];
 
+  // 잘못된 병원 ID 처리
   if (!isValidId)
     return <QueryError error={new Error("올바르지 않은 병원 번호입니다.")} />;
 
@@ -27,11 +28,13 @@ export function HospitalDetailPage() {
       <Link to={HOSPITALS_PATH} className="text-sm font-bold text-blue-600">
         ← 병원 목록
       </Link>
+
       {hospitalQuery.isPending && (
         <p role="status" className="mt-8 text-sm text-slate-600">
           병원 정보를 불러오고 있습니다.
         </p>
       )}
+
       {hospitalQuery.isError && (
         <div className="mt-8">
           <QueryError
@@ -40,22 +43,28 @@ export function HospitalDetailPage() {
           />
         </div>
       )}
+
       {hospitalQuery.data && (
         <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+          
           <p className="font-bold text-blue-600">{hospitalQuery.data.region}</p>
+          
           <h1 className="mt-3 text-4xl font-extrabold">
             {hospitalQuery.data.name}
           </h1>
+
           <div className="mt-7 flex flex-wrap items-center gap-6 text-slate-700">
             <p>
               <span className="mr-2 text-blue-600">☎</span>
               {hospitalQuery.data.tel}
             </p>
+
             <p>
               <span className="mr-2 text-blue-600">♙</span>진료 의사{" "}
               {doctorsQuery.data?.length ?? 0}명
             </p>
           </div>
+
           {specialties.length > 0 && (
             <div className="mt-6 flex flex-wrap gap-2">
               {specialties.map((specialty) => (
@@ -73,11 +82,13 @@ export function HospitalDetailPage() {
 
       <section className="mt-10">
         <h2 className="text-2xl font-extrabold">진료 의사</h2>
+        
         {doctorsQuery.isPending && (
           <p role="status" className="mt-6 text-sm text-slate-600">
             의사 목록을 불러오고 있습니다.
           </p>
         )}
+
         {doctorsQuery.isError && (
           <div className="mt-6">
             <QueryError
@@ -86,11 +97,13 @@ export function HospitalDetailPage() {
             />
           </div>
         )}
+
         {doctorsQuery.isSuccess && doctorsQuery.data.length === 0 && (
           <p className="mt-6 rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-600">
             현재 조회 가능한 의사가 없습니다.
           </p>
         )}
+
         {doctorsQuery.data && doctorsQuery.data.length > 0 && (
           <ul className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {doctorsQuery.data.map((doctor) => (
@@ -105,16 +118,16 @@ export function HospitalDetailPage() {
                   {doctor.doctorName} 의사
                 </h3>
                 <p className="mt-3 text-sm font-semibold text-slate-700">
-                  연락처 {doctor.contact}
+                  ☎ {doctor.contact}
                 </p>
                 <p className="mt-3 line-clamp-2 min-h-10 text-sm leading-5 text-slate-500">
-                  {doctor.introduction || "등록된 소개가 없습니다."}
+                  {doctor.introduction || ""}
                 </p>
                 <Link
                   to={DOCTOR_DETAIL_PATH(doctor.doctorId)}
                   className="mt-6 block rounded-lg border border-blue-200 py-2.5 text-center text-sm font-bold text-blue-600 hover:bg-blue-50"
                 >
-                  상세 정보 보기
+                  의사 정보 보기
                 </Link>
               </li>
             ))}

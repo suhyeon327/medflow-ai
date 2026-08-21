@@ -18,20 +18,28 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
 
     List<Doctor> findAllByStatus(DoctorStatus status);
 
-    List<Doctor> findAllByHospitalIdAndStatusAndUserStatus(
-            Long hospitalId,
-            DoctorStatus status,
-            UserStatus userStatus
-    );
-
     Optional<Doctor> findByIdAndStatusAndUserStatus(
             Long doctorId,
             DoctorStatus status,
             UserStatus userStatus
     );
 
+    // 여러 병원에 소속된 의사 목록 조회
     List<Doctor> findAllByHospitalIdInAndStatusAndUserStatus(
             List<Long> hospitalIds,
+            DoctorStatus status,
+            UserStatus userStatus
+    );
+
+    // 특정 병원에 소속된 의사 목록 조회
+    List<Doctor> findAllByHospitalIdAndStatusAndUserStatus(
+            Long hospitalId,
+            DoctorStatus status,
+            UserStatus userStatus
+    );
+
+    // 활성 상태에 해당하는 의사 수 조회
+    long countByStatusAndUserStatus(
             DoctorStatus status,
             UserStatus userStatus
     );

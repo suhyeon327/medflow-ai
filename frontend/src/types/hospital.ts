@@ -26,6 +26,11 @@ export interface HospitalDetail {
   tel: string;
 }
 
+export interface HospitalSummary {
+  hospitalCount: number;
+  doctorCount: number;
+}
+
 export type HospitalStatus = "ACTIVE" | "CLOSED";
 
 export interface AdminHospital extends HospitalDetail {

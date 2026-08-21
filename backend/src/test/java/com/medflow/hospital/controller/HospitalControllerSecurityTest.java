@@ -3,6 +3,8 @@ package com.medflow.hospital.controller;
 import com.medflow.auth.jwt.JwtProvider;
 import com.medflow.auth.security.CustomUserDetails;
 import com.medflow.common.config.SecurityConfig;
+import com.medflow.common.exception.BusinessException;
+import com.medflow.common.exception.ErrorCode;
 import com.medflow.common.exception.GlobalExceptionHandler;
 import com.medflow.common.security.CustomAuthenticationEntryPoint;
 import com.medflow.hospital.dto.response.HospitalPageResponse;
@@ -79,7 +81,7 @@ class HospitalControllerSecurityTest {
     }
 
     @Test
-    void hospitalList_usesDefaultPageSizeTwenty() throws Exception {
+    void hospitalList_withoutPagingParameter_usesDefaultPageSizeFifteen() throws Exception {
         when(hospitalService.getAvailableHospitals(eq(null), any(Pageable.class)))
                 .thenAnswer(invocation -> {
                     Pageable pageable = invocation.getArgument(1);
@@ -97,7 +99,7 @@ class HospitalControllerSecurityTest {
         mockMvc.perform(get("/api/v1/hospitals"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.page").value(0))
-                .andExpect(jsonPath("$.data.size").value(20));
+                .andExpect(jsonPath("$.data.size").value(15));
     }
 
     @Test
@@ -112,7 +114,7 @@ class HospitalControllerSecurityTest {
     void adminCanAccessHospitalManagementApi() throws Exception {
         when(adminHospitalService.getHospitals()).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/v1/admin/hospitals/")
+        mockMvc.perform(get("/api/v1/admin/hospitals")
                         .with(user(userDetails(1L, UserRole.ADMIN))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
@@ -121,7 +123,7 @@ class HospitalControllerSecurityTest {
     @ParameterizedTest
     @EnumSource(value = UserRole.class, names = {"PATIENT", "DOCTOR"})
     void generalUsersCannotAccessAdminHospitalApi(UserRole role) throws Exception {
-        mockMvc.perform(get("/api/v1/admin/hospitals/")
+        mockMvc.perform(get("/api/v1/admin/hospitals")
                         .with(user(userDetails(10L, role))))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.error.code").value("AUTH_006"));
@@ -129,7 +131,7 @@ class HospitalControllerSecurityTest {
 
     @Test
     void unauthenticatedUserCannotAccessAdminHospitalApi() throws Exception {
-        mockMvc.perform(delete("/api/v1/admin/hospitals/{hospitalId}", 1L))
+        mockMvc.perform(delete("/api/v1/admin/hospitals{hospitalId}", 1L))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error.code").value("AUTH_007"));
     }
@@ -152,7 +154,7 @@ class HospitalControllerSecurityTest {
 
     @Test
     void updateHospital_rejectsMissingStatus() throws Exception {
-        mockMvc.perform(put("/api/v1/admin/hospitals/{hospitalId}", 1L)
+        mockMvc.perform(put("/api/v1/admin/hospitals{hospitalId}", 1L)
                         .with(user(userDetails(1L, UserRole.ADMIN)))
                         .contentType("application/json")
                         .content("""
@@ -165,6 +167,38 @@ class HospitalControllerSecurityTest {
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void hospitalDetail_whenHospitalDoesNotExist_returnsHospitalNotFound() throws Exception {
+        when(hospitalService.getDetailHospital(999L))
+                .thenThrow(new BusinessException(ErrorCode.HOSPITAL_NOT_FOUND));
+
+        mockMvc.perform(get("/api/v1/hospitals/{hospitalId}", 999L))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("HOSPITAL_002"));
+    }
+
+    @Test
+    void createHospital_whenNameAlreadyExists_returnsConflict() throws Exception {
+        when(adminHospitalService.createHospital(any()))
+                .thenThrow(new BusinessException(ErrorCode.HOSPITAL_ALREADY_EXISTS));
+
+        mockMvc.perform(post("/api/v1/admin/hospitals")
+                        .with(user(userDetails(1L, UserRole.ADMIN)))
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "name": "중복 병원",
+                                  "address": "서울시 강남구",
+                                  "region": "서울",
+                                  "tel": "02-1234-5678"
+                                }
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("HOSPITAL_001"));
     }
 
     private CustomUserDetails userDetails(Long userId, UserRole role) {

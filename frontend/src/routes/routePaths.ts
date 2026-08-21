@@ -1,34 +1,50 @@
 import type { UserRole } from "../types/auth";
 
+// Auth
 export const LOGIN_PATH = "/login";
 export const SIGNUP_PATH = "/signup";
 export const UNAUTHORIZED_PATH = "/unauthorized";
 export const WITHDRAW_PATH = "/account/withdraw";
+
+// Hospital
+export const HOSPITALS_PATH = "/hospitals";
+export const HOSPITAL_DETAIL_PATH = (hospitalId: number) =>
+  `/hospitals/${hospitalId}`;
+
+// Patient
 export const PATIENT_RESERVATIONS_PATH = "/patient/reservations";
 export const PATIENT_PROFILE_PATH = "/patient/profile";
+export const PATIENT_QUESTIONNAIRE_PATH = (reservationId: number) =>
+  `/patient/reservations/${reservationId}/questionnaire`;
+
+// Doctor
 export const DOCTOR_PROFILE_PATH = "/doctor/profile";
 export const DOCTOR_SCHEDULES_PATH = "/doctor/schedules";
 export const DOCTOR_RESERVATIONS_PATH = "/doctor/reservations";
+
 export const DOCTOR_RESERVATION_DETAIL_PATH = (
   reservationId: number,
   questionnaireId?: number | null,
 ) =>
-  `/doctor/reservations/${reservationId}${questionnaireId ? `?questionnaireId=${questionnaireId}` : ""}`;
+  `/doctor/reservations/${reservationId}${
+    questionnaireId ? `?questionnaireId=${questionnaireId}` : ""
+  }`;
+
 export const DOCTOR_QUESTIONNAIRE_ANALYSIS_PATH = (questionnaireId: number) =>
   `/doctor/questionnaires/${questionnaireId}`;
-export const ADMIN_DOCTOR_DETAIL_PATH = (doctorId: number) =>
-  `/admin/doctors/${doctorId}`;
+
+export const DOCTOR_DETAIL_PATH = (doctorId: number) =>
+  `/doctors/${doctorId}`;
+
+// Admin
 export const ADMIN_USERS_PATH = "/admin/users";
 export const ADMIN_DOCTORS_PATH = "/admin/doctors";
+export const ADMIN_DOCTOR_DETAIL_PATH = (doctorId: number) =>
+  `/admin/doctors/${doctorId}`;
 export const ADMIN_HOSPITALS_PATH = "/admin/hospitals";
 export const ADMIN_RESERVATIONS_PATH = "/admin/reservations";
-export const HOSPITALS_PATH = "/hospitals";
-export const HOSPITAL_DETAIL_PATH = (hospitalId: number) =>
-  `/hospitals/${hospitalId}`;
-export const DOCTOR_DETAIL_PATH = (doctorId: number) => `/doctors/${doctorId}`;
-export const PATIENT_QUESTIONNAIRE_PATH = (reservationId: number) =>
-  `/patient/reservations/${reservationId}/questionnaire`;
 
+// Role Home
 export const ROLE_HOME_PATH: Record<UserRole, string> = {
   PATIENT: "/patient",
   DOCTOR: "/doctor",

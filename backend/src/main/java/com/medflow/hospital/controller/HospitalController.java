@@ -4,6 +4,7 @@ import com.medflow.common.response.ApiResponse;
 import com.medflow.doctor.dto.response.DoctorResponse;
 import com.medflow.hospital.dto.response.HospitalDetailResponse;
 import com.medflow.hospital.dto.response.HospitalPageResponse;
+import com.medflow.hospital.dto.response.HospitalSummaryResponse;
 import com.medflow.hospital.service.HospitalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,11 +24,11 @@ public class HospitalController {
     private final HospitalService hospitalService;
 
     // 병원 목록 조회
-    @Operation(summary = "병원 목록 및 검색", description = "병원명, 지역, 주소를 하나의 검색어로 검색합니다.", security = {})
+    @Operation(summary = "병원 목록 및 검색", description = "병원명, 주소를 하나의 검색어로 검색합니다.", security = {})
     @GetMapping
     public ApiResponse<HospitalPageResponse> getHospitals(
             @RequestParam(required = false) String keyword,
-            @PageableDefault(size = 20) Pageable pageable
+            @PageableDefault(size = 15) Pageable pageable
     ) {
         return ApiResponse.success(
                 hospitalService.getAvailableHospitals(keyword, pageable)
@@ -54,5 +55,11 @@ public class HospitalController {
         return ApiResponse.success(
                 hospitalService.getAvailableDoctors(hospitalId)
         );
+    }
+
+    // 전체 병원 및 의료진 통계 조회
+    @GetMapping("/summary")
+    public ApiResponse<HospitalSummaryResponse> getHospitalSummary() {
+        return ApiResponse.success(hospitalService.getSummary());
     }
 }

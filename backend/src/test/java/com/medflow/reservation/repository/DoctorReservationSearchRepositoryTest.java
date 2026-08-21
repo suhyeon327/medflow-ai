@@ -4,7 +4,6 @@ import com.medflow.common.config.QuerydslConfig;
 import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorSchedule;
 import com.medflow.hospital.entity.Hospital;
-import com.medflow.hospital.entity.HospitalStatus;
 import com.medflow.patient.entity.Gender;
 import com.medflow.patient.entity.Patient;
 import com.medflow.reservation.entity.Reservation;
@@ -146,7 +145,7 @@ class DoctorReservationSearchRepositoryTest {
 
     private Hospital persistHospital() {
         Hospital hospital = Hospital.create(
-                "테스트 병원", "서울시 강남구", "서울", "02-1234-5678", HospitalStatus.ACTIVE
+                "테스트 병원", "서울시 강남구", "서울", "02-1234-5678"
         );
         entityManager.persist(hospital);
         return hospital;
