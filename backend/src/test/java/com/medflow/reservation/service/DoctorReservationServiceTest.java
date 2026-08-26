@@ -32,9 +32,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,7 +49,6 @@ class DoctorReservationServiceTest {
     @Mock DoctorReservationSearchRepository searchRepository;
     @Mock QuestionnaireRepository questionnaireRepository;
     @Mock QuestionnaireAnalysisRepository questionnaireAnalysisRepository;
-    @Mock Clock clock;
     @InjectMocks DoctorReservationService service;
 
     @Test
@@ -134,24 +130,11 @@ class DoctorReservationServiceTest {
 
     @Test
     void updateReservationStatus_completesApprovedReservation() {
-        Reservation reservation = ownedReservation(1L, 10L, 100L);
-        setCurrentTime("2026-08-06T01:00:00Z");
+        ownedReservation(1L, 10L, 100L);
 
         ReservationStatusResponse response = service.updateReservationStatus(1L, 100L, ReservationStatus.COMPLETED);
 
         assertThat(response.status()).isEqualTo(ReservationStatus.COMPLETED);
-    }
-
-    @Test
-    void updateReservationStatus_rejectsCompletionBeforeEndTime() {
-        Reservation reservation = ownedReservation(1L, 10L, 100L);
-        setCurrentTime("2026-08-05T23:30:00Z");
-
-        assertThatThrownBy(() -> service.updateReservationStatus(1L, 100L, ReservationStatus.COMPLETED))
-                .isInstanceOf(BusinessException.class)
-                .extracting("errorCode")
-                .isEqualTo(ErrorCode.RESERVATION_NOT_ENDED);
-        assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.APPROVED);
     }
 
     @ParameterizedTest
@@ -171,7 +154,7 @@ class DoctorReservationServiceTest {
         when(doctorRepository.findByUserId(1L)).thenReturn(Optional.of(doctor));
         when(reservationRepository.findDoctorReservationForUpdate(100L, 10L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.updateReservationStatus(1L, 100L, ReservationStatus.APPROVED))
+        assertThatThrownBy(() -> service.updateReservationStatus(1L, 100L, ReservationStatus.COMPLETED))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.RESERVATION_NOT_FOUND);
@@ -195,19 +178,11 @@ class DoctorReservationServiceTest {
         verify(reservationRepository).findByIdAndDoctorScheduleDoctorId(100L, 10L);
     }
 
-    @Test
-    void updateReservationStatus_rejectsDuplicateCompletionAfterSchedulerCompletion() {
+    @ParameterizedTest
+    @EnumSource(value = ReservationStatus.class, names = {"CANCELLED", "COMPLETED"})
+    void updateReservationStatus_rejectsCompletionOfNonApprovedReservation(ReservationStatus status) {
         Reservation reservation = ownedReservation(1L, 10L, 100L);
-        Clock fixedClock = Clock.fixed(Instant.parse("2026-08-06T01:00:00Z"), ZoneId.of("Asia/Seoul"));
-        when(reservationRepository.findCompletionTargets(
-                ReservationStatus.APPROVED,
-                LocalDate.of(2026, 8, 6),
-                LocalTime.of(10, 0),
-                PageRequest.of(0, 100)
-        )).thenReturn(List.of(reservation));
-
-        new ReservationCompletionService(reservationRepository, fixedClock).completeEndedReservations();
-        setCurrentTime("2026-08-06T01:00:00Z");
+        ReflectionTestUtils.setField(reservation, "status", status);
 
         assertThatThrownBy(() -> service.updateReservationStatus(1L, 100L, ReservationStatus.COMPLETED))
                 .isInstanceOf(BusinessException.class)
@@ -236,11 +211,6 @@ class DoctorReservationServiceTest {
         Reservation reservation = Reservation.create(patient, schedule);
         ReflectionTestUtils.setField(reservation, "id", id);
         return reservation;
-    }
-
-    private void setCurrentTime(String instant) {
-        when(clock.instant()).thenReturn(Instant.parse(instant));
-        when(clock.getZone()).thenReturn(ZoneId.of("Asia/Seoul"));
     }
 
     private Questionnaire questionnaire(Long id, Reservation reservation) {

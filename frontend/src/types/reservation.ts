@@ -98,10 +98,7 @@ export interface ReservationStatusResponse {
   status: ReservationStatus;
 }
 
-export type DoctorReservationStatusUpdate =
-  | "APPROVED"
-  | "REJECTED"
-  | "COMPLETED";
+export type DoctorReservationStatusUpdate = "COMPLETED";
 
 export interface AdminReservation extends DoctorReservation {
   hospitalId: number;

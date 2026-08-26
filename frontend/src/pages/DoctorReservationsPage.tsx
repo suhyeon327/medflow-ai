@@ -6,7 +6,10 @@ import {
   useCreateDoctorSchedulesMutation,
   useOwnDoctorSchedulesQuery,
 } from "../features/doctors/doctorQueries";
-import { useDoctorReservationsQuery } from "../features/reservations/reservationQueries";
+import {
+  useDoctorReservationsQuery,
+  useUpdateDoctorReservationStatusMutation,
+} from "../features/reservations/reservationQueries";
 import { DOCTOR_RESERVATION_DETAIL_PATH } from "../routes/routePaths";
 import type { ReservationStatus } from "../types/reservation";
 
@@ -38,6 +41,7 @@ export function DoctorReservationsPage() {
   });
   const schedulesQuery = useOwnDoctorSchedulesQuery(date);
   const createMutation = useCreateDoctorSchedulesMutation();
+  const completionMutation = useUpdateDoctorReservationStatusMutation();
   const reservations =
     reservationsQuery.data?.content.filter(
       (item) =>
@@ -226,6 +230,11 @@ export function DoctorReservationsPage() {
             onRetry={() => schedulesQuery.refetch()}
           />
         )}
+        {completionMutation.isError && (
+          <p className="mb-4 text-sm text-red-700">
+            {getApiErrorMessage(completionMutation.error)}
+          </p>
+        )}
         {reservationsQuery.isSuccess &&
           schedulesQuery.isSuccess &&
           scheduleRows.length === 0 && (
@@ -241,7 +250,7 @@ export function DoctorReservationsPage() {
                   <th className="px-5 py-4">시간</th>
                   <th className="px-5 py-4">상태</th>
                   <th className="px-5 py-4">환자</th>
-                  <th className="px-5 py-4">상세</th>
+                  <th className="px-5 py-4">관리</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -265,15 +274,36 @@ export function DoctorReservationsPage() {
                     </td>
                     <td className="px-5 py-4">
                       {reservation ? (
-                        <Link
-                          to={DOCTOR_RESERVATION_DETAIL_PATH(
-                            reservation.reservationId,
-                            reservation.questionnaireId,
+                        <div className="flex flex-wrap justify-center gap-2">
+                          <Link
+                            to={DOCTOR_RESERVATION_DETAIL_PATH(
+                              reservation.reservationId,
+                              reservation.questionnaireId,
+                            )}
+                            className="rounded-lg border border-blue-200 px-3 py-2 font-semibold text-blue-700 hover:bg-blue-50"
+                          >
+                            상세 보기
+                          </Link>
+                          {reservation.reservationStatus === "APPROVED" && (
+                            <button
+                              type="button"
+                              disabled={completionMutation.isPending}
+                              onClick={() =>
+                                completionMutation.mutate({
+                                  reservationId: reservation.reservationId,
+                                  status: "COMPLETED",
+                                })
+                              }
+                              className="rounded-lg bg-emerald-600 px-3 py-2 font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                            >
+                              {completionMutation.isPending &&
+                              completionMutation.variables?.reservationId ===
+                                reservation.reservationId
+                                ? "처리 중..."
+                                : "진료 완료"}
+                            </button>
                           )}
-                          className="rounded-lg border border-blue-200 px-3 py-2 font-semibold text-blue-700 hover:bg-blue-50"
-                        >
-                          상세 보기
-                        </Link>
+                        </div>
                       ) : (
                         "-"
                       )}

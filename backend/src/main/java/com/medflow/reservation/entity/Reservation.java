@@ -10,8 +10,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "reservations")
 @Getter
@@ -69,19 +67,10 @@ public class  Reservation extends BaseEntity {
     }
 
     // 진료 완료
-    public void complete(LocalDateTime now) {
+    public void complete() {
 
         if (this.status != ReservationStatus.APPROVED) {
             throw new BusinessException(ErrorCode.INVALID_STATUS_CHANGE);
-        }
-
-        LocalDateTime reservationEndAt = LocalDateTime.of(
-                doctorSchedule.getDate(),
-                doctorSchedule.getEndTime()
-        );
-
-        if (reservationEndAt.isAfter(now)) {
-            throw new BusinessException(ErrorCode.RESERVATION_NOT_ENDED);
         }
 
         this.status = ReservationStatus.COMPLETED;

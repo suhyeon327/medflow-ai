@@ -22,8 +22,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
-import java.time.Clock;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -38,7 +36,6 @@ public class DoctorReservationService {
     private final DoctorReservationSearchRepository doctorReservationSearchRepository;
     private final QuestionnaireRepository questionnaireRepository;
     private final QuestionnaireAnalysisRepository questionnaireAnalysisRepository;
-    private final Clock clock;
 
     // 의사 예약 검색 및 필터링
     @Transactional(readOnly = true)
@@ -100,7 +97,7 @@ public class DoctorReservationService {
             throw new BusinessException(ErrorCode.INVALID_STATUS_CHANGE);
         }
 
-        reservation.complete(LocalDateTime.now(clock));
+        reservation.complete();
 
         return ReservationStatusResponse.from(reservation);
     }

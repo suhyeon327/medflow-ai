@@ -1,0 +1,34 @@
+spring:
+  main:
+    web-application-type: none
+  datasource:
+    url: "${BASELINE_DB_URL:jdbc:mysql://localhost:3306/medflow?rewriteBatchedStatements=true}"
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 500
+
+ai:
+  provider: fake
+
+jwt:
+  secret: ${JWT_SECRET:baseline-only-secret-key-that-is-at-least-32-bytes}
+
+admin:
+  bootstrap-enabled: false
+
+baseline:
+  generator:
+    enabled: ${BASELINE_GENERATOR_ENABLED:false}
+  doctor-reservations:
+    enabled: ${BASELINE_DOCTOR_RESERVATIONS_ENABLED:false}
+
+logging:
+  level:
+    org.hibernate.SQL: warn
