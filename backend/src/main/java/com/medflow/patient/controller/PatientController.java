@@ -1,6 +1,6 @@
 package com.medflow.patient.controller;
 
-import com.medflow.auth.security.CustomUserDetails;
+import com.medflow.security.principal.UserPrincipal;
 import com.medflow.common.response.ApiResponse;
 import com.medflow.patient.dto.PatientRequest;
 import com.medflow.patient.dto.PatientResponse;
@@ -21,11 +21,11 @@ public class PatientController {
     // 환자 프로필 조회
     @GetMapping("/profile")
     public ApiResponse<PatientResponse> getPatientProfile(
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
         return ApiResponse.success(
                 patientService.getPatientProfile(
-                        userDetails.getUserId()
+                        userPrincipal.getUserId()
                 )
         );
     }
@@ -33,12 +33,12 @@ public class PatientController {
     // 환자 정보 수정
     @PutMapping("/profile")
     public ApiResponse<PatientResponse> updatePatientProfile(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestBody PatientRequest request
     ) {
         return ApiResponse.success(
                 patientService.updatePatientProfile(
-                        userDetails.getUserId(),
+                        userPrincipal.getUserId(),
                         request
                 )
         );

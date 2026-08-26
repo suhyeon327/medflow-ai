@@ -1,6 +1,6 @@
 package com.medflow.reservation.controller;
 
-import com.medflow.auth.security.CustomUserDetails;
+import com.medflow.security.principal.UserPrincipal;
 import com.medflow.common.response.ApiResponse;
 import com.medflow.reservation.dto.request.ReservationCreateRequest;
 import com.medflow.reservation.dto.response.PatientReservationResponse;
@@ -34,12 +34,12 @@ public class ReservationController {
     // 예약 생성
     @PostMapping("/")
     public ApiResponse<ReservationCreateResponse> createReservation(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Valid @RequestBody ReservationCreateRequest request
     ) {
         return ApiResponse.success(
                 reservationService.createReservation(
-                        userDetails.getUserId(),
+                        userPrincipal.getUserId(),
                         request
                 )
         );
@@ -48,7 +48,7 @@ public class ReservationController {
     // 환자 예약 내역 조회
     @GetMapping("/patient")
     public ApiResponse<PatientReservationPageResponse> getPatientReservations(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestParam(required = false) ReservationStatus status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(required = false) Long hospitalId,
@@ -57,19 +57,19 @@ public class ReservationController {
             @PageableDefault(size = 10) Pageable pageable
     ) {
         return ApiResponse.success(
-                reservationService.getPatientReservations(userDetails.getUserId(), status, date, hospitalId, doctorId, period, pageable)
+                reservationService.getPatientReservations(userPrincipal.getUserId(), status, date, hospitalId, doctorId, period, pageable)
         );
     }
 
     // 환자 예약 취소
     @PatchMapping("/{reservationId}/cancel")
     public ApiResponse<ReservationCancelResponse> cancelReservation(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable Long reservationId
     ) {
         return ApiResponse.success(
                 reservationService.cancelReservation(
-                        userDetails.getUserId(),
+                        userPrincipal.getUserId(),
                         reservationId
                 )
         );

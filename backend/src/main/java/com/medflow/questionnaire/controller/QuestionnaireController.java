@@ -1,6 +1,6 @@
 package com.medflow.questionnaire.controller;
 
-import com.medflow.auth.security.CustomUserDetails;
+import com.medflow.security.principal.UserPrincipal;
 import com.medflow.common.response.ApiResponse;
 import com.medflow.questionnaire.dto.request.QuestionnaireCreateRequest;
 import com.medflow.questionnaire.dto.request.QuestionnaireUpdateRequest;
@@ -28,45 +28,45 @@ public class QuestionnaireController {
     // 예약 기반 문진 작성
     @PostMapping
     public ApiResponse<QuestionnaireResponse> createQuestionnaire(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Valid @RequestBody QuestionnaireCreateRequest request
     ) {
         return ApiResponse.success(
-                questionnaireService.createQuestionnaire(userDetails.getUserId(), request)
+                questionnaireService.createQuestionnaire(userPrincipal.getUserId(), request)
         );
     }
 
     // 예약 문진 조회
     @GetMapping("/{reservationId}/questionnaire")
     public ApiResponse<QuestionnaireDetailResponse> getQuestionnaire(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable Long reservationId
     ) {
         return ApiResponse.success(
-                questionnaireService.getQuestionnaire(userDetails.getUserId(), reservationId)
+                questionnaireService.getQuestionnaire(userPrincipal.getUserId(), reservationId)
         );
     }
 
     // 예약 문진 수정
     @PutMapping("/{questionnaireId}")
     public ApiResponse<QuestionnaireUpdateResponse> updateQuestionnaire(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable Long questionnaireId,
             @Valid @RequestBody QuestionnaireUpdateRequest request
     ) {
         return ApiResponse.success(
-                questionnaireService.updateQuestionnaire(userDetails.getUserId(), questionnaireId, request)
+                questionnaireService.updateQuestionnaire(userPrincipal.getUserId(), questionnaireId, request)
         );
     }
 
     // AI 문진 분석 결과 조회
     @GetMapping("/{questionnaireId}/analysis")
     public ApiResponse<QuestionnaireAnalysisDetailResponse> getQuestionnaireAnalysis(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable Long questionnaireId
     ) {
         return ApiResponse.success(
-                questionnaireAnalysisService.getAnalysis(userDetails.getUserId(), questionnaireId)
+                questionnaireAnalysisService.getAnalysis(userPrincipal.getUserId(), questionnaireId)
         );
     }
 }

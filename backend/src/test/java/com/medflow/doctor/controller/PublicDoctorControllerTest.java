@@ -1,8 +1,9 @@
 package com.medflow.doctor.controller;
 
-import com.medflow.auth.jwt.JwtProvider;
-import com.medflow.common.config.SecurityConfig;
-import com.medflow.common.security.CustomAuthenticationEntryPoint;
+import com.medflow.security.config.SecurityConfig;
+import com.medflow.security.handler.CustomAuthenticationEntryPoint;
+import com.medflow.security.jwt.JwtTokenParser;
+import com.medflow.security.principal.UserPrincipalService;
 import com.medflow.doctor.dto.response.AvailableDoctorScheduleResponse;
 import com.medflow.doctor.dto.response.DoctorDetailResponse;
 import com.medflow.doctor.service.PublicDoctorService;
@@ -33,7 +34,10 @@ class PublicDoctorControllerTest {
     private PublicDoctorService publicDoctorService;
 
     @MockitoBean
-    private JwtProvider jwtProvider;
+    private JwtTokenParser jwtTokenParser;
+
+    @MockitoBean
+    private UserPrincipalService userPrincipalService;
 
     @MockitoBean
     private CustomAuthenticationEntryPoint authenticationEntryPoint;

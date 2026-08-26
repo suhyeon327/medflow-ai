@@ -1,6 +1,6 @@
 package com.medflow.questionnaire.controller;
 
-import com.medflow.auth.security.CustomUserDetails;
+import com.medflow.security.principal.UserPrincipal;
 import com.medflow.common.response.ApiResponse;
 import com.medflow.questionnaire.dto.response.DoctorQuestionnaireAnalysisResponse;
 import com.medflow.questionnaire.service.DoctorQuestionnairesService;
@@ -23,12 +23,12 @@ public class DoctorQuestionnairesController {
     // 의사 담당 문진의 AI 분석 결과 조회
     @GetMapping("/{questionnaireId}/analysis")
     public ApiResponse<DoctorQuestionnaireAnalysisResponse> getQuestionnaireAnalysis(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable Long questionnaireId
     ) {
         return ApiResponse.success(
                 doctorQuestionnairesService.getQuestionnaireAnalysis(
-                        userDetails.getUserId(),
+                        userPrincipal.getUserId(),
                         questionnaireId
                 )
         );

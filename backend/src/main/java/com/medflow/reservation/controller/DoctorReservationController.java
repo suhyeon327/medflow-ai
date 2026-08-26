@@ -1,6 +1,6 @@
 package com.medflow.reservation.controller;
 
-import com.medflow.auth.security.CustomUserDetails;
+import com.medflow.security.principal.UserPrincipal;
 import com.medflow.common.response.ApiResponse;
 import com.medflow.reservation.dto.request.ReservationStatusUpdateRequest;
 import com.medflow.reservation.dto.response.DoctorReservationPageResponse;
@@ -31,37 +31,37 @@ public class DoctorReservationController {
     @Operation(summary = "의사 예약 목록 조회", description = "예약 날짜와 상태를 선택적으로 조합하여 조회합니다.")
     @GetMapping
     public ApiResponse<DoctorReservationPageResponse> getDoctorReservations(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(required = false) ReservationStatus status,
             @PageableDefault(size = 10) Pageable pageable
     ) {
         return ApiResponse.success(
-                doctorReservationService.getDoctorReservations(userDetails.getUserId(), date, status, pageable)
+                doctorReservationService.getDoctorReservations(userPrincipal.getUserId(), date, status, pageable)
         );
     }
 
     @Operation(summary = "예약 환자 정보 조회")
     @GetMapping("/{reservationId}/patient")
     public ApiResponse<DoctorReservationPatientResponse> getReservationPatient(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable Long reservationId
     ) {
         return ApiResponse.success(
-                doctorReservationService.getReservationPatient(userDetails.getUserId(), reservationId)
+                doctorReservationService.getReservationPatient(userPrincipal.getUserId(), reservationId)
         );
     }
 
-    @Operation(summary = "예약 진료 완료", description = "종료 시간이 지난 예약을 COMPLETED 상태로 변경합니다.")
+    @Operation(summary = "예약 진료 완료", description = "담당 의사가 APPROVED 예약을 COMPLETED 상태로 변경합니다.")
     @PatchMapping("/{reservationId}/status")
     public ApiResponse<ReservationStatusResponse> updateReservationStatus(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @PathVariable Long reservationId,
             @Valid @RequestBody ReservationStatusUpdateRequest request
     ) {
         return ApiResponse.success(
                 doctorReservationService.updateReservationStatus(
-                        userDetails.getUserId(), reservationId, request.status()
+                        userPrincipal.getUserId(), reservationId, request.status()
                 )
         );
     }

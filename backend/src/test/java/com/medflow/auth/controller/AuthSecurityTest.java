@@ -1,12 +1,15 @@
 package com.medflow.auth.controller;
 
-import com.medflow.auth.jwt.JwtProvider;
-import com.medflow.auth.security.CustomUserDetails;
 import com.medflow.auth.service.AuthService;
-import com.medflow.common.config.SecurityConfig;
 import com.medflow.common.exception.GlobalExceptionHandler;
 import com.medflow.common.exception.AuthForbiddenException;
-import com.medflow.common.security.CustomAuthenticationEntryPoint;
+import com.medflow.security.config.SecurityConfig;
+import com.medflow.security.handler.CustomAuthenticationEntryPoint;
+import com.medflow.security.jwt.JwtTokenParser;
+import com.medflow.security.principal.UserPrincipal;
+import com.medflow.security.principal.UserPrincipalService;
+import com.medflow.user.controller.UserAccountController;
+import com.medflow.user.service.UserAccountService;
 import com.medflow.user.entity.User;
 import com.medflow.user.entity.UserRole;
 import org.junit.jupiter.api.Test;
@@ -35,9 +38,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest({AuthController.class, AuthSecurityTest.RoleProtectedController.class})
+@WebMvcTest({AuthController.class, UserAccountController.class, AuthSecurityTest.RoleProtectedController.class})
 @ContextConfiguration(classes = {
         AuthController.class,
+        UserAccountController.class,
         AuthSecurityTest.RoleProtectedController.class,
         SecurityConfig.class,
         GlobalExceptionHandler.class,
@@ -49,10 +53,16 @@ class AuthSecurityTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private AuthService authService;
+    private AuthService authenticationService;
 
     @MockitoBean
-    private JwtProvider jwtProvider;
+    private UserAccountService userAccountService;
+
+    @MockitoBean
+    private JwtTokenParser jwtTokenParser;
+
+    @MockitoBean
+    private UserPrincipalService userPrincipalService;
 
     @Test
     void protectedApiRejectsUnauthenticatedUser() throws Exception {
@@ -73,14 +83,14 @@ class AuthSecurityTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
 
-        verify(authService).logout(org.mockito.ArgumentMatchers.eq(1L), org.mockito.ArgumentMatchers.argThat(
+        verify(authenticationService).logout(org.mockito.ArgumentMatchers.eq(1L), org.mockito.ArgumentMatchers.argThat(
                 request -> request.refreshToken().equals("refresh-token")
         ));
     }
 
     @Test
     void logoutWithAnotherUsersRefreshTokenReturnsForbidden() throws Exception {
-        doThrow(new AuthForbiddenException()).when(authService).logout(
+        doThrow(new AuthForbiddenException()).when(authenticationService).logout(
                 org.mockito.ArgumentMatchers.eq(1L),
                 org.mockito.ArgumentMatchers.any()
         );
@@ -128,10 +138,10 @@ class AuthSecurityTest {
         );
     }
 
-    private CustomUserDetails userDetails(Long userId, UserRole role) {
+    private UserPrincipal userDetails(Long userId, UserRole role) {
         User user = User.create(role.name().toLowerCase() + userId + "@test.com", "password", role);
         ReflectionTestUtils.setField(user, "id", userId);
-        return new CustomUserDetails(user);
+        return UserPrincipal.from(user);
     }
 
     @RestController

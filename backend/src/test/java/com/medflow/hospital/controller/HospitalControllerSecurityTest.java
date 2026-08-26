@@ -1,12 +1,13 @@
 package com.medflow.hospital.controller;
 
-import com.medflow.auth.jwt.JwtProvider;
-import com.medflow.auth.security.CustomUserDetails;
-import com.medflow.common.config.SecurityConfig;
+import com.medflow.security.config.SecurityConfig;
+import com.medflow.security.jwt.JwtTokenParser;
+import com.medflow.security.principal.UserPrincipal;
+import com.medflow.security.principal.UserPrincipalService;
 import com.medflow.common.exception.BusinessException;
 import com.medflow.common.exception.ErrorCode;
 import com.medflow.common.exception.GlobalExceptionHandler;
-import com.medflow.common.security.CustomAuthenticationEntryPoint;
+import com.medflow.security.handler.CustomAuthenticationEntryPoint;
 import com.medflow.hospital.dto.response.HospitalPageResponse;
 import com.medflow.hospital.dto.response.HospitalSummaryResponse;
 import com.medflow.hospital.service.AdminHospitalService;
@@ -51,7 +52,8 @@ class HospitalControllerSecurityTest {
     @Autowired MockMvc mockMvc;
     @MockitoBean HospitalService hospitalService;
     @MockitoBean AdminHospitalService adminHospitalService;
-    @MockitoBean JwtProvider jwtProvider;
+    @MockitoBean JwtTokenParser jwtTokenParser;
+    @MockitoBean UserPrincipalService userPrincipalService;
 
     @Test
     void hospitalList_isPublicAndReturnsPaginationResponse() throws Exception {
@@ -215,9 +217,9 @@ class HospitalControllerSecurityTest {
                 .andExpect(jsonPath("$.error.code").value("HOSPITAL_001"));
     }
 
-    private CustomUserDetails userDetails(Long userId, UserRole role) {
+    private UserPrincipal userDetails(Long userId, UserRole role) {
         User user = User.create(role.name().toLowerCase() + userId + "@test.com", "password", role);
         ReflectionTestUtils.setField(user, "id", userId);
-        return new CustomUserDetails(user);
+        return UserPrincipal.from(user);
     }
 }

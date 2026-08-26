@@ -1,10 +1,11 @@
 package com.medflow.user.controller;
 
-import com.medflow.auth.jwt.JwtProvider;
-import com.medflow.auth.security.CustomUserDetails;
-import com.medflow.common.config.SecurityConfig;
+import com.medflow.security.config.SecurityConfig;
+import com.medflow.security.jwt.JwtTokenParser;
+import com.medflow.security.principal.UserPrincipal;
+import com.medflow.security.principal.UserPrincipalService;
 import com.medflow.common.exception.GlobalExceptionHandler;
-import com.medflow.common.security.CustomAuthenticationEntryPoint;
+import com.medflow.security.handler.CustomAuthenticationEntryPoint;
 import com.medflow.user.dto.AdminUserPageResponse;
 import com.medflow.user.dto.AdminUserResponse;
 import com.medflow.user.entity.User;
@@ -44,7 +45,8 @@ class AdminUserControllerTest {
 
     @Autowired MockMvc mockMvc;
     @MockitoBean UserService userService;
-    @MockitoBean JwtProvider jwtProvider;
+    @MockitoBean JwtTokenParser jwtTokenParser;
+    @MockitoBean UserPrincipalService userPrincipalService;
 
     @Test
     void 관리자는_사용자_단건을_조회할_수_있다() throws Exception {
@@ -131,9 +133,9 @@ class AdminUserControllerTest {
         );
     }
 
-    private CustomUserDetails userDetails(Long userId, UserRole role) {
+    private UserPrincipal userDetails(Long userId, UserRole role) {
         User user = User.create(role.name().toLowerCase() + userId + "@test.com", "password", role);
         ReflectionTestUtils.setField(user, "id", userId);
-        return new CustomUserDetails(user);
+        return UserPrincipal.from(user);
     }
 }

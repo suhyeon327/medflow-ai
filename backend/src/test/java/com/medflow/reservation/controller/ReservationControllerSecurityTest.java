@@ -1,10 +1,11 @@
 package com.medflow.reservation.controller;
 
-import com.medflow.auth.jwt.JwtProvider;
-import com.medflow.auth.security.CustomUserDetails;
-import com.medflow.common.config.SecurityConfig;
+import com.medflow.security.config.SecurityConfig;
+import com.medflow.security.jwt.JwtTokenParser;
+import com.medflow.security.principal.UserPrincipal;
+import com.medflow.security.principal.UserPrincipalService;
 import com.medflow.common.exception.GlobalExceptionHandler;
-import com.medflow.common.security.CustomAuthenticationEntryPoint;
+import com.medflow.security.handler.CustomAuthenticationEntryPoint;
 import com.medflow.reservation.dto.response.AdminReservationPageResponse;
 import com.medflow.reservation.dto.response.DoctorReservationPageResponse;
 import com.medflow.reservation.dto.response.PatientReservationPageResponse;
@@ -67,7 +68,10 @@ class ReservationControllerSecurityTest {
     private AdminReservationService adminReservationService;
 
     @MockitoBean
-    private JwtProvider jwtProvider;
+    private JwtTokenParser jwtTokenParser;
+
+    @MockitoBean
+    private UserPrincipalService userPrincipalService;
 
     @Test
     void patientCanCreateReservation() throws Exception {
@@ -204,9 +208,9 @@ class ReservationControllerSecurityTest {
         );
     }
 
-    private CustomUserDetails userDetails(Long userId, UserRole role) {
+    private UserPrincipal userDetails(Long userId, UserRole role) {
         User user = User.create(role.name().toLowerCase() + userId + "@test.com", "password", role);
         ReflectionTestUtils.setField(user, "id", userId);
-        return new CustomUserDetails(user);
+        return UserPrincipal.from(user);
     }
 }

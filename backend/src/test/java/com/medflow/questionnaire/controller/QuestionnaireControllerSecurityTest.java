@@ -1,10 +1,11 @@
 package com.medflow.questionnaire.controller;
 
-import com.medflow.auth.jwt.JwtProvider;
-import com.medflow.auth.security.CustomUserDetails;
-import com.medflow.common.config.SecurityConfig;
+import com.medflow.security.config.SecurityConfig;
+import com.medflow.security.jwt.JwtTokenParser;
+import com.medflow.security.principal.UserPrincipal;
+import com.medflow.security.principal.UserPrincipalService;
 import com.medflow.common.exception.GlobalExceptionHandler;
-import com.medflow.common.security.CustomAuthenticationEntryPoint;
+import com.medflow.security.handler.CustomAuthenticationEntryPoint;
 import com.medflow.questionnaire.dto.response.DoctorQuestionnaireAnalysisResponse;
 import com.medflow.questionnaire.dto.response.QuestionnaireAnalysisDetailResponse;
 import com.medflow.questionnaire.entity.PriorityLevel;
@@ -58,7 +59,10 @@ class QuestionnaireControllerSecurityTest {
     private DoctorQuestionnairesService doctorQuestionnairesService;
 
     @MockitoBean
-    private JwtProvider jwtProvider;
+    private JwtTokenParser jwtTokenParser;
+
+    @MockitoBean
+    private UserPrincipalService userPrincipalService;
 
     @Test
     void patientCanAccessOwnQuestionnaireAnalysisApi() throws Exception {
@@ -127,9 +131,9 @@ class QuestionnaireControllerSecurityTest {
         );
     }
 
-    private CustomUserDetails userDetails(Long userId, UserRole role) {
+    private UserPrincipal userDetails(Long userId, UserRole role) {
         User user = User.create(role.name().toLowerCase() + userId + "@test.com", "password", role);
         ReflectionTestUtils.setField(user, "id", userId);
-        return new CustomUserDetails(user);
+        return UserPrincipal.from(user);
     }
 }

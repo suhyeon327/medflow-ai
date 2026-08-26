@@ -1,6 +1,6 @@
 package com.medflow.doctor.controller;
 
-import com.medflow.auth.security.CustomUserDetails;
+import com.medflow.security.principal.UserPrincipal;
 import com.medflow.common.response.ApiResponse;
 import com.medflow.doctor.dto.request.DoctorScheduleCreateRequest;
 import com.medflow.doctor.dto.request.DoctorUpdateRequest;
@@ -33,39 +33,39 @@ public class DoctorController {
 
     @GetMapping("/profile")
     public ApiResponse<DoctorProfileResponse> getDoctorProfile(
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
-        return ApiResponse.success(doctorService.getDoctorProfile(userDetails.getUserId()));
+        return ApiResponse.success(doctorService.getDoctorProfile(userPrincipal.getUserId()));
     }
 
     @PutMapping("/profile")
     public ApiResponse<DoctorProfileResponse> updateDoctorProfile(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Valid @RequestBody DoctorUpdateRequest request
     ) {
         return ApiResponse.success(
-                doctorService.updateDoctorProfile(userDetails.getUserId(), request)
+                doctorService.updateDoctorProfile(userPrincipal.getUserId(), request)
         );
     }
 
     @PostMapping("/schedules")
     public ApiResponse<List<DoctorScheduleResponse>> createDoctorSchedules(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Valid @RequestBody DoctorScheduleCreateRequest request
     ) {
         return ApiResponse.success(
-                doctorService.createDoctorSchedules(userDetails.getUserId(), request)
+                doctorService.createDoctorSchedules(userPrincipal.getUserId(), request)
         );
     }
 
     @GetMapping("/schedules")
     public ApiResponse<List<DoctorScheduleResponse>> getDoctorSchedules(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
         return ApiResponse.success(
-                doctorService.getDoctorSchedules(userDetails.getUserId(), date)
+                doctorService.getDoctorSchedules(userPrincipal.getUserId(), date)
         );
     }
 }
