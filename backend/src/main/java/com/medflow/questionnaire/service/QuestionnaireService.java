@@ -72,19 +72,16 @@ public class QuestionnaireService {
         return QuestionnaireResponse.from(savedQuestionnaire);
     }
 
-    // 예약 문진 조회
+    // 문진 단건 조회
     @Transactional(readOnly = true)
-    public QuestionnaireDetailResponse getQuestionnaire(Long userId, Long reservationId) {
+    public QuestionnaireDetailResponse getQuestionnaire(Long userId, Long questionnaireId) {
         Patient patient = patientRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PATIENT_NOT_FOUND));
 
-        Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
-
-        validateReservationOwner(patient, reservation);
-
-        Questionnaire questionnaire = questionnaireRepository.findByReservationId(reservationId)
+        Questionnaire questionnaire = questionnaireRepository.findById(questionnaireId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.QUESTIONNAIRE_NOT_FOUND));
+
+        validateReservationOwner(patient, questionnaire.getReservation());
 
         return QuestionnaireDetailResponse.from(questionnaire);
     }

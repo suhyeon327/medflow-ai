@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { Link, useParams } from "react-router";
-import { ApiError, getApiErrorMessage } from "../api/apiError";
+import { Link, useNavigate, useParams } from "react-router";
+import { getApiErrorMessage } from "../api/apiError";
 import { QueryError } from "../components/QueryError";
 import { QuestionnaireAnalysisPanel } from "../components/QuestionnaireAnalysisPanel";
 import {
@@ -9,7 +9,10 @@ import {
   useQuestionnaireQuery,
   useUpdateQuestionnaireMutation,
 } from "../features/questionnaires/questionnaireQueries";
-import { PATIENT_RESERVATIONS_PATH } from "../routes/routePaths";
+import {
+  PATIENT_QUESTIONNAIRE_PATH,
+  PATIENT_RESERVATIONS_PATH,
+} from "../routes/routePaths";
 import type { QuestionnaireFormData } from "../types/questionnaire";
 
 const EMPTY_FORM: QuestionnaireFormData = {
@@ -28,15 +31,17 @@ const INPUT_CLASS =
   "mt-2 block w-full rounded-md border border-slate-300 px-3 py-2.5 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100";
 
 export function PatientQuestionnairePage() {
-  const reservationId = Number(useParams().reservationId);
-  const questionnaireQuery = useQuestionnaireQuery(reservationId);
+  const params = useParams();
+  const navigate = useNavigate();
+  const reservationId = Number(params.reservationId);
+  const questionnaireId = params.questionnaireId
+    ? Number(params.questionnaireId)
+    : null;
+  const questionnaireQuery = useQuestionnaireQuery(questionnaireId);
   const createMutation = useCreateQuestionnaireMutation();
-  const updateMutation = useUpdateQuestionnaireMutation(reservationId);
+  const updateMutation = useUpdateQuestionnaireMutation();
   const [form, setForm] = useState(EMPTY_FORM);
   const questionnaire = questionnaireQuery.data;
-  const notCreated =
-    questionnaireQuery.error instanceof ApiError &&
-    questionnaireQuery.error.status === 404;
   const analysisQuery = useQuestionnaireAnalysisQuery(
     questionnaire?.questionnaireId ?? null,
   );
@@ -65,7 +70,16 @@ export function PatientQuestionnairePage() {
           questionnaireId: questionnaire.questionnaireId,
           request: form,
         });
-      else await createMutation.mutateAsync({ ...form, reservationId });
+      else {
+        const created = await createMutation.mutateAsync({ ...form, reservationId });
+        navigate(
+          PATIENT_QUESTIONNAIRE_PATH(
+            created.reservationId,
+            created.questionnaireId,
+          ),
+          { replace: true },
+        );
+      }
     } catch {
       /* 오류 메시지는 mutation 상태로 표시합니다. */
     }
@@ -74,6 +88,11 @@ export function PatientQuestionnairePage() {
 
   if (!Number.isInteger(reservationId) || reservationId <= 0)
     return <QueryError error={new Error("올바르지 않은 예약 번호입니다.")} />;
+  if (
+    questionnaireId !== null &&
+    (!Number.isInteger(questionnaireId) || questionnaireId <= 0)
+  )
+    return <QueryError error={new Error("올바르지 않은 문진 번호입니다.")} />;
 
   return (
     <section>
@@ -84,12 +103,12 @@ export function PatientQuestionnairePage() {
         ← 내 예약
       </Link>
       <h1 className="mt-6 text-3xl font-bold">진료 전 문진 작성</h1>
-      {questionnaireQuery.isPending && (
+      {questionnaireId !== null && questionnaireQuery.isPending && (
         <p className="mt-8 text-sm text-slate-600">
           문진 정보를 확인하고 있습니다.
         </p>
       )}
-      {questionnaireQuery.isError && !notCreated && (
+      {questionnaireQuery.isError && (
         <div className="mt-8">
           <QueryError
             error={questionnaireQuery.error}
@@ -97,7 +116,7 @@ export function PatientQuestionnairePage() {
           />
         </div>
       )}
-      {(questionnaire || notCreated) && (
+      {(questionnaire || questionnaireId === null) && (
         <form
           onSubmit={submit}
           className="mt-8 space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"

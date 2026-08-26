@@ -35,6 +35,7 @@ export interface PatientReservation {
   startTime: string;
   endTime: string;
   reservationStatus: ReservationStatus;
+  questionnaireId: number | null;
 }
 
 export interface PatientReservationPage {

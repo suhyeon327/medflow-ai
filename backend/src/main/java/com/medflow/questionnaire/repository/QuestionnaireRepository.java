@@ -5,14 +5,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Optional;
 import java.util.List;
 
 public interface QuestionnaireRepository extends JpaRepository<Questionnaire, Long> {
 
     boolean existsByReservationId(Long reservationId);
-
-    Optional<Questionnaire> findByReservationId(Long reservationId);
 
     @Query("""
             select q

@@ -214,6 +214,7 @@ export function PatientReservationsPage() {
                             <Link
                               to={PATIENT_QUESTIONNAIRE_PATH(
                                 reservation.reservationId,
+                                reservation.questionnaireId,
                               )}
                               className="rounded-lg border border-blue-200 px-4 py-2.5 text-center text-sm font-bold text-blue-600 hover:bg-blue-50"
                             >

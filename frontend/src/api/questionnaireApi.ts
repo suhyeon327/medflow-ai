@@ -7,10 +7,10 @@ import type {
 import { apiClient } from "./apiClient";
 
 export function getQuestionnaire(
-  reservationId: number,
+  questionnaireId: number,
 ): Promise<QuestionnaireDetail> {
   return apiClient<QuestionnaireDetail>({
-    url: `/api/v1/questionnaires/${reservationId}/questionnaire`,
+    url: `/api/v1/questionnaires/${questionnaireId}`,
     method: "GET",
   });
 }

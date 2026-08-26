@@ -36,14 +36,14 @@ public class QuestionnaireController {
         );
     }
 
-    // 예약 문진 조회
-    @GetMapping("/{reservationId}/questionnaire")
+    // 문진 단건 조회
+    @GetMapping("/{questionnaireId}")
     public ApiResponse<QuestionnaireDetailResponse> getQuestionnaire(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @PathVariable Long reservationId
+            @PathVariable Long questionnaireId
     ) {
         return ApiResponse.success(
-                questionnaireService.getQuestionnaire(userPrincipal.getUserId(), reservationId)
+                questionnaireService.getQuestionnaire(userPrincipal.getUserId(), questionnaireId)
         );
     }
 

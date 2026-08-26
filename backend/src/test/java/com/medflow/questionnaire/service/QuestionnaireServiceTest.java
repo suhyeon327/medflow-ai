@@ -131,10 +131,10 @@ class QuestionnaireServiceTest {
         Patient patient = patient(1L);
         Reservation reservation = reservation(10L, patient, ReservationStatus.APPROVED);
         Questionnaire questionnaire = questionnaire(reservation);
-        mockFound(100L, patient, reservation);
-        when(questionnaireRepository.findByReservationId(10L)).thenReturn(Optional.of(questionnaire));
+        when(patientRepository.findByUserId(100L)).thenReturn(Optional.of(patient));
+        when(questionnaireRepository.findById(20L)).thenReturn(Optional.of(questionnaire));
 
-        QuestionnaireDetailResponse response = questionnaireService.getQuestionnaire(100L, 10L);
+        QuestionnaireDetailResponse response = questionnaireService.getQuestionnaire(100L, 20L);
 
         assertThat(response.questionnaireId()).isEqualTo(20L);
         assertThat(response.reservationId()).isEqualTo(10L);
@@ -157,33 +157,22 @@ class QuestionnaireServiceTest {
     void getQuestionnaire_fails_for_another_patients_reservation() {
         Patient loginPatient = patient(1L);
         Reservation reservation = reservation(10L, patient(2L), ReservationStatus.APPROVED);
-        mockFound(100L, loginPatient, reservation);
+        Questionnaire questionnaire = questionnaire(reservation);
+        when(patientRepository.findByUserId(100L)).thenReturn(Optional.of(loginPatient));
+        when(questionnaireRepository.findById(20L)).thenReturn(Optional.of(questionnaire));
 
         assertError(ErrorCode.QUESTIONNAIRE_RESERVATION_FORBIDDEN,
-                () -> questionnaireService.getQuestionnaire(100L, 10L));
-        verify(questionnaireRepository, never()).findByReservationId(any());
-    }
-
-    @Test
-    void getQuestionnaire_fails_when_reservation_not_found() {
-        Patient patient = mock(Patient.class);
-        when(patientRepository.findByUserId(100L)).thenReturn(Optional.of(patient));
-        when(reservationRepository.findById(10L)).thenReturn(Optional.empty());
-
-        assertError(ErrorCode.RESERVATION_NOT_FOUND,
-                () -> questionnaireService.getQuestionnaire(100L, 10L));
-        verify(questionnaireRepository, never()).findByReservationId(any());
+                () -> questionnaireService.getQuestionnaire(100L, 20L));
     }
 
     @Test
     void getQuestionnaire_fails_when_questionnaire_not_found() {
-        Patient patient = patient(1L);
-        Reservation reservation = reservation(10L, patient, ReservationStatus.APPROVED);
-        mockFound(100L, patient, reservation);
-        when(questionnaireRepository.findByReservationId(10L)).thenReturn(Optional.empty());
+        Patient patient = mock(Patient.class);
+        when(patientRepository.findByUserId(100L)).thenReturn(Optional.of(patient));
+        when(questionnaireRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertError(ErrorCode.QUESTIONNAIRE_NOT_FOUND,
-                () -> questionnaireService.getQuestionnaire(100L, 10L));
+                () -> questionnaireService.getQuestionnaire(100L, 999L));
     }
 
     @Test

@@ -78,7 +78,7 @@ export function AppRouter() {
               element={<PatientReservationsPage />}
             />
             <Route
-              path="/patient/reservations/:reservationId/questionnaire"
+              path="/patient/reservations/:reservationId/questionnaire/:questionnaireId?"
               element={<PatientQuestionnairePage />}
             />
             <Route

@@ -13,20 +13,23 @@ import type {
 
 export const questionnaireKeys = {
   all: ["questionnaires"] as const,
-  reservation: (reservationId: number) =>
-    ["questionnaires", "reservation", reservationId] as const,
+  detail: (questionnaireId: number) =>
+    ["questionnaires", questionnaireId] as const,
   analysis: (questionnaireId: number) =>
     ["questionnaires", questionnaireId, "analysis"] as const,
   doctorAnalysis: (questionnaireId: number) =>
     ["doctor", "questionnaires", questionnaireId, "analysis"] as const,
 };
 
-export function useQuestionnaireQuery(reservationId: number) {
+export function useQuestionnaireQuery(questionnaireId: number | null) {
   return useQuery({
-    queryKey: questionnaireKeys.reservation(reservationId),
-    queryFn: () => getQuestionnaire(reservationId),
+    queryKey: questionnaireKeys.detail(questionnaireId ?? 0),
+    queryFn: () => getQuestionnaire(questionnaireId as number),
     retry: false,
-    enabled: Number.isInteger(reservationId) && reservationId > 0,
+    enabled:
+      questionnaireId !== null &&
+      Number.isInteger(questionnaireId) &&
+      questionnaireId > 0,
   });
 }
 
@@ -59,13 +62,13 @@ export function useCreateQuestionnaireMutation() {
       createQuestionnaire(request),
     onSuccess: (data) =>
       queryClient.setQueryData(
-        questionnaireKeys.reservation(data.reservationId),
+        questionnaireKeys.detail(data.questionnaireId),
         data,
       ),
   });
 }
 
-export function useUpdateQuestionnaireMutation(reservationId: number) {
+export function useUpdateQuestionnaireMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -77,7 +80,7 @@ export function useUpdateQuestionnaireMutation(reservationId: number) {
     }) => updateQuestionnaire(questionnaireId, request),
     onSuccess: (data) =>
       queryClient.setQueryData(
-        questionnaireKeys.reservation(reservationId),
+        questionnaireKeys.detail(data.questionnaireId),
         data,
       ),
   });

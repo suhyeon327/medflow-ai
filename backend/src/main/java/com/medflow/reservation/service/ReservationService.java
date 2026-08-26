@@ -7,6 +7,8 @@ import com.medflow.doctor.entity.DoctorScheduleStatus;
 import com.medflow.doctor.repository.DoctorScheduleRepository;
 import com.medflow.patient.entity.Patient;
 import com.medflow.patient.repository.PatientRepository;
+import com.medflow.questionnaire.entity.Questionnaire;
+import com.medflow.questionnaire.repository.QuestionnaireRepository;
 import com.medflow.reservation.dto.request.ReservationCreateRequest;
 import com.medflow.reservation.dto.response.PatientReservationResponse;
 import com.medflow.reservation.dto.response.ReservationCancelResponse;
@@ -26,6 +28,8 @@ import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +40,7 @@ public class ReservationService {
     private final DoctorScheduleRepository doctorScheduleRepository;
     private final PatientRepository patientRepository;
     private final ReservationSearchRepository reservationSearchRepository;
+    private final QuestionnaireRepository questionnaireRepository;
     
     // 환자 예약 내역 조회
     @Transactional(readOnly = true)
@@ -44,11 +49,19 @@ public class ReservationService {
         Patient patient = patientRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PATIENT_NOT_FOUND));
 
-        Page<PatientReservationResponse> reservationPage = reservationSearchRepository
-                .search(patient.getId(), status, date, hospitalId, doctorId, period, pageable)
-                .map(PatientReservationResponse::from);
+        Page<Reservation> reservationPage = reservationSearchRepository
+                .search(patient.getId(), status, date, hospitalId, doctorId, period, pageable);
+        Map<Long, Long> questionnaireIdByReservationId = getQuestionnaireIdByReservationId(
+                reservationPage.getContent()
+        );
+        Page<PatientReservationResponse> responsePage = reservationPage.map(reservation ->
+                PatientReservationResponse.from(
+                        reservation,
+                        questionnaireIdByReservationId.get(reservation.getId())
+                )
+        );
 
-        return PatientReservationPageResponse.from(reservationPage);
+        return PatientReservationPageResponse.from(responsePage);
     }
 
     // 예약 생성
@@ -83,11 +96,31 @@ public class ReservationService {
         Patient patient = patientRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PATIENT_NOT_FOUND));
 
-        return reservationRepository
-                .findByPatientId(patient.getId())
-                .stream()
-                .map(PatientReservationResponse::from)
+        List<Reservation> reservations = reservationRepository.findByPatientId(patient.getId());
+        Map<Long, Long> questionnaireIdByReservationId = getQuestionnaireIdByReservationId(reservations);
+
+        return reservations.stream()
+                .map(reservation -> PatientReservationResponse.from(
+                        reservation,
+                        questionnaireIdByReservationId.get(reservation.getId())
+                ))
                 .toList();
+    }
+
+    private Map<Long, Long> getQuestionnaireIdByReservationId(List<Reservation> reservations) {
+        List<Long> reservationIds = reservations.stream()
+                .map(Reservation::getId)
+                .toList();
+
+        if (reservationIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return questionnaireRepository.findAllByReservationIdIn(reservationIds).stream()
+                .collect(Collectors.toMap(
+                        questionnaire -> questionnaire.getReservation().getId(),
+                        Questionnaire::getId
+                ));
     }
 
     // 환자 예약 취소

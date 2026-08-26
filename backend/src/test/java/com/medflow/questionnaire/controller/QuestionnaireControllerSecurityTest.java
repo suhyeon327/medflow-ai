@@ -4,6 +4,8 @@ import com.medflow.security.config.SecurityConfig;
 import com.medflow.security.jwt.JwtTokenParser;
 import com.medflow.security.principal.UserPrincipal;
 import com.medflow.security.principal.UserPrincipalService;
+import com.medflow.common.exception.BusinessException;
+import com.medflow.common.exception.ErrorCode;
 import com.medflow.common.exception.GlobalExceptionHandler;
 import com.medflow.security.handler.CustomAuthenticationEntryPoint;
 import com.medflow.questionnaire.dto.response.DoctorQuestionnaireAnalysisResponse;
@@ -65,6 +67,20 @@ class QuestionnaireControllerSecurityTest {
     private UserPrincipalService userPrincipalService;
 
     @Test
+    void patientQuestionnaireApiReturnsNotFoundForUnknownQuestionnaireId() throws Exception {
+        when(questionnaireService.getQuestionnaire(1L, 999L))
+                .thenThrow(new BusinessException(ErrorCode.QUESTIONNAIRE_NOT_FOUND));
+
+        mockMvc.perform(get("/api/v1/questionnaires/{questionnaireId}", 999L)
+                        .with(user(userDetails(1L, UserRole.PATIENT))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("QUESTIONNAIRE_005"));
+
+        verify(questionnaireService).getQuestionnaire(1L, 999L);
+    }
+
+    @Test
     void patientCanAccessOwnQuestionnaireAnalysisApi() throws Exception {
         when(questionnaireAnalysisService.getAnalysis(1L, 20L))
                 .thenReturn(new QuestionnaireAnalysisDetailResponse(
@@ -116,6 +132,8 @@ class QuestionnaireControllerSecurityTest {
 
     private static Stream<Arguments> forbiddenRoleRequests() {
         return Stream.of(
+                Arguments.of("/api/v1/questionnaires/20", UserRole.DOCTOR),
+                Arguments.of("/api/v1/questionnaires/20", UserRole.ADMIN),
                 Arguments.of("/api/v1/questionnaires/20/analysis", UserRole.DOCTOR),
                 Arguments.of("/api/v1/questionnaires/20/analysis", UserRole.ADMIN),
                 Arguments.of("/api/v1/doctors/questionnaires/20/analysis", UserRole.PATIENT),
@@ -125,7 +143,7 @@ class QuestionnaireControllerSecurityTest {
 
     private static Stream<String> questionnaireApiPaths() {
         return Stream.of(
-                "/api/v1/questionnaires/10/questionnaire",
+                "/api/v1/questionnaires/20",
                 "/api/v1/questionnaires/20/analysis",
                 "/api/v1/doctors/questionnaires/20/analysis"
         );

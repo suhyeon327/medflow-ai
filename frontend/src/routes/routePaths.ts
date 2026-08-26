@@ -14,8 +14,13 @@ export const HOSPITAL_DETAIL_PATH = (hospitalId: number) =>
 // Patient
 export const PATIENT_RESERVATIONS_PATH = "/patient/reservations";
 export const PATIENT_PROFILE_PATH = "/patient/profile";
-export const PATIENT_QUESTIONNAIRE_PATH = (reservationId: number) =>
-  `/patient/reservations/${reservationId}/questionnaire`;
+export const PATIENT_QUESTIONNAIRE_PATH = (
+  reservationId: number,
+  questionnaireId?: number | null,
+) =>
+  `/patient/reservations/${reservationId}/questionnaire${
+    questionnaireId ? `/${questionnaireId}` : ""
+  }`;
 
 // Doctor
 export const DOCTOR_PROFILE_PATH = "/doctor/profile";

@@ -145,7 +145,7 @@
 | --- | --- |
 | `ReservationCreateResponse` | `reservationId`, `status` |
 | `PatientReservationPageResponse` | `content`, `page`, `size`, `totalElements`, `totalPages` |
-| `PatientReservationResponse` | `reservationId`, `hospitalId`, `hospitalName`, `doctorId`, `doctorName`, `reservationDate`, `startTime`, `endTime`, `reservationStatus` |
+| `PatientReservationResponse` | `reservationId`, `hospitalId`, `hospitalName`, `doctorId`, `doctorName`, `reservationDate`, `startTime`, `endTime`, `reservationStatus`, `questionnaireId` |
 | `ReservationCancelResponse` | `reservationId`, `status` |
 
 POST 경로와 아래 관리자 병원 GET 경로는 Controller에 trailing slash가 명시되어 있다.
@@ -155,7 +155,7 @@ POST 경로와 아래 관리자 병원 GET 경로는 Controller에 trailing slas
 | Method | URL | 인증 / Role | Path Parameter | Query Parameter | Request DTO | Response DTO (`data`) | 주요 Error |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | POST | `/api/v1/questionnaires` | 필요 / `PATIENT` | 없음 | 없음 | `QuestionnaireCreateRequest` | `QuestionnaireResponse` | `PATIENT_001`, `RESERVATION_005`, `QUESTIONNAIRE_001`~`004` |
-| GET | `/api/v1/questionnaires/{reservationId}/questionnaire` | 필요 / `PATIENT` | `reservationId` | 없음 | 없음 | `QuestionnaireDetailResponse` | `PATIENT_001`, `RESERVATION_005`, `QUESTIONNAIRE_002`, `QUESTIONNAIRE_005` |
+| GET | `/api/v1/questionnaires/{questionnaireId}` | 필요 / `PATIENT` | `questionnaireId` | 없음 | 없음 | `QuestionnaireDetailResponse` | `PATIENT_001`, `QUESTIONNAIRE_002`, `QUESTIONNAIRE_005` |
 | PUT | `/api/v1/questionnaires/{questionnaireId}` | 필요 / `PATIENT` | `questionnaireId` | 없음 | `QuestionnaireUpdateRequest` | `QuestionnaireUpdateResponse` | `PATIENT_001`, `QUESTIONNAIRE_002`~`007` |
 | GET | `/api/v1/questionnaires/{questionnaireId}/analysis` | 필요 / `PATIENT` | `questionnaireId` | 없음 | 없음 | `QuestionnaireAnalysisDetailResponse` | `PATIENT_001`, `QUESTIONNAIRE_002`, `QUESTIONNAIRE_005`, `QUESTIONNAIRE_007` |
 

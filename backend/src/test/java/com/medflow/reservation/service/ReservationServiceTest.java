@@ -10,6 +10,8 @@ import com.medflow.hospital.entity.Hospital;
 import com.medflow.patient.entity.Gender;
 import com.medflow.patient.entity.Patient;
 import com.medflow.patient.repository.PatientRepository;
+import com.medflow.questionnaire.entity.Questionnaire;
+import com.medflow.questionnaire.repository.QuestionnaireRepository;
 import com.medflow.reservation.dto.request.ReservationCreateRequest;
 import com.medflow.reservation.dto.response.*;
 import com.medflow.reservation.entity.ReservationStatus;
@@ -60,6 +62,9 @@ class ReservationServiceTest {
 
     @Mock
     private ReservationSearchRepository reservationSearchRepository;
+
+    @Mock
+    private QuestionnaireRepository questionnaireRepository;
 
     @InjectMocks
     private ReservationService reservationService;
@@ -271,6 +276,11 @@ class ReservationServiceTest {
 
         when(reservationRepository.findByPatientId(patientId))
                 .thenReturn(List.of(reservation));
+        Questionnaire questionnaire = mock(Questionnaire.class);
+        when(questionnaire.getId()).thenReturn(20L);
+        when(questionnaire.getReservation()).thenReturn(reservation);
+        when(questionnaireRepository.findAllByReservationIdIn(List.of(1L)))
+                .thenReturn(List.of(questionnaire));
 
         // when
         List<PatientReservationResponse> result =
@@ -278,6 +288,7 @@ class ReservationServiceTest {
 
         // then
         assertThat(result).hasSize(1);
+        assertThat(result.get(0).questionnaireId()).isEqualTo(20L);
 
         verify(patientRepository).findByUserId(userId);
         verify(reservationRepository).findByPatientId(patientId);
