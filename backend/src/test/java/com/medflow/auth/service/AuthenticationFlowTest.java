@@ -15,6 +15,7 @@ import com.medflow.common.exception.InvalidCredentialsException;
 import com.medflow.common.exception.BusinessException;
 import com.medflow.common.exception.EmailAlreadyExistsException;
 import com.medflow.common.exception.AuthForbiddenException;
+import com.medflow.common.exception.ErrorCode;
 import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorStatus;
 import com.medflow.doctor.repository.DoctorRepository;
@@ -268,7 +269,7 @@ class AuthenticationFlowTest {
     }
 
     @Test
-    void login_withUnregisteredEmail_throwsInvalidCredentialsException() {
+    void login_withUnregisteredEmail_throwsInvalidCredentials() {
         LoginRequest request = mock(LoginRequest.class);
 
         when(request.email()).thenReturn("unknown@example.com");
@@ -277,7 +278,10 @@ class AuthenticationFlowTest {
                 .thenThrow(new InternalAuthenticationServiceException("사용자를 찾을 수 없습니다."));
 
         assertThatThrownBy(() -> authenticationService.login(request))
-                .isInstanceOf(InvalidCredentialsException.class);
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.INVALID_CREDENTIALS.getMessage())
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_CREDENTIALS);
     }
 
     @Test
@@ -332,13 +336,16 @@ class AuthenticationFlowTest {
     }
 
     @Test
-    void login_withWrongPassword_throwsInvalidCredentialsException() {
+    void login_withWrongPassword_throwsInvalidCredentials() {
         LoginRequest request = new LoginRequest("patient@example.com", "wrong-password");
         when(authenticationManager.authenticate(any()))
                 .thenThrow(new BadCredentialsException("비밀번호 불일치"));
 
         assertThatThrownBy(() -> authenticationService.login(request))
-                .isInstanceOf(InvalidCredentialsException.class);
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.INVALID_CREDENTIALS.getMessage())
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_CREDENTIALS);
 
         verifyNoInteractions(jwtGenerator);
         verify(refreshTokenRepository, never()).save(any());

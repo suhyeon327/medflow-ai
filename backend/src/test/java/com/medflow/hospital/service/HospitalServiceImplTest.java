@@ -5,6 +5,7 @@ import com.medflow.common.exception.ErrorCode;
 import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorStatus;
 import com.medflow.doctor.repository.DoctorRepository;
+import com.medflow.hospital.dto.projection.HospitalDoctorProjection;
 import com.medflow.hospital.entity.Hospital;
 import com.medflow.hospital.entity.HospitalStatus;
 import com.medflow.hospital.repository.HospitalRepository;
@@ -53,12 +54,15 @@ class HospitalServiceImplTest {
 
         when(hospitalRepository.searchByStatusAndKeyword(HospitalStatus.ACTIVE, keyword, pageable))
                 .thenReturn(new PageImpl<>(List.of(hospital), pageable, 1));
-        when(doctorRepository.findAllByHospitalIdInAndStatusAndUserStatus(
+        when(doctorRepository.findHospitalDoctorProjections(
                 List.of(1L), DoctorStatus.ACTIVE, UserStatus.ACTIVE
         )).thenReturn(List.of());
 
         assertThat(hospitalService.getAvailableHospitals("  서울  ", pageable).content()).hasSize(1);
         verify(hospitalRepository).searchByStatusAndKeyword(HospitalStatus.ACTIVE, keyword, pageable);
+        verify(doctorRepository).findHospitalDoctorProjections(
+                List.of(1L), DoctorStatus.ACTIVE, UserStatus.ACTIVE
+        );
     }
 
     @Test
@@ -75,16 +79,17 @@ class HospitalServiceImplTest {
     void getAvailableHospitals_mapsDoctorCountAndDistinctSpecialtiesByHospital() {
         Hospital firstHospital = hospital(1L, "메드플로우 병원");
         Hospital secondHospital = hospital(2L, "튼튼 병원");
-        List<Doctor> doctors = List.of(
-                doctor(firstHospital, "내과"),
-                doctor(firstHospital, "내과"),
-                doctor(firstHospital, "소아과"),
-                doctor(firstHospital, " ")
+        List<HospitalDoctorProjection> doctors = List.of(
+                hospitalDoctor(1L, "내과"),
+                hospitalDoctor(1L, "내과"),
+                hospitalDoctor(1L, "소아과"),
+                hospitalDoctor(1L, " "),
+                hospitalDoctor(1L, null)
         );
         PageRequest pageable = PageRequest.of(0, 20);
         when(hospitalRepository.findAllByStatus(HospitalStatus.ACTIVE, pageable))
                 .thenReturn(new PageImpl<>(List.of(firstHospital, secondHospital), pageable, 2));
-        when(doctorRepository.findAllByHospitalIdInAndStatusAndUserStatus(
+        when(doctorRepository.findHospitalDoctorProjections(
                 List.of(1L, 2L), DoctorStatus.ACTIVE, UserStatus.ACTIVE
         )).thenReturn(doctors);
 
@@ -95,7 +100,7 @@ class HospitalServiceImplTest {
             assertThat(hospitalResponse.id()).isEqualTo(1L);
             assertThat(hospitalResponse.name()).isEqualTo("메드플로우 병원");
             assertThat(hospitalResponse.region()).isEqualTo("서울");
-            assertThat(hospitalResponse.doctorCount()).isEqualTo(4);
+            assertThat(hospitalResponse.doctorCount()).isEqualTo(5);
             assertThat(hospitalResponse.specialties()).containsExactly("내과", "소아과");
         });
         assertThat(response.content().get(1).doctorCount()).isZero();
@@ -105,6 +110,9 @@ class HospitalServiceImplTest {
         assertThat(response.totalElements()).isEqualTo(2);
         assertThat(response.first()).isTrue();
         assertThat(response.last()).isTrue();
+        verify(doctorRepository).findHospitalDoctorProjections(
+                List.of(1L, 2L), DoctorStatus.ACTIVE, UserStatus.ACTIVE
+        );
     }
 
     @Test
@@ -119,7 +127,7 @@ class HospitalServiceImplTest {
         assertThat(response.page()).isEqualTo(3);
         assertThat(response.totalElements()).isEqualTo(40);
         assertThat(response.last()).isTrue();
-        verify(doctorRepository, never()).findAllByHospitalIdInAndStatusAndUserStatus(
+        verify(doctorRepository, never()).findHospitalDoctorProjections(
                 anyList(), any(), any()
         );
     }
@@ -212,6 +220,13 @@ class HospitalServiceImplTest {
     private Doctor doctor(Hospital hospital, String specialty) {
         Doctor doctor = mock(Doctor.class);
         when(doctor.getHospital()).thenReturn(hospital);
+        when(doctor.getSpecialty()).thenReturn(specialty);
+        return doctor;
+    }
+
+    private HospitalDoctorProjection hospitalDoctor(Long hospitalId, String specialty) {
+        HospitalDoctorProjection doctor = mock(HospitalDoctorProjection.class);
+        when(doctor.getHospitalId()).thenReturn(hospitalId);
         when(doctor.getSpecialty()).thenReturn(specialty);
         return doctor;
     }
