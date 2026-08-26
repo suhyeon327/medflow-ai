@@ -6,6 +6,7 @@ import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorStatus;
 import com.medflow.doctor.dto.response.DoctorResponse;
 import com.medflow.doctor.repository.DoctorRepository;
+import com.medflow.hospital.dto.projection.HospitalDoctorProjection;
 import com.medflow.hospital.dto.response.HospitalDetailResponse;
 import com.medflow.hospital.dto.response.HospitalListResponse;
 import com.medflow.hospital.dto.response.HospitalPageResponse;
@@ -51,19 +52,20 @@ public class HospitalService {
                 .toList();
 
         // 조회된 병원들에 소속된 활성 의사 조회
-        List<Doctor> doctors = hospitalIds.isEmpty()
+        List<HospitalDoctorProjection> doctors = hospitalIds.isEmpty()
                 ? List.of()
-                : doctorRepository.findAllByHospitalIdInAndStatusAndUserStatus(
+                : doctorRepository.findHospitalDoctorProjections(
                 hospitalIds,
                 DoctorStatus.ACTIVE,
                 UserStatus.ACTIVE
         );
 
         // 조회된 의사들을 병원 ID별로 그룹화
-        Map<Long, List<Doctor>> doctorsByHospitalId = doctors.stream()
-                .collect(Collectors.groupingBy(
-                        doctor -> doctor.getHospital().getId()
-                ));
+        Map<Long, List<HospitalDoctorProjection>> doctorsByHospitalId =
+                doctors.stream()
+                    .collect(Collectors.groupingBy(
+                            HospitalDoctorProjection::getHospitalId
+                    ));
 
         // 각 병원과 해당 병원의 의사 목록을 HospitalListResponse로 반환
         Page<HospitalListResponse> responses = hospitals.map(hospital -> HospitalListResponse.from(
@@ -75,7 +77,13 @@ public class HospitalService {
         ));
 
         // 병원 목록과 페이징 정보를 최종 응답 DTO로 변환
-        return HospitalPageResponse.from(responses);
+        HospitalPageResponse result = HospitalPageResponse.from(responses);
+
+        return result;
+    }
+
+    private long toMillis(long nanos) {
+        return nanos / 1_000_000;
     }
 
     // 병원 상세 정보 조회

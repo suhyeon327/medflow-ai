@@ -1,6 +1,6 @@
 package com.medflow.hospital.dto.response;
 
-import com.medflow.doctor.entity.Doctor;
+import com.medflow.hospital.dto.projection.HospitalDoctorProjection;
 import com.medflow.hospital.entity.Hospital;
 
 import java.util.List;
@@ -18,10 +18,10 @@ public record HospitalListResponse(
 
     public static HospitalListResponse from(
             Hospital hospital,
-            List<Doctor> doctors
+            List<HospitalDoctorProjection> doctors
     ) {
         List<String> specialties = doctors.stream()
-                .map(Doctor::getSpecialty)
+                .map(HospitalDoctorProjection::getSpecialty)
                 .filter(Objects::nonNull)
                 .filter(specialty -> !specialty.isBlank())
                 .distinct()
