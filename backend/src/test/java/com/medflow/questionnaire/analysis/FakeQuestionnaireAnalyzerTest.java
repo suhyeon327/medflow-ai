@@ -1,8 +1,9 @@
 package com.medflow.questionnaire.analysis;
 
+import com.medflow.questionnaire.dto.request.QuestionnaireAnalysisRequest;
 import com.medflow.questionnaire.dto.response.QuestionnaireAnalysisResponse;
-import com.medflow.questionnaire.entity.Questionnaire;
 import com.medflow.questionnaire.entity.PriorityLevel;
+import com.medflow.questionnaire.entity.Questionnaire;
 import com.medflow.reservation.entity.Reservation;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +25,7 @@ class FakeQuestionnaireAnalyzerTest {
                 "고혈압", "혈압약", "없음", null
         );
 
-        QuestionnaireAnalysisResponse result = analyzer.analyze(questionnaire);
+        QuestionnaireAnalysisResponse result = analyzer.analyze(QuestionnaireAnalysisRequest.from(questionnaire));
 
         assertThat(result.summary()).isEqualTo(
                 "주 증상 '복통', 통증 정도 6, 체온 37.5로 입력되었으며 상세 증상은 '배가 아픕니다.'입니다."

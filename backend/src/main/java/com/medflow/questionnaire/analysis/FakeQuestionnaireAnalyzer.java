@@ -1,8 +1,8 @@
 package com.medflow.questionnaire.analysis;
 
+import com.medflow.questionnaire.dto.request.QuestionnaireAnalysisRequest;
 import com.medflow.questionnaire.dto.response.QuestionnaireAnalysisResponse;
 import com.medflow.questionnaire.entity.PriorityLevel;
-import com.medflow.questionnaire.entity.Questionnaire;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -17,13 +17,13 @@ import java.util.List;
 public class FakeQuestionnaireAnalyzer implements AiQuestionnaireAnalyzer {
 
     @Override
-    public QuestionnaireAnalysisResponse analyze(Questionnaire questionnaire) {
+    public QuestionnaireAnalysisResponse analyze(QuestionnaireAnalysisRequest request) {
         String summary = "주 증상 '%s', 통증 정도 %s, 체온 %s로 입력되었으며 상세 증상은 '%s'입니다."
                 .formatted(
-                        questionnaire.getChiefComplaint(),
-                        valueOrNotProvided(questionnaire.getPainLevel()),
-                        valueOrNotProvided(questionnaire.getTemperature()),
-                        questionnaire.getSymptomDescription()
+                        request.chiefComplaint(),
+                        valueOrNotProvided(request.painLevel()),
+                        valueOrNotProvided(request.temperature()),
+                        request.symptomDescription()
                 );
 
         return new QuestionnaireAnalysisResponse(

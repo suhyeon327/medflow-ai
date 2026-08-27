@@ -3,6 +3,7 @@ package com.medflow.questionnaire.event;
 import com.medflow.questionnaire.service.QuestionnaireAnalysisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -14,7 +15,8 @@ public class QuestionnaireAnalysisEventListener {
 
     private final QuestionnaireAnalysisService questionnaireAnalysisService;
 
-    // 문진 저장 트랜잭션이 커밋된 후 별도 트랜잭션으로 분석
+    // 문진 저장 트랜잭션 커밋 후 AI 분석을 비동기로 실행
+    @Async("questionnaireAnalysisExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(QuestionnaireAnalysisRequestedEvent event) {
         try {

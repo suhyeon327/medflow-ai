@@ -2,11 +2,12 @@ package com.medflow.questionnaire.service;
 
 import com.medflow.common.exception.BusinessException;
 import com.medflow.common.exception.ErrorCode;
-import com.medflow.questionnaire.analysis.AiQuestionnaireAnalyzer;
-import com.medflow.questionnaire.dto.response.QuestionnaireAnalysisResponse;
-import com.medflow.questionnaire.dto.response.QuestionnaireAnalysisDetailResponse;
 import com.medflow.patient.entity.Patient;
 import com.medflow.patient.repository.PatientRepository;
+import com.medflow.questionnaire.analysis.AiQuestionnaireAnalyzer;
+import com.medflow.questionnaire.dto.request.QuestionnaireAnalysisRequest;
+import com.medflow.questionnaire.dto.response.QuestionnaireAnalysisDetailResponse;
+import com.medflow.questionnaire.dto.response.QuestionnaireAnalysisResponse;
 import com.medflow.questionnaire.entity.Questionnaire;
 import com.medflow.questionnaire.entity.QuestionnaireAnalysis;
 import com.medflow.questionnaire.repository.QuestionnaireAnalysisRepository;
@@ -14,7 +15,6 @@ import com.medflow.questionnaire.repository.QuestionnaireRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class QuestionnaireAnalysisService {
 
+    private final QuestionnaireAnalysisTransactionService questionnaireAnalysisTransactionService;
     private final QuestionnaireAnalysisRepository questionnaireAnalysisRepository;
     private final QuestionnaireRepository questionnaireRepository;
     private final PatientRepository patientRepository;
@@ -45,25 +46,41 @@ public class QuestionnaireAnalysisService {
 
         return QuestionnaireAnalysisDetailResponse.from(analysis);
     }
-  
+
     // 환자 문진 분석
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void analyze(Long questionnaireId) {
 
-        QuestionnaireAnalysis analysis = questionnaireAnalysisRepository.findByQuestionnaireId(questionnaireId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.QUESTIONNAIRE_ANALYSIS_NOT_FOUND));
+        long totalStart = System.currentTimeMillis();
 
-        analysis.startProcessing();
+        log.info(
+                "questionnaire analysis start: questionnaireId={}",
+                questionnaireId
+        );
+
+        QuestionnaireAnalysisRequest analysisRequest =
+                questionnaireAnalysisTransactionService.startAnalysis(questionnaireId);
 
         try {
-            QuestionnaireAnalysisResponse result = aiQuestionnaireAnalyzer.analyze(analysis.getQuestionnaire());
-            analysis.complete(
-                    result.summary(),
-                    result.keyFindings(),
-                    result.riskSignals(),
-                    result.doctorCheckpoints(),
-                    result.priorityLevel()
+            long geminiStart = System.currentTimeMillis();
+
+            log.info("gemini analysis start: questionnaireId={}",
+                    questionnaireId
             );
+
+            QuestionnaireAnalysisResponse result =
+                    aiQuestionnaireAnalyzer.analyze(analysisRequest);
+
+            log.info(
+                    "gemini analysis completed: questionnaireId={}, duration={}ms",
+                    questionnaireId,
+                    System.currentTimeMillis() - geminiStart
+            );
+
+            questionnaireAnalysisTransactionService.completeAnalysis(
+                    questionnaireId,
+                    result
+            );
+
         } catch (Exception e) {
             log.error(
                     "AI 문진 분석 실패. questionnaireId={}",
@@ -71,7 +88,14 @@ public class QuestionnaireAnalysisService {
                     e
             );
 
-            analysis.fail();
+            questionnaireAnalysisTransactionService
+                    .failAnalysis(questionnaireId);
         }
+
+        log.info(
+                "questionnaire analysis completed: questionnaireId={}, duration={}ms",
+                questionnaireId,
+                System.currentTimeMillis() - totalStart
+        );
     }
 }

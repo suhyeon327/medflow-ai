@@ -11,9 +11,9 @@ import com.medflow.common.config.GeminiProperties;
 import com.medflow.common.exception.BusinessException;
 import com.medflow.common.exception.ErrorCode;
 import com.medflow.questionnaire.dto.analysis.GeminiAnalysisResult;
+import com.medflow.questionnaire.dto.request.QuestionnaireAnalysisRequest;
 import com.medflow.questionnaire.dto.response.QuestionnaireAnalysisResponse;
 import com.medflow.questionnaire.entity.PriorityLevel;
-import com.medflow.questionnaire.entity.Questionnaire;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -47,12 +47,12 @@ public class GeminiQuestionnaireAnalyzer implements AiQuestionnaireAnalyzer {
     private final ObjectMapper objectMapper;   // JSON 문자열 -> JAVA 객체
 
     @Override
-    public QuestionnaireAnalysisResponse analyze(Questionnaire questionnaire) {
+    public QuestionnaireAnalysisResponse analyze(QuestionnaireAnalysisRequest request) {
 
         // Gemini API 호출
         GenerateContentResponse response = geminiClient.models.generateContent(
                 geminiProperties.model(),   // 사용할 모델
-                createQuestionnairePrompt(questionnaire),   // 사용자 프롬프트
+                createQuestionnairePrompt(request),   // 사용자 프롬프트
                 createGenerateContentConfig()   // 응답설정
         );
 
@@ -139,7 +139,7 @@ public class GeminiQuestionnaireAnalyzer implements AiQuestionnaireAnalyzer {
         );
     }
 
-    private String createQuestionnairePrompt(Questionnaire questionnaire) {
+    private String createQuestionnairePrompt(QuestionnaireAnalysisRequest request) {
         return """
                 다음 환자 문진을 분석해 주세요.
 
@@ -154,16 +154,16 @@ public class GeminiQuestionnaireAnalyzer implements AiQuestionnaireAnalyzer {
                 알레르기: %s
                 추가 전달사항: %s
                 """.formatted(
-                questionnaire.getChiefComplaint(),
-                questionnaire.getSymptomStartedAt(),
-                questionnaire.getSymptomDescription(),
-                valueOrNotProvided(questionnaire.getPainLevel()),
-                valueOrNotProvided(questionnaire.getTemperature()),
-                valueOrNotProvided(questionnaire.getAssociatedSymptoms()),
-                valueOrNotProvided(questionnaire.getMedicalHistory()),
-                valueOrNotProvided(questionnaire.getMedications()),
-                valueOrNotProvided(questionnaire.getAllergies()),
-                valueOrNotProvided(questionnaire.getAdditionalNote())
+                request.chiefComplaint(),
+                request.symptomStartedAt(),
+                request.symptomDescription(),
+                valueOrNotProvided(request.painLevel()),
+                valueOrNotProvided(request.temperature()),
+                valueOrNotProvided(request.associatedSymptoms()),
+                valueOrNotProvided(request.medicalHistory()),
+                valueOrNotProvided(request.medications()),
+                valueOrNotProvided(request.allergies()),
+                valueOrNotProvided(request.additionalNote())
         );
     }
 

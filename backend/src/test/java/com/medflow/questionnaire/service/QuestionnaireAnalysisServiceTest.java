@@ -1,6 +1,7 @@
 package com.medflow.questionnaire.service;
 
 import com.medflow.questionnaire.analysis.AiQuestionnaireAnalyzer;
+import com.medflow.questionnaire.dto.request.QuestionnaireAnalysisRequest;
 import com.medflow.questionnaire.dto.response.QuestionnaireAnalysisResponse;
 import com.medflow.questionnaire.dto.response.QuestionnaireAnalysisDetailResponse;
 import com.medflow.questionnaire.entity.*;
@@ -31,27 +32,23 @@ class QuestionnaireAnalysisServiceTest {
     @Mock QuestionnaireAnalysisRepository questionnaireAnalysisRepository;
     @Mock QuestionnaireRepository questionnaireRepository;
     @Mock PatientRepository patientRepository;
+    @Mock QuestionnaireAnalysisTransactionService questionnaireAnalysisTransactionService;
     @Mock AiQuestionnaireAnalyzer aiQuestionnaireAnalyzer;
     @InjectMocks QuestionnaireAnalysisService questionnaireAnalysisService;
 
     @Test
-    void analyze_success_savesCompletedResultOnExistingAnalysis() {
+    void analyze_success_completesAnalysisInSeparateTransaction() {
         Questionnaire questionnaire = questionnaire("복통");
-        QuestionnaireAnalysis analysis = QuestionnaireAnalysis.pending(questionnaire);
+        QuestionnaireAnalysisRequest request = QuestionnaireAnalysisRequest.from(questionnaire);
         QuestionnaireAnalysisResponse result = result("복통");
-        when(questionnaireAnalysisRepository.findByQuestionnaireId(20L)).thenReturn(Optional.of(analysis));
-        when(aiQuestionnaireAnalyzer.analyze(questionnaire)).thenReturn(result);
+        when(questionnaireAnalysisTransactionService.startAnalysis(20L)).thenReturn(request);
+        when(aiQuestionnaireAnalyzer.analyze(request)).thenReturn(result);
 
         questionnaireAnalysisService.analyze(20L);
 
-        assertThat(analysis.getStatus()).isEqualTo(QuestionnaireAnalysisStatus.COMPLETED);
-        assertThat(analysis.getSummary()).isEqualTo("복통 종합 요약");
-        assertThat(analysis.getKeyFindings()).containsExactly("통증과 체온 확인");
-        assertThat(analysis.getRiskSignals()).containsExactly("병력 종합 확인");
-        assertThat(analysis.getDoctorCheckpoints()).containsExactly("복부 상태 확인");
-        assertThat(analysis.getPriorityLevel()).isEqualTo(PriorityLevel.NORMAL);
-        assertThat(analysis.getStatus()).isEqualTo(QuestionnaireAnalysisStatus.COMPLETED);
-        verify(questionnaireAnalysisRepository, never()).save(any());
+        verify(aiQuestionnaireAnalyzer).analyze(request);
+        verify(questionnaireAnalysisTransactionService).completeAnalysis(20L, result);
+        verify(questionnaireAnalysisTransactionService, never()).failAnalysis(anyLong());
     }
 
     @Test
@@ -62,28 +59,27 @@ class QuestionnaireAnalysisServiceTest {
                 8, new BigDecimal("38.1"), "어지러움", "당뇨", "당뇨약",
                 "페니실린", "오후부터 악화됨"
         );
-        QuestionnaireAnalysis analysis = QuestionnaireAnalysis.pending(questionnaire);
-        when(questionnaireAnalysisRepository.findByQuestionnaireId(20L)).thenReturn(Optional.of(analysis));
-        when(aiQuestionnaireAnalyzer.analyze(questionnaire)).thenReturn(result(questionnaire.getChiefComplaint()));
+        QuestionnaireAnalysisRequest request = QuestionnaireAnalysisRequest.from(questionnaire);
+        QuestionnaireAnalysisResponse result = result(request.chiefComplaint());
+        when(questionnaireAnalysisTransactionService.startAnalysis(20L)).thenReturn(request);
+        when(aiQuestionnaireAnalyzer.analyze(request)).thenReturn(result);
 
         questionnaireAnalysisService.analyze(20L);
 
-        assertThat(analysis.getSummary()).isEqualTo("두통 종합 요약");
-        verify(questionnaireAnalysisRepository, never()).save(any());
+        assertThat(request.chiefComplaint()).isEqualTo("두통");
+        verify(questionnaireAnalysisTransactionService).completeAnalysis(20L, result);
     }
 
     @Test
     void analyze_failure_marksFailed_withoutThrowing() {
-        Questionnaire questionnaire = questionnaire("복통");
-        QuestionnaireAnalysis analysis = QuestionnaireAnalysis.pending(questionnaire);
-        when(questionnaireAnalysisRepository.findByQuestionnaireId(20L)).thenReturn(Optional.of(analysis));
-        when(aiQuestionnaireAnalyzer.analyze(questionnaire)).thenThrow(new IllegalStateException("Fake 분석 실패"));
+        QuestionnaireAnalysisRequest request = QuestionnaireAnalysisRequest.from(questionnaire("복통"));
+        when(questionnaireAnalysisTransactionService.startAnalysis(20L)).thenReturn(request);
+        when(aiQuestionnaireAnalyzer.analyze(request)).thenThrow(new IllegalStateException("Fake 분석 실패"));
 
         questionnaireAnalysisService.analyze(20L);
 
-        assertThat(analysis.getStatus()).isEqualTo(QuestionnaireAnalysisStatus.FAILED);
-        assertThat(analysis.getSummary()).isNull();
-        assertThat(analysis.getKeyFindings()).isEmpty();
+        verify(questionnaireAnalysisTransactionService).failAnalysis(20L);
+        verify(questionnaireAnalysisTransactionService, never()).completeAnalysis(anyLong(), any());
     }
 
     @Test
