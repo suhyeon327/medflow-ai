@@ -3,3 +3,4 @@
 !.env.example → example 파일은 예외적으로 Git에 포함
 /docs/
 /output/
+medflow-env.bat

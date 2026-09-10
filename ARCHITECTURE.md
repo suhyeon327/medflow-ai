@@ -16,8 +16,6 @@ flowchart LR
 
 Docker Compose의 Nginx는 SPA 정적 파일을 제공하고 `/api/` 요청을 `backend:8080`으로 프록시한다. 개발 환경에서는 프론트의 `VITE_API_BASE_URL`이 가리키는 백엔드에 Axios가 직접 요청한다.
 
-Compose에는 Redis 7도 실행되지만 애플리케이션에서 연결하지 않는다. Spring Data Redis 의존성, Redis client, cache/session/token 저장 코드가 없으므로 위 런타임 흐름에는 포함하지 않았다.
-
 ## 2. Backend
 
 ### 2.1 애플리케이션 구조
@@ -223,7 +221,6 @@ flowchart TB
         N["frontend<br/>Nginx :80"]
         S["backend<br/>Spring Boot :8080 internal"]
         M[("mysql:8.4<br/>named volume")]
-        R["redis:7<br/>declared but unused"]
         N --> S
         S --> M
     end
@@ -232,8 +229,8 @@ flowchart TB
 
 - Backend Dockerfile: Gradle JDK 21 builder → Eclipse Temurin 21 JRE
 - Frontend Dockerfile: Node 20 builder → Nginx Alpine
-- MySQL과 Redis 데이터는 named volume을 사용한다.
-- Backend는 MySQL/Redis healthcheck 통과 뒤 시작하도록 선언되어 있지만 Redis에 실제로 연결하지 않는다.
+- MySQL 데이터는 named volume을 사용한다.
+- Backend는 MySQL healthcheck 통과 뒤 시작하도록 선언되어 있다.
 - 외부에 공개된 Compose port는 Frontend/Nginx의 80뿐이며 Backend는 내부 DNS `backend:8080`으로 접근한다.
 
 ### 6.2 CI/CD
@@ -250,7 +247,6 @@ EC2 사용은 workflow에서 확인되지만 VPC, Load Balancer, RDS, S3, Route 
 
 ## 7. 확인된 아키텍처 경계와 주의점
 
-- Redis 컨테이너는 선언만 되어 있어 현재 시스템 동작에 필요하지 않다.
 - Refresh Token은 서비스가 사용자당 하나를 기대하지만 DB UNIQUE는 `token`에만 있고 `user_id`에는 없다.
 - 슬롯 예약은 상태 필드로 단일 예약을 표현하지만 DB FK UNIQUE 또는 생성 시 Lock이 없다.
 - Soft delete는 전역 필터가 아니므로 공개 조회가 상태와 사용자 활성 조건을 빠뜨리지 않도록 주의해야 한다.

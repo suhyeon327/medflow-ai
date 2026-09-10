@@ -23,8 +23,6 @@ AI는 진단이나 처방을 하지 않습니다. 환자가 작성한 문진을 
 | AI | Google Gen AI SDK, Gemini API, 테스트/로컬용 Fake analyzer |
 | Delivery | Docker, Docker Compose, Nginx, GitHub Actions, EC2 SSH 배포 |
 
-Docker Compose에 Redis 컨테이너가 선언되어 있지만 현재 애플리케이션 사용 코드는 없습니다.
-
 ## 시스템 아키텍처
 
 ```mermaid
@@ -143,7 +141,7 @@ frontend/                        React SPA
   src/pages/                     공개·역할별 화면
   src/routes/                    Routing과 인증/역할 guard
 .github/workflows/ci-cd.yml      CI와 EC2 배포
-docker-compose.yml               Nginx, Backend, MySQL, 미사용 Redis 선언
+docker-compose.yml               Nginx, Backend, MySQL 선언
 ```
 
 ## 주요 기술적 고민

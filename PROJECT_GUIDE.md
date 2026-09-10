@@ -53,8 +53,6 @@ AI 분석은 진단이나 처방을 대신하지 않는다. 문진 원문을 의
 | Database | MySQL 8.4(Docker Compose 기준) |
 | 배포/자동화 | Docker multi-stage build, Nginx, Docker Compose, GitHub Actions, EC2 SSH 배포 |
 
-Docker Compose에는 Redis 7 컨테이너와 환경변수가 선언되어 있으나, 현재 백엔드에는 Redis 의존성이나 사용 코드가 없다. Redis를 현재 기술 스택의 애플리케이션 구성 요소로 간주하지 않는다.
-
 ## 5. 주요 도메인
 
 - `user`: 이메일, 암호화된 비밀번호, 역할, 계정 상태를 가진 인증 주체

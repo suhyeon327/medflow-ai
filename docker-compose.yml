@@ -10,6 +10,9 @@ services:
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
 
+    ports:
+      - "3306:3306"
+
     volumes:
       - mysql-data:/var/lib/mysql
 
@@ -22,20 +25,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-
-  redis:
-    image: redis:7
-    container_name: medflow-redis
-    restart: unless-stopped
-
-    volumes:
-      - redis-data:/data
-
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   backend:
     build:
@@ -53,9 +42,6 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DDL_AUTO: ${DDL_AUTO:-update}
 
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-
       JWT_SECRET: ${JWT_SECRET}
 
       AI_PROVIDER: ${AI_PROVIDER}
@@ -68,8 +54,6 @@ services:
 
     depends_on:
       mysql:
-        condition: service_healthy
-      redis:
         condition: service_healthy
 
   frontend:
@@ -90,4 +74,3 @@ services:
 
 volumes:
   mysql-data:
-  redis-data:
