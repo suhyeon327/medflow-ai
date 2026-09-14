@@ -92,7 +92,7 @@ export function updateAdminHospital(
 ): Promise<AdminHospital> {
   return apiClient<AdminHospital>(
     {
-      url: `/api/v1/admin/hospitals${hospitalId}`,
+      url: `/api/v1/admin/hospitals/${hospitalId}`,
       method: "PUT",
       data: request
     }
@@ -105,7 +105,7 @@ export function deleteAdminHospital(
 ): Promise<AdminHospitalDeleteResponse> {
   return apiClient<AdminHospitalDeleteResponse>(
     {
-      url: `/api/v1/admin/hospitals${hospitalId}`,
+      url: `/api/v1/admin/hospitals/${hospitalId}`,
       method: "DELETE"
     }
   );
