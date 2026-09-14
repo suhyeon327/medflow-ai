@@ -5,6 +5,7 @@ import com.medflow.common.response.ApiResponse;
 import com.medflow.patient.dto.PatientRequest;
 import com.medflow.patient.dto.PatientResponse;
 import com.medflow.patient.service.PatientService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -34,7 +35,7 @@ public class PatientController {
     @PutMapping("/profile")
     public ApiResponse<PatientResponse> updatePatientProfile(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @RequestBody PatientRequest request
+            @Valid @RequestBody PatientRequest request
     ) {
         return ApiResponse.success(
                 patientService.updatePatientProfile(

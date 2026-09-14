@@ -25,6 +25,7 @@ import java.time.LocalDate;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -83,6 +84,66 @@ class PatientControllerSecurityTest {
                 .andExpect(jsonPath("$.success").value(true));
 
         verify(patientService).updatePatientProfile(eq(1L), any());
+    }
+
+    @Test
+    void 환자_프로필_수정_필수값이_null이면_BadRequest를_반환한다() throws Exception {
+        // when & then
+        mockMvc.perform(put("/api/v1/patients/profile")
+                        .with(user(userDetails(1L, UserRole.PATIENT)))
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "name": "홍길동",
+                                  "birth": null,
+                                  "gender": "MALE",
+                                  "phone": "01012345678"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"));
+
+        verify(patientService, never()).updatePatientProfile(any(), any());
+    }
+
+    @Test
+    void 환자_프로필_수정_이름이_공백이면_BadRequest를_반환한다() throws Exception {
+        // when & then
+        mockMvc.perform(put("/api/v1/patients/profile")
+                        .with(user(userDetails(1L, UserRole.PATIENT)))
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "name": " ",
+                                  "birth": "1999-05-20",
+                                  "gender": "MALE",
+                                  "phone": "01012345678"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"));
+
+        verify(patientService, never()).updatePatientProfile(any(), any());
+    }
+
+    @Test
+    void 환자_프로필_수정_전화번호_형식이_잘못되면_BadRequest를_반환한다() throws Exception {
+        // when & then
+        mockMvc.perform(put("/api/v1/patients/profile")
+                        .with(user(userDetails(1L, UserRole.PATIENT)))
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "name": "홍길동",
+                                  "birth": "1999-05-20",
+                                  "gender": "MALE",
+                                  "phone": "010-1234-5678"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"));
+
+        verify(patientService, never()).updatePatientProfile(any(), any());
     }
 
     @ParameterizedTest
