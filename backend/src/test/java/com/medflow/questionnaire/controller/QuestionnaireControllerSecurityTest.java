@@ -33,8 +33,11 @@ import java.util.stream.Stream;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -78,6 +81,30 @@ class QuestionnaireControllerSecurityTest {
                 .andExpect(jsonPath("$.error.code").value("QUESTIONNAIRE_005"));
 
         verify(questionnaireService).getQuestionnaire(1L, 999L);
+    }
+
+    @Test
+    void patientCannotCreateQuestionnaireAfterAppointmentStart() throws Exception {
+        when(questionnaireService.createQuestionnaire(eq(1L), any()))
+                .thenThrow(new BusinessException(ErrorCode.QUESTIONNAIRE_UPDATE_AFTER_START));
+
+        mockMvc.perform(post("/api/v1/questionnaires")
+                        .with(user(userDetails(1L, UserRole.PATIENT)))
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "reservationId": 10,
+                                  "chiefComplaint": "복통",
+                                  "symptomStartedAt": "2026-07-29T09:30:00",
+                                  "symptomDescription": "배가 아픕니다.",
+                                  "painLevel": 5
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.error.code").value("QUESTIONNAIRE_006"));
+
+        verify(questionnaireService).createQuestionnaire(eq(1L), any());
     }
 
     @Test

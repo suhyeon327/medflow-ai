@@ -49,7 +49,7 @@ class QuestionnaireServiceTest {
     @InjectMocks QuestionnaireService questionnaireService;
 
     @Test
-    void createQuestionnaire_success_and_savesAllFields() {
+    void createQuestionnaire_before_appointment_start_succeeds_and_savesAllFields() {
         Patient patient = patient(1L);
         Reservation reservation = reservation(10L, patient, ReservationStatus.APPROVED);
         QuestionnaireCreateRequest request = request(10L);
@@ -124,6 +124,46 @@ class QuestionnaireServiceTest {
     @Test
     void createQuestionnaire_fails_for_completed_reservation() {
         assertStatusFailure(ReservationStatus.COMPLETED, ErrorCode.QUESTIONNAIRE_COMPLETED_RESERVATION);
+    }
+
+    @Test
+    void createQuestionnaire_fails_at_appointment_start() {
+        Patient patient = patient(1L);
+        Reservation reservation = reservation(
+                10L,
+                patient,
+                ReservationStatus.APPROVED,
+                LocalDateTime.now()
+        );
+        mockFound(100L, patient, reservation);
+
+        assertError(
+                ErrorCode.QUESTIONNAIRE_UPDATE_AFTER_START,
+                () -> questionnaireService.createQuestionnaire(100L, request(10L))
+        );
+
+        verify(questionnaireRepository, never()).save(any());
+        verify(eventPublisher, never()).publishEvent(any());
+    }
+
+    @Test
+    void createQuestionnaire_fails_after_appointment_start() {
+        Patient patient = patient(1L);
+        Reservation reservation = reservation(
+                10L,
+                patient,
+                ReservationStatus.APPROVED,
+                LocalDateTime.now().minusMinutes(1)
+        );
+        mockFound(100L, patient, reservation);
+
+        assertError(
+                ErrorCode.QUESTIONNAIRE_UPDATE_AFTER_START,
+                () -> questionnaireService.createQuestionnaire(100L, request(10L))
+        );
+
+        verify(questionnaireRepository, never()).save(any());
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
     @Test
@@ -309,10 +349,28 @@ class QuestionnaireServiceTest {
     }
 
     private Reservation reservation(Long id, Patient patient, ReservationStatus status) {
+        return reservation(
+                id,
+                patient,
+                status,
+                LocalDateTime.of(2099, 1, 1, 10, 0)
+        );
+    }
+
+    private Reservation reservation(
+            Long id,
+            Patient patient,
+            ReservationStatus status,
+            LocalDateTime appointmentStart
+    ) {
         Reservation reservation = mock(Reservation.class);
+        DoctorSchedule schedule = mock(DoctorSchedule.class);
         when(reservation.getId()).thenReturn(id);
         when(reservation.getPatient()).thenReturn(patient);
         lenient().when(reservation.getStatus()).thenReturn(status);
+        lenient().when(reservation.getDoctorSchedule()).thenReturn(schedule);
+        lenient().when(schedule.getDate()).thenReturn(appointmentStart.toLocalDate());
+        lenient().when(schedule.getStartTime()).thenReturn(appointmentStart.toLocalTime());
         return reservation;
     }
 

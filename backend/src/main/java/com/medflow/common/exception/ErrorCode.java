@@ -50,7 +50,7 @@ public enum ErrorCode {
     QUESTIONNAIRE_CANCELLED_RESERVATION(HttpStatus.BAD_REQUEST, "QUESTIONNAIRE_003", "취소된 예약에는 문진을 작성할 수 없습니다."),
     QUESTIONNAIRE_COMPLETED_RESERVATION(HttpStatus.BAD_REQUEST, "QUESTIONNAIRE_004", "진료가 완료된 예약에는 문진을 작성할 수 없습니다."),
     QUESTIONNAIRE_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTIONNAIRE_005", "문진을 찾을 수 없습니다."),
-    QUESTIONNAIRE_UPDATE_AFTER_START(HttpStatus.BAD_REQUEST, "QUESTIONNAIRE_006", "진료가 시작된 예약의 문진은 수정할 수 없습니다."),
+    QUESTIONNAIRE_UPDATE_AFTER_START(HttpStatus.BAD_REQUEST, "QUESTIONNAIRE_006", "진료가 시작된 예약의 문진은 작성하거나 수정할 수 없습니다."),
     QUESTIONNAIRE_ANALYSIS_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTIONNAIRE_007", "문진 분석 내용을 찾을 수 없습니다."),
 
     // AI

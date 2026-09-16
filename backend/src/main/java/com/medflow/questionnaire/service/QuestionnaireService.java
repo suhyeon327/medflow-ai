@@ -100,8 +100,7 @@ public class QuestionnaireService {
 
         Reservation reservation = questionnaire.getReservation();
         
-        validateReservationOwner(patient, reservation);
-        validateQuestionnaireUpdateTime(reservation);
+        validateReservation(patient, reservation);
 
         questionnaire.update(
                 request.chiefComplaint(),
@@ -138,6 +137,8 @@ public class QuestionnaireService {
         if (reservation.getStatus() == ReservationStatus.COMPLETED) {
             throw new BusinessException(ErrorCode.QUESTIONNAIRE_COMPLETED_RESERVATION);
         }
+
+        validateQuestionnaireWriteTime(reservation);
     }
 
     private void validateReservationOwner(Patient patient, Reservation reservation) {
@@ -147,14 +148,7 @@ public class QuestionnaireService {
         }
     }
 
-    private void validateQuestionnaireUpdateTime(Reservation reservation) {
-        if (reservation.getStatus() == ReservationStatus.CANCELLED) {
-            throw new BusinessException(ErrorCode.QUESTIONNAIRE_CANCELLED_RESERVATION);
-        }
-        if (reservation.getStatus() == ReservationStatus.COMPLETED) {
-            throw new BusinessException(ErrorCode.QUESTIONNAIRE_COMPLETED_RESERVATION);
-        }
-
+    private void validateQuestionnaireWriteTime(Reservation reservation) {
         LocalDateTime appointmentStart = LocalDateTime.of(
                 reservation.getDoctorSchedule().getDate(),
                 reservation.getDoctorSchedule().getStartTime()
