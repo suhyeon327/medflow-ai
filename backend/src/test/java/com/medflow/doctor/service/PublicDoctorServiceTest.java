@@ -5,6 +5,7 @@ import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorStatus;
 import com.medflow.doctor.repository.DoctorRepository;
 import com.medflow.hospital.entity.Hospital;
+import com.medflow.hospital.entity.HospitalStatus;
 import com.medflow.user.entity.UserStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,8 +35,8 @@ class PublicDoctorServiceTest {
         Doctor doctor = mock(Doctor.class);
         Hospital hospital = mock(Hospital.class);
 
-        when(doctorRepository.findByIdAndStatusAndUserStatus(
-                doctorId, DoctorStatus.ACTIVE, UserStatus.ACTIVE
+        when(doctorRepository.findByIdAndStatusAndUserStatusAndHospitalStatus(
+                doctorId, DoctorStatus.ACTIVE, UserStatus.ACTIVE, HospitalStatus.ACTIVE
         )).thenReturn(Optional.of(doctor));
         when(doctor.getId()).thenReturn(doctorId);
         when(doctor.getName()).thenReturn("홍길동");
@@ -53,8 +54,19 @@ class PublicDoctorServiceTest {
     @Test
     void 활성_의사가_없으면_공개_상세_조회에_실패한다() {
         Long doctorId = 999L;
-        when(doctorRepository.findByIdAndStatusAndUserStatus(
-                doctorId, DoctorStatus.ACTIVE, UserStatus.ACTIVE
+        when(doctorRepository.findByIdAndStatusAndUserStatusAndHospitalStatus(
+                doctorId, DoctorStatus.ACTIVE, UserStatus.ACTIVE, HospitalStatus.ACTIVE
+        )).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> publicDoctorService.getDoctor(doctorId))
+                .isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    void 종료된_병원_소속_의사는_공개_조회에_노출되지_않는다() {
+        Long doctorId = 1L;
+        when(doctorRepository.findByIdAndStatusAndUserStatusAndHospitalStatus(
+                doctorId, DoctorStatus.ACTIVE, UserStatus.ACTIVE, HospitalStatus.ACTIVE
         )).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> publicDoctorService.getDoctor(doctorId))

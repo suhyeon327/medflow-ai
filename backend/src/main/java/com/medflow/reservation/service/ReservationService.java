@@ -4,7 +4,9 @@ import com.medflow.common.exception.BusinessException;
 import com.medflow.common.exception.ErrorCode;
 import com.medflow.doctor.entity.DoctorSchedule;
 import com.medflow.doctor.entity.DoctorScheduleStatus;
+import com.medflow.doctor.entity.DoctorStatus;
 import com.medflow.doctor.repository.DoctorScheduleRepository;
+import com.medflow.hospital.entity.HospitalStatus;
 import com.medflow.patient.entity.Patient;
 import com.medflow.patient.repository.PatientRepository;
 import com.medflow.questionnaire.entity.Questionnaire;
@@ -18,6 +20,7 @@ import com.medflow.reservation.entity.ReservationPeriod;
 import com.medflow.reservation.entity.ReservationStatus;
 import com.medflow.reservation.repository.ReservationRepository;
 import com.medflow.reservation.repository.ReservationSearchRepository;
+import com.medflow.user.entity.UserStatus;
 import com.medflow.reservation.dto.response.PatientReservationPageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +29,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import java.util.List;
 import java.util.Map;
@@ -67,21 +71,30 @@ public class ReservationService {
     // 예약 생성
     public ReservationCreateResponse createReservation(Long userId, ReservationCreateRequest request) {
 
-        // 예약하려는 시간 정보 가져오기
-        DoctorSchedule doctorschedule = doctorScheduleRepository.findById(request.scheduleId())
-                .orElseThrow(() -> new BusinessException((ErrorCode.SCHEDULE_NOT_FOUND)));
+        LocalDateTime now = LocalDateTime.now();
 
-        // 예약이 가능한지 확인
-        if (doctorschedule.getStatus() != DoctorScheduleStatus.AVAILABLE) {
-            throw new BusinessException(ErrorCode.SCHEDULE_NOT_AVAILABLE);
-        }
+        // 시간, 슬롯, 의사, 사용자, 병원 상태를 모두 확인하고 동시 예약을 방지하기 위해 잠금 조회
+        DoctorSchedule doctorSchedule = doctorScheduleRepository.findReservableScheduleForUpdate(
+                        request.scheduleId(),
+                        DoctorScheduleStatus.AVAILABLE,
+                        DoctorStatus.ACTIVE,
+                        UserStatus.ACTIVE,
+                        HospitalStatus.ACTIVE,
+                        now.toLocalDate(),
+                        now.toLocalTime()
+                )
+                .orElseThrow(() -> new BusinessException(
+                        doctorScheduleRepository.existsById(request.scheduleId())
+                                ? ErrorCode.SCHEDULE_NOT_AVAILABLE
+                                : ErrorCode.SCHEDULE_NOT_FOUND
+                ));
 
         Patient patient = patientRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PATIENT_NOT_FOUND));
 
-        Reservation reservation = Reservation.create(patient, doctorschedule);
+        Reservation reservation = Reservation.create(patient, doctorSchedule);
 
-        doctorschedule.reserve();
+        doctorSchedule.reserve();
 
         reservationRepository.save(reservation);
 

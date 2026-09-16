@@ -10,6 +10,7 @@ import com.medflow.doctor.entity.DoctorScheduleStatus;
 import com.medflow.doctor.entity.DoctorStatus;
 import com.medflow.doctor.repository.DoctorRepository;
 import com.medflow.doctor.repository.DoctorScheduleRepository;
+import com.medflow.hospital.entity.HospitalStatus;
 import com.medflow.user.entity.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -54,10 +55,11 @@ public class PublicDoctorService {
     }
 
     private Doctor getActiveDoctor(Long doctorId) {
-        return doctorRepository.findByIdAndStatusAndUserStatus(
+        return doctorRepository.findByIdAndStatusAndUserStatusAndHospitalStatus(
                         doctorId,
                         DoctorStatus.ACTIVE,
-                        UserStatus.ACTIVE
+                        UserStatus.ACTIVE,
+                        HospitalStatus.ACTIVE
                 )
                 .orElseThrow(() -> new BusinessException(ErrorCode.DOCTOR_NOT_FOUND));
     }

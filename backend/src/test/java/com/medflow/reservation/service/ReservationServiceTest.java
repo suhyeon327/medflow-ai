@@ -4,9 +4,11 @@ package com.medflow.reservation.service;
 import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorSchedule;
 import com.medflow.doctor.entity.DoctorScheduleStatus;
+import com.medflow.doctor.entity.DoctorStatus;
 import com.medflow.doctor.repository.DoctorRepository;
 import com.medflow.doctor.repository.DoctorScheduleRepository;
 import com.medflow.hospital.entity.Hospital;
+import com.medflow.hospital.entity.HospitalStatus;
 import com.medflow.patient.entity.Gender;
 import com.medflow.patient.entity.Patient;
 import com.medflow.patient.repository.PatientRepository;
@@ -24,6 +26,7 @@ import com.medflow.common.exception.BusinessException;
 import com.medflow.common.exception.ErrorCode;
 
 import com.medflow.user.entity.User;
+import com.medflow.user.entity.UserStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -89,7 +92,15 @@ class ReservationServiceTest {
         when(patientRepository.findByUserId(userId))
                 .thenReturn(Optional.of(patient));
 
-        when(doctorScheduleRepository.findById(scheduleId))
+        when(doctorScheduleRepository.findReservableScheduleForUpdate(
+                eq(scheduleId),
+                eq(DoctorScheduleStatus.AVAILABLE),
+                eq(DoctorStatus.ACTIVE),
+                eq(UserStatus.ACTIVE),
+                eq(HospitalStatus.ACTIVE),
+                any(LocalDate.class),
+                any(LocalTime.class)
+        ))
                 .thenReturn(Optional.of(schedule));
 
         ReservationCreateRequest request =
@@ -123,8 +134,16 @@ class ReservationServiceTest {
 
         DoctorSchedule schedule = createReservedSchedule(scheduleId);
 
-        when(doctorScheduleRepository.findById(scheduleId))
-                .thenReturn(Optional.of(schedule));
+        when(doctorScheduleRepository.findReservableScheduleForUpdate(
+                eq(scheduleId),
+                eq(DoctorScheduleStatus.AVAILABLE),
+                eq(DoctorStatus.ACTIVE),
+                eq(UserStatus.ACTIVE),
+                eq(HospitalStatus.ACTIVE),
+                any(LocalDate.class),
+                any(LocalTime.class)
+        )).thenReturn(Optional.empty());
+        when(doctorScheduleRepository.existsById(scheduleId)).thenReturn(true);
 
         ReservationCreateRequest request =
                 new ReservationCreateRequest(scheduleId);
@@ -152,8 +171,15 @@ class ReservationServiceTest {
         Long userId = 1L;
         Long scheduleId = 999L;
 
-        when(doctorScheduleRepository.findById(scheduleId))
-                .thenReturn(Optional.empty());
+        when(doctorScheduleRepository.findReservableScheduleForUpdate(
+                eq(scheduleId),
+                eq(DoctorScheduleStatus.AVAILABLE),
+                eq(DoctorStatus.ACTIVE),
+                eq(UserStatus.ACTIVE),
+                eq(HospitalStatus.ACTIVE),
+                any(LocalDate.class),
+                any(LocalTime.class)
+        )).thenReturn(Optional.empty());
 
         ReservationCreateRequest request =
                 new ReservationCreateRequest(scheduleId);
@@ -181,7 +207,15 @@ class ReservationServiceTest {
         DoctorSchedule schedule =
                 createAvailableSchedule(scheduleId);
 
-        when(doctorScheduleRepository.findById(scheduleId))
+        when(doctorScheduleRepository.findReservableScheduleForUpdate(
+                eq(scheduleId),
+                eq(DoctorScheduleStatus.AVAILABLE),
+                eq(DoctorStatus.ACTIVE),
+                eq(UserStatus.ACTIVE),
+                eq(HospitalStatus.ACTIVE),
+                any(LocalDate.class),
+                any(LocalTime.class)
+        ))
                 .thenReturn(Optional.of(schedule));
 
         when(patientRepository.findByUserId(userId))
@@ -198,6 +232,49 @@ class ReservationServiceTest {
                 )
         )
                 .isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    void createReservation_fail_when_schedule_is_in_the_past() {
+        assertUnavailableScheduleRejected(11L);
+    }
+
+    @Test
+    void createReservation_fail_when_hospital_is_closed() {
+        assertUnavailableScheduleRejected(12L);
+    }
+
+    @Test
+    void createReservation_fail_when_doctor_user_is_withdrawn() {
+        assertUnavailableScheduleRejected(13L);
+    }
+
+    @Test
+    void createReservation_fail_when_doctor_is_not_approved() {
+        assertUnavailableScheduleRejected(14L);
+    }
+
+    private void assertUnavailableScheduleRejected(Long scheduleId) {
+        when(doctorScheduleRepository.findReservableScheduleForUpdate(
+                eq(scheduleId),
+                eq(DoctorScheduleStatus.AVAILABLE),
+                eq(DoctorStatus.ACTIVE),
+                eq(UserStatus.ACTIVE),
+                eq(HospitalStatus.ACTIVE),
+                any(LocalDate.class),
+                any(LocalTime.class)
+        )).thenReturn(Optional.empty());
+        when(doctorScheduleRepository.existsById(scheduleId)).thenReturn(true);
+
+        assertThatThrownBy(() -> reservationService.createReservation(
+                1L,
+                new ReservationCreateRequest(scheduleId)
+        ))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.SCHEDULE_NOT_AVAILABLE);
+
+        verify(reservationRepository, never()).save(any());
     }
 
     // 환자 생성

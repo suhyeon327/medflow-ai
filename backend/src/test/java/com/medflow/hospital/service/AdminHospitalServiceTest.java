@@ -7,6 +7,8 @@ import com.medflow.hospital.dto.request.AdminHospitalUpdateRequest;
 import com.medflow.hospital.entity.Hospital;
 import com.medflow.hospital.entity.HospitalStatus;
 import com.medflow.hospital.repository.HospitalRepository;
+import com.medflow.reservation.entity.ReservationStatus;
+import com.medflow.reservation.repository.ReservationRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -17,10 +19,13 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -29,6 +34,7 @@ import static org.mockito.Mockito.when;
 class AdminHospitalServiceTest {
 
     @Mock HospitalRepository hospitalRepository;
+    @Mock ReservationRepository reservationRepository;
     @InjectMocks AdminHospitalService adminHospitalService;
 
     @Test
@@ -80,7 +86,7 @@ class AdminHospitalServiceTest {
     void updateHospital_whenNameIsChangedToUniqueName_updatesAllFields() {
         Hospital hospital = hospital(1L, "기존 병원", HospitalStatus.ACTIVE);
         AdminHospitalUpdateRequest request = updateRequest("변경 병원", HospitalStatus.ACTIVE);
-        when(hospitalRepository.findById(1L)).thenReturn(Optional.of(hospital));
+        when(hospitalRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(hospital));
         when(hospitalRepository.existsByName("변경 병원")).thenReturn(false);
 
         var response = adminHospitalService.updateHospital(1L, request);
@@ -96,7 +102,7 @@ class AdminHospitalServiceTest {
     void updateHospital_whenNameIsUnchanged_updatesWithoutDuplicateCheck() {
         Hospital hospital = hospital(1L, "기존 병원", HospitalStatus.ACTIVE);
         AdminHospitalUpdateRequest request = updateRequest("기존 병원", HospitalStatus.CLOSED);
-        when(hospitalRepository.findById(1L)).thenReturn(Optional.of(hospital));
+        when(hospitalRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(hospital));
 
         var response = adminHospitalService.updateHospital(1L, request);
 
@@ -109,7 +115,7 @@ class AdminHospitalServiceTest {
     void updateHospital_whenChangedNameAlreadyExists_throwsHospitalAlreadyExists() {
         Hospital hospital = hospital(1L, "기존 병원", HospitalStatus.ACTIVE);
         AdminHospitalUpdateRequest request = updateRequest("중복 병원", HospitalStatus.ACTIVE);
-        when(hospitalRepository.findById(1L)).thenReturn(Optional.of(hospital));
+        when(hospitalRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(hospital));
         when(hospitalRepository.existsByName("중복 병원")).thenReturn(true);
 
         assertError(ErrorCode.HOSPITAL_ALREADY_EXISTS,
@@ -118,7 +124,7 @@ class AdminHospitalServiceTest {
 
     @Test
     void updateHospital_whenHospitalDoesNotExist_throwsHospitalNotFound() {
-        when(hospitalRepository.findById(999L)).thenReturn(Optional.empty());
+        when(hospitalRepository.findByIdForUpdate(999L)).thenReturn(Optional.empty());
 
         assertError(ErrorCode.HOSPITAL_NOT_FOUND,
                 () -> adminHospitalService.updateHospital(999L, updateRequest("병원", HospitalStatus.ACTIVE)));
@@ -127,7 +133,7 @@ class AdminHospitalServiceTest {
     @Test
     void deleteHospital_whenHospitalExists_closesAndSoftDeletesHospital() {
         Hospital hospital = hospital(1L, "삭제 병원", HospitalStatus.ACTIVE);
-        when(hospitalRepository.findById(1L)).thenReturn(Optional.of(hospital));
+        when(hospitalRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(hospital));
 
         var response = adminHospitalService.deleteHospital(1L);
 
@@ -140,10 +146,46 @@ class AdminHospitalServiceTest {
 
     @Test
     void deleteHospital_whenHospitalDoesNotExist_throwsHospitalNotFound() {
-        when(hospitalRepository.findById(999L)).thenReturn(Optional.empty());
+        when(hospitalRepository.findByIdForUpdate(999L)).thenReturn(Optional.empty());
 
         assertError(ErrorCode.HOSPITAL_NOT_FOUND,
                 () -> adminHospitalService.deleteHospital(999L));
+    }
+
+    @Test
+    void updateHospital_whenUpcomingReservationExists_rejectsClosingHospital() {
+        Hospital hospital = hospital(1L, "운영 병원", HospitalStatus.ACTIVE);
+        when(hospitalRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(hospital));
+        when(reservationRepository.existsUpcomingReservationByHospitalIdAndStatus(
+                eq(1L), eq(ReservationStatus.APPROVED), any(LocalDate.class), any(LocalTime.class)
+        )).thenReturn(true);
+
+        assertError(
+                ErrorCode.HOSPITAL_HAS_UPCOMING_RESERVATIONS,
+                () -> adminHospitalService.updateHospital(
+                        1L,
+                        updateRequest("운영 병원", HospitalStatus.CLOSED)
+                )
+        );
+
+        assertThat(hospital.getStatus()).isEqualTo(HospitalStatus.ACTIVE);
+    }
+
+    @Test
+    void deleteHospital_whenUpcomingReservationExists_rejectsClosingHospital() {
+        Hospital hospital = hospital(1L, "운영 병원", HospitalStatus.ACTIVE);
+        when(hospitalRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(hospital));
+        when(reservationRepository.existsUpcomingReservationByHospitalIdAndStatus(
+                eq(1L), eq(ReservationStatus.APPROVED), any(LocalDate.class), any(LocalTime.class)
+        )).thenReturn(true);
+
+        assertError(
+                ErrorCode.HOSPITAL_HAS_UPCOMING_RESERVATIONS,
+                () -> adminHospitalService.deleteHospital(1L)
+        );
+
+        assertThat(hospital.getStatus()).isEqualTo(HospitalStatus.ACTIVE);
+        assertThat(hospital.getDeletedAt()).isNull();
     }
 
     private Hospital hospital(Long id, String name, HospitalStatus status) {

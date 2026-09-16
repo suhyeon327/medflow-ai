@@ -3,6 +3,7 @@ package com.medflow.doctor.repository;
 import com.medflow.doctor.entity.Doctor;
 import com.medflow.doctor.entity.DoctorStatus;
 import com.medflow.hospital.dto.projection.HospitalDoctorProjection;
+import com.medflow.hospital.entity.HospitalStatus;
 import com.medflow.user.entity.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -21,10 +22,11 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
 
     List<Doctor> findAllByStatus(DoctorStatus status);
 
-    Optional<Doctor> findByIdAndStatusAndUserStatus(
+    Optional<Doctor> findByIdAndStatusAndUserStatusAndHospitalStatus(
             Long doctorId,
             DoctorStatus status,
-            UserStatus userStatus
+            UserStatus userStatus,
+            HospitalStatus hospitalStatus
     );
 
     // 여러 병원에 소속된 의사 목록 조회
