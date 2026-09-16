@@ -63,4 +63,10 @@ public class UserPrincipal implements UserDetails {
     public String getUsername() {
         return email;
     }
+
+    // 활성 회원만 로그인 인증 허용
+    @Override
+    public boolean isEnabled() {
+        return status == UserStatus.ACTIVE;
+    }
 }

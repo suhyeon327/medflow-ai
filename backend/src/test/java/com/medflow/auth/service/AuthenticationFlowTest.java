@@ -43,6 +43,7 @@ import org.mockito.quality.Strictness;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -280,8 +281,11 @@ class AuthenticationFlowTest {
         assertThatThrownBy(() -> authenticationService.login(request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(ErrorCode.INVALID_CREDENTIALS.getMessage())
-                .extracting("errorCode")
-                .isEqualTo(ErrorCode.INVALID_CREDENTIALS);
+                .satisfies(exception -> {
+                    BusinessException businessException = (BusinessException) exception;
+                    assertThat(businessException.getErrorCode()).isEqualTo(ErrorCode.INVALID_CREDENTIALS);
+                    assertThat(businessException.getErrorCode().getStatus().value()).isEqualTo(401);
+                });
     }
 
     @Test
@@ -346,6 +350,25 @@ class AuthenticationFlowTest {
                 .hasMessage(ErrorCode.INVALID_CREDENTIALS.getMessage())
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.INVALID_CREDENTIALS);
+
+        verifyNoInteractions(jwtGenerator);
+        verify(refreshTokenRepository, never()).save(any());
+    }
+
+    @Test
+    void login_withWithdrawnUser_throwsInvalidCredentials() {
+        LoginRequest request = new LoginRequest("withdrawn@example.com", "password123!");
+        when(authenticationManager.authenticate(any()))
+                .thenThrow(new DisabledException("탈퇴한 사용자"));
+
+        assertThatThrownBy(() -> authenticationService.login(request))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ErrorCode.INVALID_CREDENTIALS.getMessage())
+                .satisfies(exception -> {
+                    BusinessException businessException = (BusinessException) exception;
+                    assertThat(businessException.getErrorCode()).isEqualTo(ErrorCode.INVALID_CREDENTIALS);
+                    assertThat(businessException.getErrorCode().getStatus().value()).isEqualTo(401);
+                });
 
         verifyNoInteractions(jwtGenerator);
         verify(refreshTokenRepository, never()).save(any());
