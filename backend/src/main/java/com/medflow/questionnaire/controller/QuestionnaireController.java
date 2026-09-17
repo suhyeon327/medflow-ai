@@ -12,9 +12,12 @@ import com.medflow.questionnaire.service.QuestionnaireService;
 import com.medflow.questionnaire.service.QuestionnaireAnalysisService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,13 +30,18 @@ public class QuestionnaireController {
 
     // 예약 기반 문진 작성
     @PostMapping
-    public ApiResponse<QuestionnaireResponse> createQuestionnaire(
+    public ResponseEntity<ApiResponse<QuestionnaireResponse>> createQuestionnaire(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Valid @RequestBody QuestionnaireCreateRequest request
     ) {
-        return ApiResponse.success(
-                questionnaireService.createQuestionnaire(userPrincipal.getUserId(), request)
+        QuestionnaireResponse response = questionnaireService.createQuestionnaire(
+                userPrincipal.getUserId(),
+                request
         );
+
+        return ResponseEntity
+                .created(URI.create("/api/v1/questionnaires/" + response.questionnaireId()))
+                .body(ApiResponse.success(response));
     }
 
     // 문진 단건 조회

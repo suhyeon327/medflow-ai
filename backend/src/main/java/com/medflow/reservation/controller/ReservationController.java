@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
 
@@ -32,17 +34,19 @@ public class ReservationController {
     private final ReservationService reservationService;
 
     // 예약 생성
-    @PostMapping("/")
-    public ApiResponse<ReservationCreateResponse> createReservation(
+    @PostMapping
+    public ResponseEntity<ApiResponse<ReservationCreateResponse>> createReservation(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Valid @RequestBody ReservationCreateRequest request
     ) {
-        return ApiResponse.success(
-                reservationService.createReservation(
-                        userPrincipal.getUserId(),
-                        request
-                )
+        ReservationCreateResponse response = reservationService.createReservation(
+                userPrincipal.getUserId(),
+                request
         );
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success(response));
     }
 
     // 환자 예약 내역 조회

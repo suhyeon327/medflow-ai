@@ -16,7 +16,7 @@ public enum ErrorCode {
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "AUTH_005", "이메일 또는 비밀번호가 올바르지 않습니다."),
     AUTH_FORBIDDEN(HttpStatus.FORBIDDEN, "AUTH_006", "접근 권한이 없습니다."),
     AUTH_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "AUTH_007", "인증이 필요합니다."),
-    INVALID_SIGNUP_ROLE(HttpStatus.CONFLICT, "AUTH_008", "회원가입 가능한 회원 유형이 아닙니다."),
+    INVALID_SIGNUP_ROLE(HttpStatus.BAD_REQUEST, "AUTH_008", "회원가입 가능한 회원 유형이 아닙니다."),
     INVALID_SIGNUP_PROFILE(HttpStatus.BAD_REQUEST, "AUTH_009", "회원 유형에 맞는 추가 정보를 입력해주세요."),
 
     // Patient
@@ -31,26 +31,26 @@ public enum ErrorCode {
     // Doctor
     DOCTOR_ALREADY_EXISTS(HttpStatus.CONFLICT, "DOCTOR_001", "이미 의사 인증을 신청했거나 등록된 면허번호입니다."),
     DOCTOR_NOT_FOUND(HttpStatus.NOT_FOUND, "DOCTOR_002", "의사 정보를 찾을 수 없습니다."),
-    INVALID_DOCTOR_STATUS(HttpStatus.BAD_REQUEST, "DOCTOR_003", "현재 상태에서는 요청을 처리할 수 없습니다."),
+    INVALID_DOCTOR_STATUS(HttpStatus.CONFLICT, "DOCTOR_003", "현재 상태에서는 요청을 처리할 수 없습니다."),
     LICENSE_NUMBER_ALREADY_EXISTS(HttpStatus.CONFLICT, "DOCTOR_004", "이미 등록된 면허번호입니다."),
     DOCTOR_NOT_APPROVED(HttpStatus.FORBIDDEN, "DOCTOR_005", "승인되지 않은 의사는 해당 기능을 사용할 수 없습니다."),
     INVALID_SCHEDULE_TIME_RANGE(HttpStatus.BAD_REQUEST, "DOCTOR_006", "진료 종료 시각은 시작 시각보다 늦어야 합니다."),
 
     // Reservation
-    SCHEDULE_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "RESERVATION_001", "예약할 수 없는 시간입니다."),
-    COMPLETED_RESERVATION(HttpStatus.BAD_REQUEST, "RESERVATION_002", "진료가 완료된 예약은 취소할 수 없습니다."),
+    SCHEDULE_NOT_AVAILABLE(HttpStatus.CONFLICT, "RESERVATION_001", "예약할 수 없는 시간입니다."),
+    COMPLETED_RESERVATION(HttpStatus.CONFLICT, "RESERVATION_002", "진료가 완료된 예약은 취소할 수 없습니다."),
     INVALID_STATUS_CHANGE(HttpStatus.CONFLICT, "RESERVATION_003", "현재 예약 상태에서는 요청한 상태로 변경할 수 없습니다."),
     SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVATION_004", "예약 가능한 일정을 찾을 수 없습니다."),
     RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVATION_005", "예약을 찾을 수 없습니다."),
-    RESERVATION_ALREADY_CANCELLED(HttpStatus.BAD_REQUEST, "RESERVATION_007", "이미 취소된 예약입니다."),
+    RESERVATION_ALREADY_CANCELLED(HttpStatus.CONFLICT, "RESERVATION_007", "이미 취소된 예약입니다."),
 
     // Questionnaire
     QUESTIONNAIRE_ALREADY_EXISTS(HttpStatus.CONFLICT, "QUESTIONNAIRE_001", "해당 예약에 이미 문진이 작성되었습니다."),
     QUESTIONNAIRE_RESERVATION_FORBIDDEN(HttpStatus.FORBIDDEN, "QUESTIONNAIRE_002", "본인의 예약에만 문진을 작성할 수 있습니다."),
-    QUESTIONNAIRE_CANCELLED_RESERVATION(HttpStatus.BAD_REQUEST, "QUESTIONNAIRE_003", "취소된 예약에는 문진을 작성할 수 없습니다."),
-    QUESTIONNAIRE_COMPLETED_RESERVATION(HttpStatus.BAD_REQUEST, "QUESTIONNAIRE_004", "진료가 완료된 예약에는 문진을 작성할 수 없습니다."),
+    QUESTIONNAIRE_CANCELLED_RESERVATION(HttpStatus.CONFLICT, "QUESTIONNAIRE_003", "취소된 예약에는 문진을 작성할 수 없습니다."),
+    QUESTIONNAIRE_COMPLETED_RESERVATION(HttpStatus.CONFLICT, "QUESTIONNAIRE_004", "진료가 완료된 예약에는 문진을 작성할 수 없습니다."),
     QUESTIONNAIRE_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTIONNAIRE_005", "문진을 찾을 수 없습니다."),
-    QUESTIONNAIRE_UPDATE_AFTER_START(HttpStatus.BAD_REQUEST, "QUESTIONNAIRE_006", "진료가 시작된 예약의 문진은 작성하거나 수정할 수 없습니다."),
+    QUESTIONNAIRE_UPDATE_AFTER_START(HttpStatus.CONFLICT, "QUESTIONNAIRE_006", "진료가 시작된 예약의 문진은 작성하거나 수정할 수 없습니다."),
     QUESTIONNAIRE_ANALYSIS_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTIONNAIRE_007", "문진 분석 내용을 찾을 수 없습니다."),
 
     // AI

@@ -16,6 +16,10 @@
 
 ### 성공 응답
 
+- 조회 및 응답 본문이 있는 수정/삭제: `200 OK`
+- 자원 생성: `201 Created`
+- 응답 본문이 없는 성공: `204 No Content`
+
 ```json
 {
   "success": true,
@@ -126,13 +130,11 @@
 | `PatientRequest` | `name` 필수, `birth` 필수, `gender` 필수, `phone` 하이픈 없는 10~11자리 |
 | `PatientResponse` | `id`, `name`, `birth`, `gender`, `phone` |
 
-주의: PUT Controller의 Request에 현재 `@Valid`가 없으므로 `PatientRequest`의 Bean Validation 애너테이션은 서버에서 실행되지 않는다.
-
 ## 5. Patient Reservation
 
 | Method | URL | 인증 / Role | Path Parameter | Query Parameter | Request DTO | Response DTO (`data`) | 주요 Error |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| POST | `/api/v1/reservations/` | 필요 / `PATIENT` | 없음 | 없음 | `ReservationCreateRequest` | `ReservationCreateResponse` | `RESERVATION_004`, `RESERVATION_001`, `PATIENT_001` |
+| POST | `/api/v1/reservations` | 필요 / `PATIENT` | 없음 | 없음 | `ReservationCreateRequest` | `ReservationCreateResponse` | `RESERVATION_004`, `RESERVATION_001`, `PATIENT_001` |
 | GET | `/api/v1/reservations/patient` | 필요 / `PATIENT` | 없음 | `status?`, `date?`, `hospitalId?`, `doctorId?`, `period?`, `page?`, `size?`; 기본 size 10 | 없음 | `PatientReservationPageResponse` | `PATIENT_001` |
 | PATCH | `/api/v1/reservations/{reservationId}/cancel` | 필요 / `PATIENT` | `reservationId` | 없음 | 없음 | `ReservationCancelResponse` | `PATIENT_001`, `RESERVATION_005`, `RESERVATION_002`, `RESERVATION_007` |
 
@@ -147,8 +149,6 @@
 | `PatientReservationPageResponse` | `content`, `page`, `size`, `totalElements`, `totalPages` |
 | `PatientReservationResponse` | `reservationId`, `hospitalId`, `hospitalName`, `doctorId`, `doctorName`, `reservationDate`, `startTime`, `endTime`, `reservationStatus`, `questionnaireId` |
 | `ReservationCancelResponse` | `reservationId`, `status` |
-
-POST 경로와 아래 관리자 병원 GET 경로는 Controller에 trailing slash가 명시되어 있다.
 
 ## 6. Patient Questionnaire
 
@@ -232,8 +232,8 @@ POST는 `[startTime, endTime)` 구간을 `slotMinutes` 단위로 나눠 여러 �
 
 | Method | URL | 인증 / Role | Path Parameter | Query Parameter | Request DTO | Response DTO (`data`) | 주요 Error |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| POST | `/api/v1/admin/hospitals` | 필요 / `ADMIN` | 없음 | 없음 | `AdminHospitalCreateRequest` | `HospitalDetailResponse` | `HOSPITAL_001` |
-| GET | `/api/v1/admin/hospitals/` | 필요 / `ADMIN` | 없음 | 없음 | 없음 | `List<AdminHospitalResponse>` | 공통 오류 |
+| POST | `/api/v1/admin/hospitals` | 필요 / `ADMIN` | 없음 | 없음 | `AdminHospitalCreateRequest` | `AdminHospitalResponse` | `HOSPITAL_001` |
+| GET | `/api/v1/admin/hospitals` | 필요 / `ADMIN` | 없음 | 없음 | 없음 | `List<AdminHospitalResponse>` | 공통 오류 |
 | PUT | `/api/v1/admin/hospitals/{hospitalId}` | 필요 / `ADMIN` | `hospitalId` | 없음 | `AdminHospitalUpdateRequest` | `AdminHospitalResponse` | `HOSPITAL_001`, `HOSPITAL_002` |
 | DELETE | `/api/v1/admin/hospitals/{hospitalId}` | 필요 / `ADMIN` | `hospitalId` | 없음 | 없음 | `AdminHospitalDeleteResponse` | `HOSPITAL_002` |
 

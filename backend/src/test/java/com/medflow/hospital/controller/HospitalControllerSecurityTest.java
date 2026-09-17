@@ -10,6 +10,8 @@ import com.medflow.common.exception.GlobalExceptionHandler;
 import com.medflow.security.handler.CustomAuthenticationEntryPoint;
 import com.medflow.hospital.dto.response.HospitalPageResponse;
 import com.medflow.hospital.dto.response.HospitalSummaryResponse;
+import com.medflow.hospital.dto.response.AdminHospitalResponse;
+import com.medflow.hospital.entity.HospitalStatus;
 import com.medflow.hospital.service.AdminHospitalService;
 import com.medflow.hospital.service.HospitalService;
 import com.medflow.user.entity.User;
@@ -26,6 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -37,6 +40,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest({HospitalController.class, AdminHospitalController.class})
@@ -166,6 +170,38 @@ class HospitalControllerSecurityTest {
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void createHospital_returnsCreatedWithLocation() throws Exception {
+        LocalDateTime now = LocalDateTime.of(2026, 9, 17, 10, 0);
+        when(adminHospitalService.createHospital(any()))
+                .thenReturn(new AdminHospitalResponse(
+                        10L,
+                        "메드플로우 병원",
+                        "서울시 강남구",
+                        "서울",
+                        "02-1234-5678",
+                        HospitalStatus.ACTIVE,
+                        now,
+                        now,
+                        null
+                ));
+
+        mockMvc.perform(post("/api/v1/admin/hospitals")
+                        .with(user(userDetails(1L, UserRole.ADMIN)))
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "name": "메드플로우 병원",
+                                  "address": "서울시 강남구",
+                                  "region": "서울",
+                                  "tel": "02-1234-5678"
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", "/api/v1/hospitals/10"))
+                .andExpect(jsonPath("$.data.id").value(10L));
     }
 
     @Test

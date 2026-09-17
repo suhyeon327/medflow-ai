@@ -8,9 +8,11 @@ import com.medflow.hospital.dto.response.AdminHospitalDeleteResponse;
 import com.medflow.hospital.service.AdminHospitalService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -23,12 +25,14 @@ public class AdminHospitalController {
 
     // 병원 등록
     @PostMapping
-    public ApiResponse<AdminHospitalResponse> createHospital(
+    public ResponseEntity<ApiResponse<AdminHospitalResponse>> createHospital(
             @Valid @RequestBody AdminHospitalCreateRequest request
             ) {
-        return ApiResponse.success(
-                adminHospitalService.createHospital(request)
-        );
+        AdminHospitalResponse response = adminHospitalService.createHospital(request);
+
+        return ResponseEntity
+                .created(URI.create("/api/v1/hospitals/" + response.id()))
+                .body(ApiResponse.success(response));
     }
 
     // 병원 관리 목록 조회

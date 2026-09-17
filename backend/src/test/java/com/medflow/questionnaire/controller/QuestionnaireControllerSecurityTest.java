@@ -10,6 +10,7 @@ import com.medflow.common.exception.GlobalExceptionHandler;
 import com.medflow.security.handler.CustomAuthenticationEntryPoint;
 import com.medflow.questionnaire.dto.response.DoctorQuestionnaireAnalysisResponse;
 import com.medflow.questionnaire.dto.response.QuestionnaireAnalysisDetailResponse;
+import com.medflow.questionnaire.dto.response.QuestionnaireResponse;
 import com.medflow.questionnaire.entity.PriorityLevel;
 import com.medflow.questionnaire.entity.QuestionnaireAnalysisStatus;
 import com.medflow.questionnaire.service.DoctorQuestionnairesService;
@@ -29,6 +30,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.time.LocalDateTime;
 import java.util.stream.Stream;
 
 import static org.mockito.Mockito.verify;
@@ -39,6 +41,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest({QuestionnaireController.class, DoctorQuestionnairesController.class})
@@ -100,11 +103,48 @@ class QuestionnaireControllerSecurityTest {
                                   "painLevel": 5
                                 }
                                 """))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.error.code").value("QUESTIONNAIRE_006"));
 
         verify(questionnaireService).createQuestionnaire(eq(1L), any());
+    }
+
+    @Test
+    void patientCanCreateQuestionnaireWithCreatedStatusAndLocation() throws Exception {
+        when(questionnaireService.createQuestionnaire(eq(1L), any()))
+                .thenReturn(new QuestionnaireResponse(
+                        20L,
+                        10L,
+                        1L,
+                        "복통",
+                        LocalDateTime.of(2026, 9, 17, 9, 0),
+                        "배가 아픕니다.",
+                        5,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        LocalDateTime.of(2026, 9, 17, 10, 0)
+                ));
+
+        mockMvc.perform(post("/api/v1/questionnaires")
+                        .with(user(userDetails(1L, UserRole.PATIENT)))
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "reservationId": 10,
+                                  "chiefComplaint": "복통",
+                                  "symptomStartedAt": "2026-09-17T09:00:00",
+                                  "symptomDescription": "배가 아픕니다.",
+                                  "painLevel": 5
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", "/api/v1/questionnaires/20"))
+                .andExpect(jsonPath("$.data.questionnaireId").value(20L));
     }
 
     @Test

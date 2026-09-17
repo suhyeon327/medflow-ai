@@ -82,11 +82,11 @@ class ReservationControllerSecurityTest {
         )).thenReturn(new ReservationCreateResponse(100L, ReservationStatus.APPROVED));
 
         // when & then
-        mockMvc.perform(post("/api/v1/reservations/")
+        mockMvc.perform(post("/api/v1/reservations")
                         .with(user(userDetails(1L, UserRole.PATIENT)))
                         .contentType("application/json")
                         .content("{\"scheduleId\":10}"))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data.reservationId").value(100L))
                 .andExpect(jsonPath("$.data.status").value("APPROVED"));
     }

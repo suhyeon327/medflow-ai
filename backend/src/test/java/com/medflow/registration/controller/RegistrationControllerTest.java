@@ -56,7 +56,7 @@ class RegistrationControllerTest {
                                   }
                                 }
                                 """))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data.email").value("patient@example.com"))
                 .andExpect(jsonPath("$.data.profileId").value(10L));
     }

@@ -28,7 +28,7 @@ export function createReservation(
   request: ReservationCreateRequest,
 ): Promise<ReservationCreateResponse> {
   return apiClient<ReservationCreateResponse>({
-    url: "/api/v1/reservations/",
+    url: "/api/v1/reservations",
     method: "POST",
     data: request,
   });
