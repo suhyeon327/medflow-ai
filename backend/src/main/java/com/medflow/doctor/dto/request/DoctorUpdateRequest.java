@@ -14,9 +14,11 @@ public class DoctorUpdateRequest {
     private Long hospitalId;
 
     @NotBlank
+    @Size(max = 50)
     private String name;
 
     @NotBlank
+    @Size(max = 30)
     private String licenseNumber;
 
     @Size(max = 100)

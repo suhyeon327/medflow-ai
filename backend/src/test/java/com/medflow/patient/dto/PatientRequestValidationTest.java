@@ -71,4 +71,27 @@ class PatientRequestValidationTest {
         assertThat(violations).extracting(violation -> violation.getPropertyPath().toString())
                 .contains("phone");
     }
+
+    @Test
+    void 이름과_전화번호가_최대_길이면_Validation을_통과한다() {
+        PatientRequest request = new PatientRequest(
+                "가".repeat(50), LocalDate.of(1999, 5, 20), Gender.MALE, "01012345678"
+        );
+
+        var violations = validator.validate(request);
+
+        assertThat(violations).isEmpty();
+    }
+
+    @Test
+    void 이름과_전화번호가_최대_길이를_초과하면_Validation에_실패한다() {
+        PatientRequest request = new PatientRequest(
+                "가".repeat(51), LocalDate.of(1999, 5, 20), Gender.MALE, "010123456789"
+        );
+
+        var violations = validator.validate(request);
+
+        assertThat(violations).extracting(violation -> violation.getPropertyPath().toString())
+                .contains("name", "phone");
+    }
 }
